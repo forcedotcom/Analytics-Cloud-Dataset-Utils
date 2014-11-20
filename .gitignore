@@ -1,0 +1,21 @@
+## build output
+target/
+
+## eclipse files
+.project
+.classpath
+.settings/
+
+## Mac directory files
+.DS_Store
+Thumbs.db
+
+## IntelliJ Files
+.idea
+*.ipr
+*.iws
+*.iml
+/test/
+/lib/
+/classes/
+/bin/

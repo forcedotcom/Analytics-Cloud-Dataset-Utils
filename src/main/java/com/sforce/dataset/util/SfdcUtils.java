@@ -1,0 +1,799 @@
+/*
+ * Copyright (c) 2014, salesforce.com, inc.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided 
+ * that the following conditions are met:
+ * 
+ *    Redistributions of source code must retain the above copyright notice, this list of conditions and the 
+ *    following disclaimer.
+ *  
+ *    Redistributions in binary form must reproduce the above copyright notice, this list of conditions and 
+ *    the following disclaimer in the documentation and/or other materials provided with the distribution. 
+ *    
+ *    Neither the name of salesforce.com, inc. nor the names of its contributors may be used to endorse or 
+ *    promote products derived from this software without specific prior written permission.
+ *  
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+package com.sforce.dataset.util;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
+
+import org.supercsv.io.CsvListWriter;
+import org.supercsv.prefs.CsvPreference;
+
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeGlobalSObjectResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
+import com.sforce.soap.partner.Field;
+import com.sforce.soap.partner.FieldType;
+import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.ConnectionException;
+import com.sforce.ws.bind.XmlObject;
+
+public class SfdcUtils {
+
+	
+	private static final int MAX_BASE64_LENGTH = 7 * 1024 * 1024; 
+	private static final int MAX_DECIMAL_PRECISION = 38;
+
+	private static final  SimpleDateFormat sfdcDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+	static
+	{
+		sfdcDateTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+
+	private static final  SimpleDateFormat sfdcDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	static
+	{
+		sfdcDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+	
+	
+	//SFDC Object that are not supported in flow
+	static List<String> excludedObjects = Arrays.asList(new String[]{"UserRecordAccess","Vote","ContentDocumentLink","IdeaComment","UserProfile","AccountPartner","OpportunityPartner","CaseStatus","SolutionStatus","TaskStatus","LeadStatus","ContractStatus","OpportunityStage","PartnerRole","AccountHistory","ActivityHistory","CaseHistory","ContactHistory","ContentDocumentHistory","ContentVersionHistory","ContractHistory","LeadHistory","OrderHistory","OrderItemHistory","OpportunityFieldHistory","Pricebook2History","ProcessInstanceHistory","SolutionHistory","","AccountFeed","AssetFeed","CampaignFeed","CaseFeed","CollaborationGroupFeed","ContactFeed","ContentDocumentFeed","ContractFeed","DashboardFeed","EventFeed","LeadFeed","OrderFeed","OpportunityFeed","OrderItemFeed","Product2Feed","ReportFeed","TaskFeed","SolutionFeed","TopicFeed","UserFeed","DashboardComponentFeed","CaseTeamMember","CaseTeamRole","CaseTeamTemplate","CaseTeamTemplateMember","CaseTeamTemplateRecord","","AcceptedEventRelation","DeclinedEventRelation","UndecidedEventRelation","OpenActivity","TaskPriority","CombinedAttachment","NoteAndAttachment","OwnedContentDocument","AttachedContentDocument","Interviewer__Share","Position__Share","Applicant__Share","UserRecordAccess","RecentlyViewed","Name","WebLinkLocalization","RecordTypeLocalization","ScontrolLocalization","CategoryNodeLocalization","AggregateResult"});
+
+	
+	static final HashMap<FieldType,Class<?>> sfdcFieldTypeToJavaClassMap = new HashMap<FieldType,Class<?>>();
+	static {		
+		sfdcFieldTypeToJavaClassMap.put(FieldType.string, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType._boolean, java.lang.Boolean.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType._int, java.lang.Integer.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType._double, java.math.BigDecimal.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.date, java.sql.Timestamp.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.datetime, java.sql.Timestamp.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.base64, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.id, java.lang.String.class);	
+		sfdcFieldTypeToJavaClassMap.put(FieldType.reference, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.currency, java.math.BigDecimal.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.textarea, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.percent, java.math.BigDecimal.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.phone, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.url, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.email, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.combobox, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.encryptedstring, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.anyType, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.datacategorygroupreference, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.time, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.picklist, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.multipicklist, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.anyType, java.lang.String.class);
+		sfdcFieldTypeToJavaClassMap.put(FieldType.location, java.lang.String.class);
+	}	
+	
+	static final HashMap<FieldType,Class<?>> excludedSfdcFieldTypeMap = new HashMap<FieldType,Class<?>>();
+	static {
+		excludedSfdcFieldTypeMap.put(FieldType.address, java.lang.String.class);
+		excludedSfdcFieldTypeMap.put(FieldType.encryptedstring, java.lang.String.class);
+		excludedSfdcFieldTypeMap.put(FieldType.base64, java.lang.String.class);
+		excludedSfdcFieldTypeMap.put(FieldType.location, java.lang.String.class);		
+		excludedSfdcFieldTypeMap.put(FieldType.datacategorygroupreference, java.lang.String.class);
+	}
+	
+	
+	/**
+	 * Gets a list of all Objects in Salesforce
+	 * 
+	 * @param partnerConnection
+	 * @param pattern
+	 *            Regex pattern to search for salesforce objects (.*) will match
+	 *            all object
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Salesforce Objects
+	 * @throws ConnectionException 
+	 */
+	public static Map<String,String> getObjectList(PartnerConnection partnerConnection, Pattern pattern, boolean isWrite) throws ConnectionException
+	{
+
+		if (pattern == null || pattern.pattern().isEmpty())
+			pattern = Pattern.compile(".*");
+
+		LinkedHashMap<String,String> backendObjectInfoList = new LinkedHashMap<String,String>();
+
+			// Make the describeGlobal() call
+			DescribeGlobalResult describeGlobalResult = partnerConnection.describeGlobal();
+
+			// Get the sObjects from the describe global result
+			DescribeGlobalSObjectResult[] sobjectResults = describeGlobalResult.getSobjects();
+
+			// Write the name of each sObject to the console
+			for (DescribeGlobalSObjectResult sObjectResult : sobjectResults) 
+			{	
+				// Skip Objects that are deprecated
+				if (sObjectResult.isDeprecatedAndHidden())
+					continue;
+
+				if(excludedObjects.contains(sObjectResult.getName()))
+				{
+//					System.err.println("Skipping object {"+sObjectResult.getName()+"}");
+					continue;
+				}
+
+				if(!pattern.matcher(sObjectResult.getName()).matches())
+				{
+					continue;
+				}
+
+				if(!sObjectResult.getQueryable())
+				{
+					continue;
+				}
+
+				if(isWrite){
+					if((!sObjectResult.isUpdateable() || !sObjectResult.isCreateable() || !sObjectResult.isDeletable()))
+					{
+						continue;
+					}
+				}
+				backendObjectInfoList.put(sObjectResult.getName(),sObjectResult.getName());
+			}			
+
+		return backendObjectInfoList;
+
+	}
+
+	
+
+	/**
+	 * Gets a list of all Objects related to input Object from Salesforce
+	 * 
+	 * @param partnerConnection
+	 *            Salesforce connection
+	 * @param primary
+	 *            record The record to get the related objects for
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Salesforce Objects that are related to the input primary
+	 *         Record
+	 * @throws ConnectionException 
+	 */
+	public static Map<String,String> getRelatedObjectList(
+			PartnerConnection partnerConnection, String primaryObject,String primaryObjectType, boolean isWrite) throws ConnectionException  {
+
+		LinkedHashMap<String,String> backendObjectInfoList = new LinkedHashMap<String,String>();
+		
+		// Salesforce related objects can be many levels deep for Example
+		// 'Contact.Account.Owner'
+			DescribeSObjectResult dsr = partnerConnection.describeSObject(primaryObjectType);
+			// Now, retrieve metadata for each field
+			for (int i = 0; i < dsr.getFields().length; i++) 
+			{
+				// Get the field
+				com.sforce.soap.partner.Field field = dsr.getFields()[i];
+
+				// Skip fields that are deprecated
+				if (field.isDeprecatedAndHidden())
+					continue;
+				
+				//Get the parents fully qualified name for example Contact, or Contact.Account
+				String parentFullyQualifiedName = primaryObject;
+			
+				//We are only interested in fields that are Relationships (Foreign Keys)
+				if(field.getRelationshipName()!=null && !field.getRelationshipName().isEmpty() && field.getReferenceTo() != null && field.getReferenceTo().length!=0)
+				{
+					for (String relatedSObjectType : field.getReferenceTo()) 
+					{
+//						if (relatedSObjectType.isDeprecatedAndHidden())
+//							continue;
+//
+						if(excludedObjects.contains(relatedSObjectType))
+						{
+							System.err.println("Skipping object {"+relatedSObjectType+"}");
+							continue;
+						}
+
+						// This is what shows in the related object list object
+						// list drop down when user clicks on get Siblings
+						String objectName = field.getRelationshipName();
+
+						// This will be used by this code to build SFDC SOQL
+						// I need it because when we are querying
+						// multiple objects we need to know the fully
+						// qualified path of the object for example
+						// if the parent is Account and the relationship name is Owner
+						// Then fully qualified name will be Account.Owner 
+						String fullyQualifiedObjectName = parentFullyQualifiedName + "." + objectName;
+						
+						// The Object Label, SFDC has polymorphic relationships
+						// for example Account.Owner Can be related to User or
+						// Group. We need to give users a way to choose the
+						// correct Relationship.
+						@SuppressWarnings("unused")
+						String objectLabel = objectName + "(" + relatedSObjectType + ")";
+
+						// Add it to the list
+						backendObjectInfoList.put(fullyQualifiedObjectName, relatedSObjectType);
+					}
+				}
+			}
+		return backendObjectInfoList;
+	}
+
+
+
+	
+	/**
+	 * When the user selects an object from the source/target dropdown this
+	 * method is called to get fields in the selected Object. The Selected
+	 * Object Name and CanonicalName is passed in the RecordInfo object
+	 * 
+	 * @param recordInfo
+	 *            The selected Object from the dropdown
+	 * @param partnerConnection
+	 *            The connection to use for getting Object metadata
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Fields in the object
+	 * @throws ConnectionException 
+	 */
+	public static List<com.sforce.dataset.loader.file.schema.FieldType> getFieldList(String sObjectType,
+			PartnerConnection partnerConnection, boolean isWrite) throws ConnectionException
+	{
+
+			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList = new ArrayList<com.sforce.dataset.loader.file.schema.FieldType>();
+			
+			
+			DescribeSObjectResult dsr = partnerConnection.describeSObject(sObjectType);			
+			if (dsr != null) 
+			{
+				// Now, retrieve metadata for each field
+				LinkedHashMap<String, Field> labels = new LinkedHashMap<String, Field>();				
+				for (int i = 0; i < dsr.getFields().length; i++) 
+				{
+					// Get the field
+					com.sforce.soap.partner.Field field = dsr.getFields()[i];
+
+					// Skip fields that are deprecated
+					if (field.isDeprecatedAndHidden())
+						continue;
+					
+					if(excludedSfdcFieldTypeMap.containsKey(field.getType()))
+						continue;
+					
+					if(sObjectType.equals("User"))
+					{
+						if(field.getName().equals("LastPasswordChangeDate"))
+							continue;
+					}
+					
+					if(sObjectType.equals("Profile"))
+					{
+						if(field.getName().equals("PermissionsEditTask") || field.getName().equals("PermissionsEditEvent"))
+							continue;
+					}
+
+		//Prevent duplicate label error
+					
+					if(labels.containsKey(field.getLabel()))
+					{
+						System.err.println("{"+field.getName()+"} has duplicate label matching field {"+labels.get(field.getLabel()).getName()+"}");
+//						continue;
+					}
+					
+					labels.put(field.getLabel(), field);
+										
+
+					// Get the Java class corresponding to the SFDC FieldType
+					Class<?> clazz = getJavaClassFromFieldType(field.getType());			        	 			        	 
+
+					
+					// Determine the field Precision
+					int precision = getPrecision(field, clazz);
+					// Determine the field Scale
+					int scale = getScale(field, clazz);
+
+					com.sforce.dataset.loader.file.schema.FieldType bField = null;
+					if(clazz.getCanonicalName().equals(BigDecimal.class.getCanonicalName()) || clazz.getCanonicalName().equals(Integer.class.getCanonicalName()))
+					{
+						bField = com.sforce.dataset.loader.file.schema.FieldType.GetMeasureKeyDataType(field.getName(), precision, scale, 0L);
+					}else if(clazz.getCanonicalName().equals(java.sql.Timestamp.class.getCanonicalName()))
+					{
+						bField = com.sforce.dataset.loader.file.schema.FieldType.GetDateKeyDataType(field.getName(), "MM/dd/yyyy hh:mm:ss a", null);						
+					}else
+					{
+						if(field.getType().equals(FieldType.multipicklist))
+						{
+							bField = com.sforce.dataset.loader.file.schema.FieldType.GetStringKeyDataType(field.getName(), null, null);
+						}else
+						{
+							bField = com.sforce.dataset.loader.file.schema.FieldType.GetStringKeyDataType(field.getName(), ";", null);
+						}
+					}
+
+					// Set the Business Name (Name used in UI)
+					if(bField==null)
+					{
+						System.err.println("field: "+ field);
+					}
+					bField.setLabel(field.getLabel());
+					
+					bField.setDescription(field.getInlineHelpText());
+					
+					// In case of multiple source Objects the column names could
+					// clash for example account and contact both have columns
+					// named 'Id' Therefore we prefix the column name with the
+					// catalog name to make it unique For example Account.Id and
+					// Account.Owner.Id
+					bField.setFullyQualifiedName(sObjectType+"."+field.getName());
+					
+										
+					// If the field is primary key
+					if (field.getType().equals(FieldType.id)
+							|| field.isExternalId())
+						bField.setUniqueId(true);
+			    		
+		    		fieldList.add(bField);
+				}
+			}
+			return fieldList;
+	}	   
+	   
+
+		
+
+	/**
+	 * This method reads data from Object specified in recordInfo and passed the
+	 * data into the OutputBuffer
+	 * 
+	 * @param partnerConnection
+	 * @param recordInfo
+	 * @param fieldList
+	 * @param pagesize
+	 * @param dataDir
+	 * @return
+	 * @throws ReflectiveOperationException
+	 * @throws ConnectionException
+	 * @throws UnsupportedEncodingException
+	 */
+	public static boolean read(PartnerConnection partnerConnection,String recordInfo,
+			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList,
+			long pagesize, File dataDir) throws 
+			ReflectiveOperationException, ConnectionException, UnsupportedEncodingException, IOException
+			 {
+			// These debug statements should help you understand what is being
+			// passed back to your calls. You can comment these out if you like
+			BufferedOutputStream bos = null;
+//			CsvWriter writer = null;
+			CsvListWriter writer = null;
+			File csvFile = new File(dataDir,recordInfo+".csv");
+			
+			if(pagesize==0)
+				pagesize = 1000;
+			
+			partnerConnection.setQueryOptions(2000);
+			if (pagesize>0)
+				partnerConnection.setQueryOptions((int) pagesize);
+
+			//Generate the SOQL using the FieldList and RecordInfo
+			String soqlQuery = generateSOQL(recordInfo, fieldList, pagesize)  ;
+			System.out.println("SOQL: "+soqlQuery);
+			try {
+				boolean canWrite = false;
+				while(!canWrite)
+				{
+					try
+					{
+						bos = new BufferedOutputStream(new FileOutputStream(csvFile));
+						canWrite = true;
+						bos.close();
+						bos = null;
+					}catch(Throwable t)
+					{	
+//						System.err.println(t.getMessage());
+						canWrite = false;
+						DatasetUtils.readInputFromConsole("file {"+csvFile+"} is open in excel please close it first, press enter when done: ");
+					}
+				}
+				
+				writer = new CsvListWriter(new FileWriter(csvFile),CsvPreference.STANDARD_PREFERENCE);
+				List<String> hdr = new LinkedList<String>();
+				for(com.sforce.dataset.loader.file.schema.FieldType field:fieldList)
+				{
+					hdr.add(field.getName());
+				}
+				writer.write(hdr);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			
+			//Query SFDC
+			QueryResult qr = partnerConnection.query(soqlQuery);
+
+			int rowsSoFar = 0;
+			boolean done = false;
+			if (qr.getSize() > 0) 
+			{
+				while (!done) {
+					SObject[] records = qr.getRecords();
+					for (int i = 0; i < records.length; ++i) {
+						Object[] rowData = new Object[fieldList.size()];
+						for (int var = 0; var < fieldList.size(); var++) {
+							String fieldName = fieldList.get(var).getFullyQualifiedName(); //This is full path of the field
+							Object value = getFieldValueFromQueryResult(fieldName,records[i]);
+							//Object value = records[i].getField(fieldName);
+							if (value != null) {
+								// Convert the value to a type from JavaDataType
+								// first before setting it in rowData
+								value = DatasetUtils.toJavaPrimitiveType(value);
+							}
+							rowData[var] = value;
+							if(value==null)
+							{
+								rowData[var] = null;
+							}else
+							{
+								if(value instanceof Number)
+								{
+									rowData[var] = ((new BigDecimal(value.toString())).toPlainString());
+								}else if(value instanceof Date)
+								{
+									rowData[var] = (sfdcDateTimeFormat.format((Date)value));
+								}else
+								{
+									rowData[var] =  (value.toString());
+								}
+							}							
+					}
+						if(writer!=null)
+						{
+							try {
+								writer.write(rowData);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+						rowsSoFar++;
+						// If preview, exit the while loop after pagesize is reached
+						if (pagesize > 0 && i >= pagesize - 1)
+							break;
+					}
+
+//					// If its preview exit when the first set is done even if
+//					// pageSize is not reached
+//					if (qr.isDone() || pagesize > 0) {
+//						done = true;
+					if (qr.isDone()) {
+						done = true;
+					} else {
+						qr = partnerConnection.queryMore(qr.getQueryLocator());
+					}
+				}// End While
+			}
+			
+			if(writer!=null)
+				try {
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			if(bos!=null)
+				try {
+					bos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+    		System.out.println("Query returned {" + rowsSoFar + "} rows");				
+    		System.out.println("Query results saved in file {" + csvFile + "}");				
+			return true;
+	}	
+	
+    
+
+	/**
+	 * Determines the precision of the input field
+	 * 
+	 * @param fld
+	 * @param sfdcClazz
+	 * @return The field Precision (int)
+	 */
+    private static int getPrecision(com.sforce.soap.partner.Field fld,Class<?> sfdcClazz) 
+    {
+    	int fldPrecision = 0;
+
+		if(!sfdcClazz.getCanonicalName().equals(String.class.getCanonicalName()) 
+				&&	!sfdcClazz.getCanonicalName().equals(BigDecimal.class.getCanonicalName())
+				&&	!sfdcClazz.getCanonicalName().equals(byte[].class.getCanonicalName()))
+		{
+			//To use defaults for all other types set to -1
+			return -1;
+		}
+		
+   	 	if(String.class.isAssignableFrom(sfdcClazz))
+   	 	{
+   	 		if(FieldType.base64.equals(fld.getType())) 
+   	 		{
+        		fldPrecision =  MAX_BASE64_LENGTH;
+   	 		}else
+   	 		{
+	        	fldPrecision =  fld.getLength();
+   	 		}
+
+        	if(fldPrecision <= 0)
+        	{
+        		fldPrecision = 255;
+        	}
+
+   	 		return fldPrecision;
+   	 	} else     	
+        if(BigDecimal.class.isAssignableFrom(sfdcClazz))
+       	{
+        	if(fld.isCalculated())
+        		fldPrecision =  MAX_DECIMAL_PRECISION;
+        	else
+        		fldPrecision =  fld.getPrecision();         
+
+        	if(fldPrecision <= 0)
+        	{
+        		fldPrecision = MAX_DECIMAL_PRECISION;
+        	}
+
+        	return fldPrecision;
+       	}if(byte[].class.isAssignableFrom(sfdcClazz))
+        {
+        	fldPrecision = fld.getByteLength();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getLength();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getPrecision();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getDigits();        	        	
+
+        	if(fldPrecision <= 0)
+        	{
+        		fldPrecision = 255;
+        	}
+
+        	return fldPrecision;
+        }else //We should never hit this case
+        {
+        	fldPrecision = fld.getByteLength();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getLength();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getPrecision();
+        	if(fldPrecision <= 0)
+        		fldPrecision = fld.getDigits();        	        	
+
+        	if(fldPrecision <= 0)
+        	{
+        		fldPrecision = 255;
+        	}        	
+        	return fldPrecision;
+        }        
+    }	
+
+    
+    /**
+     * Determines the scale of the input field
+     * @param fld
+     * @param sfdcClazz
+     * @return The scale of the input field
+     */
+    private static int getScale(com.sforce.soap.partner.Field fld, Class<?> sfdcClazz) 
+    {
+    	int fldScale = 0;
+		if(!sfdcClazz.getCanonicalName().equals(BigDecimal.class.getCanonicalName()))
+		{
+			//To use defaults for all other types set to -1
+			return -1;
+		}
+		
+  		fldScale =  fld.getScale();       
+    	if(fldScale <= 0)
+    	{
+       		fldScale = 0;
+    	}
+    	return fldScale;
+    }    	
+
+	
+	
+	/**
+	 * Builds a SOQL query String using the ObjectName, FieldList
+	 * 
+	 * @param recordInfo
+	 * @param fieldList
+	 * @param pagesize
+	 * @return
+	 */
+	private static String generateSOQL(String recordInfo,
+			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList, long pagesize)
+	{
+//		HashMap<String, JavaDataType> fieldNameJDTMap = new HashMap<String, JavaDataType>();
+		String topLevelSObjectName = getTopLevelSObjectName(recordInfo);
+		int varLen =  topLevelSObjectName.length() + " FROM ".length() + (" LIMIT " + pagesize).length();
+		StringBuilder soql = new StringBuilder("SELECT ");
+		int i = 0;
+		for (com.sforce.dataset.loader.file.schema.FieldType field : fieldList) {
+			
+			if((soql.length()+(", " + field.name).length())>(20000-varLen))
+			{
+				System.err.println("Too many fields in object {"+topLevelSObjectName+"} truncating query to 20,000 chars");
+				break;
+			}
+
+			if (i > 0)
+				soql.append(", ");
+
+			soql.append(field.name);
+			i++;
+		}
+
+		soql.append(" FROM ");
+
+		// If the catalog name is Account.Owner then we will use Account
+		// (Top level object) in the FROM clause
+		soql.append(topLevelSObjectName);
+
+		//If this is preview then limit result set for efficiency
+		if (pagesize>0)
+			soql.append(" LIMIT " + pagesize);
+		
+		return soql.toString();
+	}
+
+	
+	/**
+	 * This method will format the error message so that it can be logged in the error csv
+	 * 
+	 * @param errors
+	 *            Array of com.sforce.soap.partner.Error[]
+	 * @return formated Error String
+	 */
+	@SuppressWarnings("unused")
+	private static String getErrorMessage(com.sforce.soap.partner.Error[] errors)
+	{
+		StringBuffer strBuf = new StringBuffer();
+		for(com.sforce.soap.partner.Error err:errors)
+		{
+		      strBuf.append(" statusCode={");
+		      strBuf.append(DatasetUtils.getCSVFriendlyString(com.sforce.ws.util.Verbose.toString(err.getStatusCode()))+"}");
+		      strBuf.append(" message={");
+		      strBuf.append(DatasetUtils.getCSVFriendlyString(com.sforce.ws.util.Verbose.toString(err.getMessage()))+"}");
+		      if(err.getFields()!=null && err.getFields().length>0)
+		      {
+			      strBuf.append(" fields=");
+			      strBuf.append(DatasetUtils.getCSVFriendlyString(com.sforce.ws.util.Verbose.toString(err.getFields())));
+		      }
+		}
+		return strBuf.toString();
+	}
+	
+	
+	/**
+	 * This method will traverse the query results and return the Field value
+	 * from the result
+	 * 
+	 * @param fieldName
+	 *            The fully qualified field Name, for Example: Account.Id or
+	 *            Contact.Account.Id
+	 * @param record
+	 *            Salesforce query result record (type SObject)
+	 * @return The field value from the result
+	 */
+	public static Object getFieldValueFromQueryResult(String fieldName,SObject record)
+	{
+//		System.out.println("getField("+fieldName+")");
+		
+		if(fieldName==null)
+			return null;
+		
+		if(record==null)
+			return null;
+		
+		if(fieldName.indexOf('.')==-1)
+		{
+			return record.getField(fieldName);			
+		}else
+		{
+			String[] levels = fieldName.split("\\.");
+			if(levels.length>2)
+			{
+				Object cur = record;
+				for(int j=1;j<levels.length;j++)
+				{
+					cur = ((XmlObject)cur).getField(levels[j]);
+					if(cur instanceof XmlObject)
+						continue;
+					else
+						break;
+				}
+				return cur;
+			}else if(levels.length==2)
+			{
+				return record.getField(levels[1]);			
+			}else if(levels.length==1)
+			{
+				return record.getField(levels[0]);
+			}else
+			{
+				return record.getField(fieldName);
+			}
+		}
+	}
+
+
+	/**
+	 * @param fullyQualifiedObjectName
+	 *            Example Contact.Account.Owner
+	 * @return Top level Sobject example Contact
+	 */
+	private static String getTopLevelSObjectName(String fullyQualifiedObjectName)
+	{
+		String topLevelSOBject = fullyQualifiedObjectName;
+		if(fullyQualifiedObjectName!=null && !fullyQualifiedObjectName.isEmpty())
+		{
+			// Lets try and parse catalog name and get Top level object
+			String[] objectLevels = fullyQualifiedObjectName.split("\\.");
+			if(objectLevels!= null && objectLevels.length>0)
+				topLevelSOBject = objectLevels[0];
+		}
+		return topLevelSOBject;
+	}
+	
+	public static Class<?> getJavaClassFromFieldType(
+			com.sforce.soap.partner.FieldType fieldType) {
+		
+		Class<?> clazz = sfdcFieldTypeToJavaClassMap.get(fieldType);
+
+		if (clazz == null)
+			clazz = java.lang.String.class;
+
+		return clazz;
+	}
+	
+	
+}
