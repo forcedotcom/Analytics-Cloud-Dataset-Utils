@@ -19,3 +19,5 @@ Thumbs.db
 /lib/
 /classes/
 /bin/
+*.releaseBackup
+release.properties
