@@ -18,14 +18,14 @@
 		<java.compile.version>1.6</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-  <repositories>
+  <distributionManagement>
     <repository>
       <id>local-proj-repo</id>
       <name>Project Local Repository</name>
       <layout>default</layout>
       <url>file://${basedir}/local-proj-repo/</url>
     </repository>
-  </repositories>
+  /<distributionManagement>
 	<licenses>
 		<license>
 			<name>BSD License (FreeBSD)</name>
