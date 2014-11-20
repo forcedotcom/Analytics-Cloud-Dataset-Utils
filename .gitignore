@@ -1,5 +1,6 @@
 ## build output
 target/
+local-proj-repo/
 
 ## eclipse files
 .project

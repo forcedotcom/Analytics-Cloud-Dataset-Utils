@@ -25,7 +25,7 @@
       <layout>default</layout>
       <url>file://${basedir}/local-proj-repo/</url>
     </repository>
-  /<distributionManagement>
+  </distributionManagement>
 	<licenses>
 		<license>
 			<name>BSD License (FreeBSD)</name>
