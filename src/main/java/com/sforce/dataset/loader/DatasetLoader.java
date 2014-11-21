@@ -286,7 +286,7 @@ public class DatasetLoader {
 //				CsvReader reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction, inputFileCharset)));
 				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), CsvPreference.STANDARD_PREFERENCE);				
 				WriterThread writer = new WriterThread(q, w, ew);
-				Thread th = new Thread(writer);
+				Thread th = new Thread(writer,"Writer-Thread");
 				th.setDaemon(true);
 				th.start();
 				
@@ -331,6 +331,11 @@ public class DatasetLoader {
 								System.err.println("Row {"+totalRowCount+"} has error {"+t+"}");
 								if(t instanceof MalformedInputException)
 								{
+									while(!writer.isDone())
+									{
+										q.put(new String[0]);
+										Thread.sleep(1000);
+									}
 									System.err.println("\n*******************************************************************************");
 									System.err.println("The input file is not utf8 encoded. Please save it as UTF8 file first");
 									System.err.println("*******************************************************************************\n");								

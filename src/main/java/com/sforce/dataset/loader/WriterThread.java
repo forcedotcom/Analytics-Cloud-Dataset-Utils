@@ -44,7 +44,7 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew)
   { 
 	  if(q==null || w == null || ew == null)
 	  {
-		  throw new IllegalArgumentException("Constrictor input cannot be null");
+		  throw new IllegalArgumentException("Constructor input cannot be null");
 	  }
 	  queue = q; 
 	  this.w = w;
@@ -53,10 +53,8 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew)
  
   public void run() {
     try {
-       
-    	System.out.println("Start: " + Thread.currentThread().getName());
-       
        String[] row = queue.take();
+   		System.out.println("Start: " + Thread.currentThread().getName());
        while (row != null && row.length!=0) {
 			try
 			{
@@ -86,33 +84,20 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew)
     }catch (Throwable t) {
        System.out.println (Thread.currentThread().getName() + " " + t.getMessage());
     }
-    isDone = true;
 	System.out.println("END: " + Thread.currentThread().getName());
+    isDone = true;
   }
 
 public boolean isDone() {
 	return isDone;
 }
 
-public void setDone(boolean isDone) {
-	this.isDone = isDone;
-}
-
 public int getErrorRowCount() {
 	return errorRowCount;
-}
-
-public void setErrorRowCount(int errorRowCount) {
-	this.errorRowCount = errorRowCount;
 }
   
   public int getTotalRowCount() {
 	return totalRowCount;
 }
-
-public void setTotalRowCount(int totalRowCount) {
-	this.totalRowCount = totalRowCount;
-}
-
 
 }
