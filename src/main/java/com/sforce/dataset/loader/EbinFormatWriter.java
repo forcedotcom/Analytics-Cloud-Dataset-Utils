@@ -56,8 +56,13 @@ public class EbinFormatWriter {
 
 	private int numColumns = 0;	
 	private OutputStream out;
-	protected long nrows;
 	int interval = 10;
+	
+
+
+	private volatile int successRowCount = 0;
+	private volatile int totalRowCount = 0;
+
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 	long startTime = 0L;
@@ -95,7 +100,7 @@ public class EbinFormatWriter {
 	protected EbinFormatWriter(OutputStream out)  throws IOException
 	{
 		this.out = out;
-		nrows = 0;
+		totalRowCount = 0;
 		out.write(magic, 0, 3);
 		out.write(version_high);
 		out.write(version_low);
@@ -113,23 +118,23 @@ public class EbinFormatWriter {
 		int count = 0;
 		int key_value_count = 0;
 
-		nrows++;
+		totalRowCount++;
 		if (values.length != this.numColumns) {
-			String message = "Row " + nrows + " contains an invalid number of Values, expected " + 
+			String message = "Row " + totalRowCount + " contains an invalid number of Values, expected " + 
 					this.numColumns + " Value(s), got " + values.length + ".\n";
 			throw new IOException(message);
 		}
 				
-		if(nrows%interval==0||nrows==1)
+		if(totalRowCount%interval==0||totalRowCount==1)
 		{
 			long newStartTime = System.currentTimeMillis();
 			if(startTime==0)
 				startTime = newStartTime;
-			System.out.println("Processing row {"+nf.format(nrows) +"} time {"+nf.format(newStartTime-startTime)+"}");			
+			System.out.println("Processing row {"+nf.format(totalRowCount) +"} time {"+nf.format(newStartTime-startTime)+"}");			
 			startTime = newStartTime;
 		}
 		
-		if(nrows/interval>=10)
+		if(totalRowCount/interval>=10)
 		{
 			interval = interval*10;
 		}
@@ -285,6 +290,7 @@ public class EbinFormatWriter {
 		}
 		arr(measure_values);
 		dict(dim_keys, dim_values);
+		successRowCount++;
 	}
 	
 	
@@ -375,9 +381,9 @@ public class EbinFormatWriter {
 	/*
 	public void addrow(String[] keys, String[] values, long[] measure_values)  throws IOException
 	{
-		nrows++;
+		totalRowCount++;
 		if (measure_values.length != measures.length) {
-			String message = "Row " + nrows + " contains an invalid number of measures, expected " + 
+			String message = "Row " + totalRowCount + " contains an invalid number of measures, expected " + 
 					measures.length + " measure(s), got " + measure_values.length + ".\n";
 			throw new IOException(message);
 		}
@@ -393,7 +399,7 @@ public class EbinFormatWriter {
 			out.close();
 		}
 		out = null;
-		if(nrows==0)
+		if(totalRowCount==0)
 		{
 			throw new IOException("Atleast one row must be written");
 		}
@@ -432,9 +438,13 @@ public class EbinFormatWriter {
 		  return true;	
 	}
 	
-	public long getNrows() {
-		return nrows;
+	public int getSuccessRowCount() {
+		return successRowCount;
 	}
 
-		
+
+	public int getTotalRowCount() {
+		return totalRowCount;
+	}
+
 }

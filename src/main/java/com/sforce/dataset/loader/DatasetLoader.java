@@ -49,6 +49,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -61,6 +63,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
+
+
+
 
 
 //import com.csvreader.CsvReader;
@@ -136,7 +141,10 @@ public class DatasetLoader {
 		boolean status = true;
 		long digestTime = 0L;
 		long uploadTime = 0L;
-		boolean isRecovery = false;
+		boolean isRecovery = false;        
+		//we only want a small capacity otherwise the reader thread will runaway and the writer thread will become slower
+		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(3);  
+
 
 		if(uploadFormat==null||uploadFormat.trim().isEmpty())
 			uploadFormat = "binary";
@@ -276,8 +284,12 @@ public class DatasetLoader {
 //				System.out.println("CodingErrorAction: "+codingErrorAction);
 				
 //				CsvReader reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction, inputFileCharset)));
-				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), CsvPreference.STANDARD_PREFERENCE);
-
+				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), CsvPreference.STANDARD_PREFERENCE);				
+				WriterThread writer = new WriterThread(q, w, ew);
+				Thread th = new Thread(writer);
+				th.setDaemon(true);
+				th.start();
+				
 				try
 				{
 //					if(reader.readHeaders())
@@ -296,23 +308,26 @@ public class DatasetLoader {
 						{
 							try
 							{
-//								hasmore = reader.readRecord();
 								row = reader.read();
-								if(row!=null)
+								if(row!=null && !writer.isDone())
 								{
 									totalRowCount++;
-									w.addrow(row.toArray(new String[row.size()]));
-									successRowCount = w.getNrows();
+									if(row.size()!=0 )
+									{
+										q.put(row.toArray(new String[row.size()]));
+//										w.addrow(row.toArray(new String[row.size()]));
+//										successRowCount = w.getNrows();
+									}
 								}else
 								{
 									hasmore = false;
 								}
 							}catch(Throwable t)
 							{
-								if(errorRowCount==0)
-								{
-									System.err.println();
-								}
+//								if(errorRowCount==0)
+//								{
+//									System.err.println();
+//								}
 								System.err.println("Row {"+totalRowCount+"} has error {"+t+"}");
 								if(t instanceof MalformedInputException)
 								{
@@ -321,18 +336,31 @@ public class DatasetLoader {
 									System.err.println("*******************************************************************************\n");								
 									status = false;
 									hasmore = false;
-								}else
-								{
-									if(row!=null)
-									{
-										ew.addError(row.toArray(new String[row.size()]), t.getMessage());
-										errorRowCount++;
-									}
+//								}else
+//								{
+//
+//									System.err.println("\n*******************************************************************************");
+//									System.err.println("t");
+//									System.err.println("*******************************************************************************\n");								
+//									status = false;
+//									hasmore = false;									
+//									if(row!=null)
+//									{
+//										ew.addError(row.toArray(new String[row.size()]), t.getMessage());
+//										errorRowCount++;
+//									}
 								}
 								//t.printStackTrace();
 							}
 						}//end while
+						while(!writer.isDone())
+						{
+							q.put(new String[0]);
+							Thread.sleep(1000);
+						}
 //					}
+						successRowCount = w.getSuccessRowCount();
+						errorRowCount = writer.getErrorRowCount();
 				}finally
 				{
 					reader.close();
