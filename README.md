@@ -2,12 +2,9 @@
 
 Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the Analytics cloud External data API. 
 
-## Building DatasetUtils
-    git clone git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git
-    mvn clean package
-
 
 ## Running DatasetUtils
+Just download the latest jar from release section (see link at the top) and follow the examples below:
 
     java -jar datasetutil-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
 
@@ -60,3 +57,8 @@ Input Parameter
 
 ## Usage Example 7: Detect inputFie encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
+
+
+## Building DatasetUtils
+    git clone git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git
+    mvn clean install
