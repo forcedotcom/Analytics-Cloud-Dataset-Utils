@@ -141,7 +141,7 @@ public class DatasetLoader {
 		boolean status = true;
 		long digestTime = 0L;
 		long uploadTime = 0L;
-		boolean isRecovery = false;        
+		boolean updateHdrJson = false;        
 		//we only want a small capacity otherwise the reader thread will runaway and the writer thread will become slower
 		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(3);  
 
@@ -236,6 +236,10 @@ public class DatasetLoader {
 			if(hdrId==null)
 			{
 				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, FileUtils.readFileToByteArray(metadataJson), uploadFormat, Operation);
+			}else
+			{
+				System.out.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
+				updateHdrJson = true;
 			}
 			if(hdrId ==null || hdrId.isEmpty())
 			{
@@ -465,14 +469,14 @@ public class DatasetLoader {
 			}else
 			{
 				System.out.println("Recovering process from last file {"+lastgzbinFile+"} upload");
-				isRecovery = true;
+				updateHdrJson = false; //The file is already digested, we cannot update the hdr now
 				gzbinFile = lastgzbinFile;
 			}
 			
 			//Upload the file			
 //			if(useSoapAPI)
 			long startTime = System.currentTimeMillis();
-			status = DatasetLoader.uploadEM(gzbinFile, uploadFormat, ExternalFileSchema.getSchemaFile(inputFile), datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", isRecovery);
+			status = uploadEM(gzbinFile, uploadFormat, ExternalFileSchema.getSchemaFile(inputFile), datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 				
@@ -516,7 +520,7 @@ public class DatasetLoader {
 	 * @return boolean status of the upload
 	 * @throws Exception
 	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, File metadataJson, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean isRecovery) throws Exception 
+	public static boolean uploadEM(File dataFile, String dataFormat, File metadataJson, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson) throws Exception 
 	{
 		byte[] metadataJsonBytes = null;
 		if(metadataJson != null && metadataJson.canRead())
@@ -524,7 +528,7 @@ public class DatasetLoader {
 		else
 			System.err.println("warning: metadata Json file {"+metadataJson+"} not found");			
 
-		return uploadEM(dataFile, dataFormat, metadataJsonBytes, datasetAlias, datasetFolder, useBulk, partnerConnection, hdrId, datasetArchiveDir, Operation, isRecovery);
+		return uploadEM(dataFile, dataFormat, metadataJsonBytes, datasetAlias, datasetFolder, useBulk, partnerConnection, hdrId, datasetArchiveDir, Operation, updateHdrJson);
 	}
 
 	/**
@@ -540,7 +544,7 @@ public class DatasetLoader {
 	 * @return boolean status of the upload
 	 * @throws Exception
 	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean isRecovery) throws Exception 
+	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson) throws Exception 
 	{
 		if(datasetAlias==null||datasetAlias.trim().isEmpty())
 		{
@@ -565,7 +569,8 @@ public class DatasetLoader {
 			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, metadataJsonBytes, dataFormat, Operation);
 		}else
 		{
-			if(isRecovery)
+			LinkedList<Integer> existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
+			if(updateHdrJson && existingFileParts.isEmpty())
 				updateFileHdr(partnerConnection, hdrId, datasetAlias, datasetFolder, metadataJsonBytes, dataFormat, "None", Operation);
 		}
 		
