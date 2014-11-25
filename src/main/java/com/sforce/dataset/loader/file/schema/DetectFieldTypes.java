@@ -35,6 +35,7 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -233,17 +234,15 @@ public class DetectFieldTypes {
 	    	return null;
 	    }
 	}
-
 	
-	
-	public SimpleDateFormat detectDate(LinkedList<String> columnValues) {
-
-	    Locale[] locales = Locale.getAvailableLocales();
+	public SimpleDateFormat detectDate(LinkedList<String> columnValues) 
+	{
 	    @SuppressWarnings("unused")
 		int failures = 0;
 	    int success = 0;
+	    
+		LinkedHashSet<SimpleDateFormat> dateFormats = getSuportedDateFormats();
 
-	    //Date dt = new Date(System.currentTimeMillis());
 	    for(int j=0;j<columnValues.size();j++)
 	    {
 	        String columnValue = columnValues.get(j);
@@ -254,84 +253,28 @@ public class DetectFieldTypes {
 	    	else
 	    		columnValue = columnValue.trim();
 
-		      for (int i = 0; i < locales.length; i++) 
+		      for (SimpleDateFormat sdf:dateFormats) 
 		      {
-		          if (locales[i].getCountry().length() == 0) {
-		        	  continue; // Skip language-only locales
-		          }	    	  
-
-		         //System.out.print(i + "| " + locales[i].getDisplayCountry()+ "| ");
-		          SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM,SimpleDateFormat.MEDIUM, locales[i]);
-		          dtf = new SimpleDateFormat(sdf.toPattern());
-		        dtf.setLenient(false);
 		         try
 		         {
-		        	 dt = dtf.parse(columnValue.trim());
-		        	 String tmpDate = dtf.format(dt);
-		        	 if(tmpDate.equalsIgnoreCase(columnValue))
+		        	 dt = sdf.parse(columnValue);
+		        	 String tmpDate = sdf.format(dt);
+		        	 if(tmpDate.length() == columnValue.length())
 		        	 {
-		        		 //System.out.println("Format:{"+dtf.toPattern()+"} value:{"+columnValue+"}");
+		        		 dtf = sdf;
 		        		 break;
 		        	 }else
 		        		 dt=null;
 		         }catch(Throwable t)
 		         {
+//				        if(dtf.toPattern().equals("MM/dd/yyyy hh:mm:ss a"))
+//				        {
+//							 System.out.println(i + "| " + locales[i].getDisplayCountry()+"| "+dtf.toPattern());
+//							 System.out.println(columnValue.trim());
+//							 t.printStackTrace();
+//				        }
 		         }
-		      }//end for-i
-
-		      if(dt==null)
-		      {
-				      for (int i = 0; i < additionalDatePatterns.length; i++) 
-				      {
-					         try
-					         {
-					        	 dtf = new SimpleDateFormat(additionalDatePatterns[i]);
-					        	 dtf.setLenient(false);
-					        	 dt = dtf.parse(columnValue.trim());
-					        	 String tmpDate = dtf.format(dt);
-					        	 if(tmpDate.equalsIgnoreCase(columnValue))
-					        	 {
-					        		 //System.out.println("Format:{"+dtf.toPattern()+"} value:{"+columnValue+"}");
-					        		 break;
-					        	 }else
-					        		 dt=null;
-					         }catch(Throwable t1)
-					         {
-					        	 
-					         }			    	  
-				      }
 		      }
-
-		      if(dt==null)
-		      {
-			      for (int i = 0; i < locales.length; i++) 
-			      {
-			          if (locales[i].getCountry().length() == 0) {
-			        	  continue; // Skip language-only locales
-			          }	    	  
-	
-			         //System.out.print(i + "| " + locales[i].getDisplayCountry()+ "| ");
-			         SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
-			          dtf = new SimpleDateFormat(sdf.toPattern());
-			         dtf.setLenient(false);
-			          //System.out.println(dtf.toPattern());
-			         try
-			         {
-			        	 dt = dtf.parse(columnValue.trim());
-			        	 String tmpDate = dtf.format(dt);
-			        	 if(tmpDate.equalsIgnoreCase(columnValue))
-			        	 {
-			        		 //System.out.println("Format:{"+dtf.toPattern()+"} value:{"+columnValue+"}");
-			        		 break;
-			        	 }else
-			        		 dt=null;
-			         }catch(Throwable t)
-			         {
-			         }
-			      }
-		      }
-		      
-	    	 
 
 	    	 if(dt!=null)
 	    	 {
@@ -344,9 +287,9 @@ public class DetectFieldTypes {
 	    		    		columnValue = columnValue.trim();
 	    		    	
 			        	 try {
-							Date dt1 = dtf.parse(columnValue.trim());
+							Date dt1 = dtf.parse(columnValue);
 				        	 String tmpDate = dtf.format(dt1);
-				        	 if(tmpDate.equalsIgnoreCase(columnValue))
+				        	 if(tmpDate.length() == columnValue.length())
 				        	 {
 				        		 success++;
 				        	 }
@@ -357,6 +300,9 @@ public class DetectFieldTypes {
 	    		    if((1.0*success/columnValues.size()) > 0.85)
 	    		    {
 	    		    	return dtf;
+	    		    }else
+	    		    {
+	    		    	dateFormats.remove(dtf); //lets not try this format again
 	    		    }
 	    	 }
 	    }
@@ -377,6 +323,43 @@ public class DetectFieldTypes {
 	    }
 	    return length;
 	}
+	
+	public LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
+	{
+		LinkedHashSet<SimpleDateFormat> dateFormats = new LinkedHashSet<SimpleDateFormat>();
+		Locale[] locales = Locale.getAvailableLocales();
+	    for (int i = 0; i < locales.length; i++) 
+	    {
+	        if (locales[i].getCountry().length() == 0) {
+	      	  continue; // Skip language-only locales
+	        }	    	  
+	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM,SimpleDateFormat.MEDIUM, locales[i]);
+	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+	    }
+
+	    for (int i = 0; i < additionalDatePatterns.length; i++) 
+	    {
+	         try
+	         {
+	        	 SimpleDateFormat sdf = new SimpleDateFormat(additionalDatePatterns[i]);
+	   	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+	         }catch(Throwable t1)
+	         {
+	        	 t1.printStackTrace();
+	         }			    	  
+	    }	    
+
+	    for (int i = 0; i < locales.length; i++) 
+	    {
+	        if (locales[i].getCountry().length() == 0) {
+	      	  continue; // Skip language-only locales
+	        }	    	  
+	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
+	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+	    }
+	    return dateFormats;
+    }
+
 	    
 
 
