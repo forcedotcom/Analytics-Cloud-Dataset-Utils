@@ -26,8 +26,16 @@
 package com.sforce.dataset.loader.file.schema;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
+
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -92,6 +100,19 @@ public class FieldType {
 	//public String acl = null; //Optional
 	//public boolean isAclField = false; //Optional
 	public int fiscalMonthOffset = 0;
+	public int firstDayOfWeek = 1; //1=SUNDAY, 2=MONDAY etc..
+	public boolean canTruncateValue = true; //Optional 
+	public boolean isSkipped = false; //Optional 
+	public String decimalSeparator = ".";
+	public int sortIndex = 0; //Index start at 1, 0 means not to sort
+	public boolean isSortAscending = true; //Optional  if index > 0 then will sort ascending if true
+	
+	public boolean isComputedField = false; //Optional  if this field is computed
+	public String computedFieldExpression = null; //Optional the expression to compute this field	
+	private transient CompiledScript compiledScript = null;
+	private transient SimpleDateFormat compiledDateFormat = null;
+	private transient Date defaultDate = null;
+	
 
 	public static FieldType GetStringKeyDataType(String name, String multivalueSeperator, String defaultValue)
 	{
@@ -142,29 +163,13 @@ public class FieldType {
 		kdt.setDescription(name);
 		return kdt;
 	}
-	/*
-	 * @date_format: Use the Java date format String as defined in http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
 
-		Letter	Date or Time Component	Presentation	Examples
-		G	Era designator	Text	AD
-		y	Year	Year	1996; 96
-		M	Month in year	Month	July; Jul; 07
-		w	Week in year	Number	27
-		W	Week in month	Number	2
-		D	Day in year	Number	189
-		d	Day in month	Number	10
-		F	Day of week in month	Number	2
-		E	Day in week	Text	Tuesday; Tue
-		a	Am/pm marker	Text	PM
-		H	Hour in day (0-23)	Number	0
-		k	Hour in day (1-24)	Number	24
-		K	Hour in am/pm (0-11)	Number	0
-		h	Hour in am/pm (1-12)	Number	12
-		m	Minute in hour	Number	30
-		s	Second in minute	Number	55
-		S	Millisecond	Number	978
-		z	Time zone	General time zone	Pacific Standard Time; PST; GMT-08:00
-		Z	Time zone	RFC 822 time zone	-0800
+	
+	/**
+	 * @param name the field name
+	 * @param format refer to Date format section in https://developer.salesforce.com/docs/atlas.en-us.bi_dev_guide_ext_data.meta/bi_dev_guide_ext_data/bi_ext_data_schema_reference.htm
+	 * @param defaultValue
+	 * @return
 	 */
 	public static FieldType GetDateKeyDataType(String name, String format, String defaultValue)
 	{
@@ -266,40 +271,35 @@ public class FieldType {
 	}
 
 	public String getFormat() {
-////		String temp = format;
-////		if(temp != null && (!temp.contains("'T'") && temp.contains("T")))
-////			temp = temp.replace("T", "'T'");
-////		if(temp != null && (!temp.contains("'Z'") && temp.contains("Z")))
-////			temp = temp.replace("Z", "'Z'");
-//		return switchFormat(format);
 		return format;
 	}
 
 	public void setFormat(String format) {
 		if(this.type.equals(FieldType.DATE_TYPE) && format != null)
 		{
-			new SimpleDateFormat(format);
-//			String temp = format;
-//			if(temp != null && (temp.contains("'T'")))
-//				temp = temp.replace("'T'", "T");
-//			if(temp != null && (temp.contains("'Z'")))
-//				temp = temp.replace("'Z'", "Z");
-			this.format = format;
+			compiledDateFormat = new SimpleDateFormat(format);
+			compiledDateFormat.setTimeZone(TimeZone.getTimeZone("GMT")); //All dates must be in GMT
+			if(this.defaultValue!=null && !this.defaultValue.isEmpty())
+			{
+				try {
+					this.defaultDate = compiledDateFormat.parse(this.defaultValue);
+				} catch (ParseException e) {
+					throw new IllegalArgumentException(e.toString());
+				}
+			}
 		}
+		this.format = format;
 	}
 	
-//	@JsonIgnore	
-//	public String switchFormat(String fmt) {
-//		if(fmt==null||fmt.isEmpty())
-//			fmt = format;
-//		String temp = fmt;
-//		if(temp != null && (!temp.contains("'T'") && temp.contains("T")))
-//			temp = temp.replace("T", "'T'");
-//		if(temp != null && (!temp.contains("'Z'") && temp.contains("Z")))
-//			temp = temp.replace("Z", "'Z'");
-//		return temp;
-//	}
+	@JsonIgnore
+	public SimpleDateFormat getCompiledDateFormat() {
+		return compiledDateFormat;
+	}
 
+	@JsonIgnore
+	public Date getDefaultDate() {
+		return defaultDate;
+	}
 
 	public String getMultiValueSeparator() {
 		return multiValueSeparator;
@@ -314,6 +314,17 @@ public class FieldType {
 	}
 
 	public void setDefaultValue(String defaultValue) {
+		if(this.type.equals(FieldType.DATE_TYPE) && compiledDateFormat != null)
+		{
+			if(defaultValue!=null && !defaultValue.isEmpty())
+			{
+				try {
+					this.defaultDate = compiledDateFormat.parse(defaultValue);
+				} catch (ParseException e) {
+					throw new IllegalArgumentException(e.toString());
+				}
+			}
+		}
 		this.defaultValue = defaultValue;
 	}
 
@@ -411,7 +422,35 @@ public class FieldType {
 		this.fiscalMonthOffset = fiscalMonthOffset;
 	}
 
+	public String getComputedFieldExpression() {
+		return computedFieldExpression;
+	}
 
+	public void setComputedFieldExpression(String computedFieldExpression) {
+		if(computedFieldExpression != null && computedFieldExpression.length()!=0)
+		{
+	        try
+	        {
+			    ScriptEngineManager mgr = new ScriptEngineManager();
+		        ScriptEngine jsEngine = mgr.getEngineByName("JavaScript");
+		        if (jsEngine instanceof Compilable)
+	            {
+	                Compilable compEngine = (Compilable)jsEngine;
+	                this.compiledScript = compEngine.compile(computedFieldExpression);
+	        		this.computedFieldExpression = computedFieldExpression;
+	            }
+	        } catch(Throwable t)
+	        {
+	        	throw new IllegalArgumentException(t.toString());
+	        }
+		}
+	}
+
+	@JsonIgnore
+	public CompiledScript getCompiledScript() {
+		return compiledScript;
+	}
+	
 
 	@Override
 	public int hashCode() {

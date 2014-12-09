@@ -267,6 +267,8 @@ public class ExternalFileSchema {
 								List<FieldType> fieldsCopy = new LinkedList<FieldType>(fields);
 								for(FieldType field:fieldsCopy)
 								{
+									if(field.isComputedField)
+										continue;
 									boolean found = false;
 									for (int i=0; i< devNames.length; i++) 
 									{
@@ -382,6 +384,14 @@ public class ExternalFileSchema {
 										message.append("[objects["+objectCount+"].fields["+fieldCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
 									}
 									
+									if(user_field.getfType()==FieldType.MEASURE)
+									{
+										if(user_field.getDefaultValue()==null|| !isLatinNumber(user_field.getDefaultValue()))
+										{
+											message.append("field fullyQualifiedName {"+user_field.fullyQualifiedName+"}  in schema must have default numeric value\n");
+										}
+									}
+									
 								}else
 								{
 									message.append("[objects["+objectCount+"].fields["+fieldCount+"].name] in schema cannot be null or empty\n");
@@ -479,6 +489,13 @@ public class ExternalFileSchema {
 							}
 							merged_fields.add(merged_field);
 						}
+
+						for(FieldType user_field:user_fields)
+						{
+							if(user_field.isComputedField)
+								merged_fields.add(user_field);
+						}
+						
 						merged_object.acl =  user_object.acl!=null?user_object.acl:auto_object.acl;
 						merged_object.connector =  user_object.connector!=null?user_object.connector:auto_object.connector;
 						merged_object.description =  user_object.description!=null?user_object.description:auto_object.description;
@@ -683,7 +700,22 @@ public class ExternalFileSchema {
 	    return (c >= '0' && c <= '9');
 	}
 
+	public static boolean isLatinNumber(String str) {
+		if (str == null) {
+			return false;
+		}
+		int sz = str.length();
+		if (sz == 0) {
+			return false;
+		}
 
+		for (int i = 0; i < sz; i++) {
+			char c = str.charAt(i);
+			if (!(c >= '0' && c <= '9'))
+				return false;
+		}
+		return true;
+	}
 
 	
 }

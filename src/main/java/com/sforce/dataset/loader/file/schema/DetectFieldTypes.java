@@ -161,9 +161,14 @@ public class DetectFieldTypes {
 						newField =  FieldType.GetStringKeyDataType(devNames[i], null, null);
 						int prec = detectTextPrecision(columnValues);
 						if(prec>255)
+						{
 							System.out.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)");
+						}
 						else
+						{
 							System.out.println(", Type: Text, Precison: "+prec);
+						}
+						newField.setPrecision(255); //Assume upper limit for precision of text fields even if the values may be smaller
 					}
 				}
 				if(newField!=null)

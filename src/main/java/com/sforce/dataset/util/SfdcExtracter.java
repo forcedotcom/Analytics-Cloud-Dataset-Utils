@@ -305,8 +305,8 @@ public class SfdcExtracter {
 					{
 						if(labels.containsKey(fld.getLabel()))
 						{
-							System.err.println("Skipping field {"+fld.getName()+"} as it has duplicate label matching field {"+labels.get(fld.getLabel())+"}");
-							continue;
+							System.err.println("field {"+fld.getName()+"} has duplicate label matching field {"+labels.get(fld.getLabel())+"}");
+//							continue;
 						}
 						labels.put(fld.getLabel(), fld.getName());
 						Map<String,String> temp = new LinkedHashMap<String,String>();

@@ -309,19 +309,19 @@ public class DataFlowUtil {
 
 		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url.replace("json", "start"), null,null);			
 		
-        HttpPut httpPatch = new HttpPut(patchURI);
+        HttpPut httput = new HttpPut(patchURI);
 //        httpPatch.addHeader("Accept", "*/*");
 //        httpPatch.addHeader("Content-Type", "application/json");
         
-		Map map = new LinkedHashMap();
-		map.put("_uid", df._uid);
-		ObjectMapper mapper = new ObjectMapper();			
-        StringEntity entity = new StringEntity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map), "UTF-8");        
-        entity.setContentType("application/json");
-        httpPatch.setConfig(requestConfig);
-        httpPatch.setEntity(entity);
-        httpPatch.addHeader("Authorization","OAuth "+sessionID);			
-		CloseableHttpResponse emresponse = httpClient.execute(httpPatch);
+//		Map map = new LinkedHashMap();
+//		map.put("_uid", df._uid);
+//		ObjectMapper mapper = new ObjectMapper();			
+//        StringEntity entity = new StringEntity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map), "UTF-8");        
+//        entity.setContentType("application/json");
+        httput.setConfig(requestConfig);
+//        httpPatch.setEntity(entity);
+        httput.addHeader("Authorization","OAuth "+sessionID);			
+		CloseableHttpResponse emresponse = httpClient.execute(httput);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
        if (statusCode != HttpStatus.SC_OK) {

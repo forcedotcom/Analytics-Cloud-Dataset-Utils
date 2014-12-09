@@ -55,6 +55,7 @@ import com.sforce.dataset.util.XmdUploader;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
+@SuppressWarnings("deprecation")
 public class DatasetUtilMain {
 	
 	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/31.0";
@@ -625,6 +626,7 @@ public class DatasetUtilMain {
 		System.out.println("--rowLimit: (Optional) the number of rows to extract, -1=all, deafult=1000");
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
+		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
 //		System.out.println("jsonConfig: (Optional) the dataflow definition json file");
 		System.out.println("*******************************************************************************\n");
 		System.out.println("Usage Example 1: Upload a csv to a dataset");

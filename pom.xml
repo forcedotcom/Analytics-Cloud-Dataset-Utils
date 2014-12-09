@@ -101,6 +101,11 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+                <groupId>com.google.code.externalsortinginjava</groupId>
+                <artifactId>externalsortinginjava</artifactId>
+                <version>0.1.9</version>
+        </dependency>
 	</dependencies>
 	<build>
 		<defaultGoal>clean install</defaultGoal>
@@ -206,6 +211,7 @@
 					<header>license.txt</header>
 					<excludes>
 						<exclude>src/test/resources/codegeneration/*.java</exclude>
+						<exclude>src/main/java/com/foundations/**/*.java</exclude>
 						<exclude>**/*.html</exclude>
 						<exclude>**/*.txt</exclude>
 						<exclude>**/*.xml</exclude>

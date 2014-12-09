@@ -41,8 +41,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.text.NumberFormat;
 import java.util.Arrays;
-//import java.util.HashMap;
-//import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -64,11 +63,6 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
-
-
-
-
-//import com.csvreader.CsvReader;
 import com.sforce.async.AsyncApiException;
 import com.sforce.async.BatchInfo;
 import com.sforce.async.BatchStateEnum;
@@ -80,6 +74,7 @@ import com.sforce.async.JobStateEnum;
 import com.sforce.async.OperationEnum;
 import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.loader.file.sort.CsvExternalSort;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.soap.partner.PartnerConnection;
@@ -92,7 +87,6 @@ import com.sforce.ws.ConnectorConfig;
 public class DatasetLoader {
 	
 
-//	private static final int DEFAULT_BUFFER_SIZE = 10*1024;
 	private static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
 	private static final int EOF = -1;
 	private static final char LF = '\n';
@@ -100,35 +94,16 @@ public class DatasetLoader {
 	private static final char QUOTE = '"';
 	private static final char COMMA = ',';
 
-//	String username = null;
-//	String password = null;
-//	String endpoint = null;
-//	String token = null;
-//	String sessionId = null;
 	
 	private static final String[] filePartsHdr = {"InsightsExternalDataId","PartNumber","DataFile"};
 	
 	private static final Pattern validChars = Pattern.compile("^[A-Za-z]+[A-Za-z\\d_]*$");
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+	private static int MAX_NUM_UPLOAD_THREADS = 3;
 
-//	public DatasetLoader()
-//	{
-//		super();
-//	}
-	
-	/*
-	public DatasetLoader(String username,String password, String token, String endpoint, String sessionId) throws Exception 
-	{
-		super();
-		this.username = username;
-		this.password = password;
-		this.token = token;
-		this.endpoint = endpoint;
-		this.sessionId = sessionId;
-	}
-	*/
 
+	@SuppressWarnings("deprecation")
 	public static boolean uploadDataset(String inputFileString,
 			String uploadFormat, CodingErrorAction codingErrorAction,
 			Charset inputFileCharset, String datasetAlias,
@@ -142,8 +117,8 @@ public class DatasetLoader {
 		long digestTime = 0L;
 		long uploadTime = 0L;
 		boolean updateHdrJson = false;        
-		//we only want a small capacity otherwise the reader thread will runaway and the writer thread will become slower
-		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(3);  
+		//we only want a small capacity otherwise the reader thread will runaway
+		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(10);  
 
 
 		if(uploadFormat==null||uploadFormat.trim().isEmpty())
@@ -165,14 +140,12 @@ public class DatasetLoader {
 			System.out.println("\n*******************************************************************************");					
 			if(FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
 			{			
-//				System.out.println("Detecting schema from csv file {"+ inputFile +"} ...");
 				schema = ExternalFileSchema.init(inputFile, inputFileCharset);
 				if(schema==null)
 				{
 					System.err.println("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile) +"}");
 					return false;
 				}
-//				System.out.println("Schema file {"+ ExternalFileSchema.getSchemaFile(inputFile) +"} successfully generated...");
 			}else
 			{
 				schema = ExternalFileSchema.load(inputFile, inputFileCharset);
@@ -181,7 +154,6 @@ public class DatasetLoader {
 					System.err.println("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile) +"}");
 					return false;
 				}
-//				System.out.println("Schema file {"+ ExternalFileSchema.getSchemaFile(inputFile) +"} successfully loaded...");
 			}
 			System.out.println("*******************************************************************************\n");					
 
@@ -225,17 +197,17 @@ public class DatasetLoader {
 			}
 			
 			//Insert header
-			File metadataJson = ExternalFileSchema.getSchemaFile(inputFile);
-			if(metadataJson == null || !metadataJson.canRead())
+			File metadataJsonFile = ExternalFileSchema.getSchemaFile(inputFile);
+			if(metadataJsonFile == null || !metadataJsonFile.canRead())
 			{
-				System.err.println("Error: metadata Json file {"+metadataJson+"} not found");		
+				System.err.println("Error: metadata Json file {"+metadataJsonFile+"} not found");		
 				return false;
 			}
 			
 			String hdrId = getLastIncompleteFileHdr(partnerConnection, datasetAlias);
 			if(hdrId==null)
 			{
-				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, FileUtils.readFileToByteArray(metadataJson), uploadFormat, Operation);
+				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, FileUtils.readFileToByteArray(metadataJsonFile), uploadFormat, Operation);
 			}else
 			{
 				System.out.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
@@ -247,6 +219,7 @@ public class DatasetLoader {
 				return false;
 			}
 			
+			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1);
 			
 //Create the Bin file
 //			File binFile = new File(csvFile.getParent(), datasetName + ".bin");
@@ -266,18 +239,19 @@ public class DatasetLoader {
 			{
 			if(uploadFormat.equalsIgnoreCase("binary") && FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
 			{	
-				GzipCompressorOutputStream out = null;
+				FileOutputStream fos = null;
+				BufferedOutputStream out = null;
 				BufferedOutputStream bos = null;
+				GzipCompressorOutputStream gzos = null;
 				try
 				{
 				gzbinFile = new File(inputFile.getParent(), hdrId + "." + FilenameUtils.getBaseName(inputFile.getName()) + ".gz");
 				GzipParameters gzipParams = new GzipParameters();
 				gzipParams.setFilename(FilenameUtils.getBaseName(inputFile.getName())  + ".bin");
-				bos = new BufferedOutputStream(new FileOutputStream(gzbinFile),DEFAULT_BUFFER_SIZE);
-				out = new GzipCompressorOutputStream(bos,gzipParams);
-//				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(gzbinFile));
-//				CSVReader reader = new CSVReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
-//				String[] header = reader.readNext();
+				fos = new FileOutputStream(gzbinFile);
+				bos = new BufferedOutputStream(fos,DEFAULT_BUFFER_SIZE);
+				gzos = new GzipCompressorOutputStream(bos,gzipParams);
+				out = new BufferedOutputStream(gzos,DEFAULT_BUFFER_SIZE);
 				long totalRowCount = 0;
 				long successRowCount = 0;
 				long errorRowCount = 0;
@@ -285,9 +259,6 @@ public class DatasetLoader {
 				EbinFormatWriter w = new EbinFormatWriter(out, schema.objects.get(0).fields.toArray(new FieldType[0]));
 				ErrorWriter ew = new ErrorWriter(inputFile,",");
 				
-//				System.out.println("CodingErrorAction: "+codingErrorAction);
-				
-//				CsvReader reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction, inputFileCharset)));
 				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), CsvPreference.STANDARD_PREFERENCE);				
 				WriterThread writer = new WriterThread(q, w, ew);
 				Thread th = new Thread(writer,"Writer-Thread");
@@ -296,13 +267,8 @@ public class DatasetLoader {
 				
 				try
 				{
-//					if(reader.readHeaders())
-//					{
 						@SuppressWarnings("unused")
-//						String[] header = reader.getHeaders();		
 						String[] header = reader.getHeader(true);		
-		//				String[] nextLine;
-		//				while ((nextLine = reader.readNext()) != null) {
 						boolean hasmore = true;
 						System.out.println("\n*******************************************************************************");					
 						System.out.println("File: "+inputFile+", being digested to file: "+gzbinFile);
@@ -319,8 +285,6 @@ public class DatasetLoader {
 									if(row.size()!=0 )
 									{
 										q.put(row.toArray(new String[row.size()]));
-//										w.addrow(row.toArray(new String[row.size()]));
-//										successRowCount = w.getNrows();
 									}
 								}else
 								{
@@ -335,50 +299,83 @@ public class DatasetLoader {
 								System.err.println("Row {"+totalRowCount+"} has error {"+t+"}");
 								if(t instanceof MalformedInputException)
 								{
+									while(!q.isEmpty())
+									{
+										try
+										{
+											Thread.sleep(1000);
+										}catch(InterruptedException in)
+										{
+											in.printStackTrace();
+										}
+									}
+									
 									while(!writer.isDone())
 									{
 										q.put(new String[0]);
-										Thread.sleep(1000);
+										try
+										{
+											Thread.sleep(1000);
+										}catch(InterruptedException in)
+										{
+											in.printStackTrace();
+										}
 									}
 									System.err.println("\n*******************************************************************************");
 									System.err.println("The input file is not utf8 encoded. Please save it as UTF8 file first");
 									System.err.println("*******************************************************************************\n");								
 									status = false;
 									hasmore = false;
-//								}else
-//								{
-//
-//									System.err.println("\n*******************************************************************************");
-//									System.err.println("t");
-//									System.err.println("*******************************************************************************\n");								
-//									status = false;
-//									hasmore = false;									
-//									if(row!=null)
-//									{
-//										ew.addError(row.toArray(new String[row.size()]), t.getMessage());
-//										errorRowCount++;
-//									}
 								}
-								//t.printStackTrace();
 							}
 						}//end while
+						while(!q.isEmpty())
+						{
+							try
+							{
+								System.out.println("1 Waiting for writer to finish");
+								Thread.sleep(1000);
+							}catch(InterruptedException in)
+							{
+								in.printStackTrace();
+							}
+						}
+						
 						while(!writer.isDone())
 						{
 							q.put(new String[0]);
-							Thread.sleep(1000);
+							try
+							{
+								System.out.println("2 Waiting for writer to finish");
+								Thread.sleep(1000);
+							}catch(InterruptedException in)
+							{
+								in.printStackTrace();
+							}
 						}
 //					}
-						successRowCount = w.getSuccessRowCount();
-						errorRowCount = writer.getErrorRowCount();
+					successRowCount = w.getSuccessRowCount();
+					errorRowCount = writer.getErrorRowCount();
 				}finally
 				{
-					reader.close();
-					w.finish();
-					ew.finish();
-					out.close();
-					bos.close();
+					if(reader!=null)
+						reader.close();
+					if(w!=null)
+						w.finish();
+					if(ew!=null)
+						ew.finish();
+					if(out!=null)
+						out.close();
+					if(gzos!=null)
+						gzos.close();
+					if(bos!=null)
+						bos.close();
+					if(fos!=null)
+						fos.close();
 					out = null;
+					gzos = null;
 					bos = null;
+					fos = null;
 				}
 				long endTime = System.currentTimeMillis();
 				digestTime = endTime-startTime;
@@ -391,7 +388,7 @@ public class DatasetLoader {
 					return false;
 				}
 				System.out.println("\n*******************************************************************************");									
-				System.out.println("Total Rows: "+totalRowCount+", Success Rows: "+successRowCount+", Eror Rows: "+errorRowCount);
+				System.out.println("Total Rows: "+nf.format(totalRowCount)+", Success Rows: "+nf.format(successRowCount)+", Eror Rows: "+nf.format(errorRowCount));
 				if(gzbinFile.length()>0)
 					System.out.println("File: "+inputFile+", Size {"+nf.format(inputFile.length())+"} compressed to file: "+gzbinFile+", Size {"+nf.format(gzbinFile.length())+"} % Compression: "+(inputFile.length()/gzbinFile.length())*100 +"%"+", Digest Time {"+nf.format(digestTime) + "} msecs");
 				System.out.println("*******************************************************************************\n");					
@@ -403,10 +400,24 @@ public class DatasetLoader {
 						} catch (IOException e) {
 						}
 					}
+					if (gzos != null) {
+						try {
+							gzos.close();
+							gzos = null;
+						} catch (IOException e) {
+						}
+					}
 					if (bos != null) {
 						try {
 							bos.close();
 							bos = null;
+						} catch (IOException e) {
+						}
+					}
+					if (fos != null) {
+						try {
+							fos.close();
+							fos = null;
 						} catch (IOException e) {
 						}
 					}
@@ -426,7 +437,7 @@ public class DatasetLoader {
 					IOUtils.copy(fis, gzOut);
 					long endTime = System.currentTimeMillis();
 					if(gzbinFile.length()>0)
-						System.out.println("File: "+inputFile+", Size {"+nf.format(inputFile.length())+"} compressed to file: "+gzbinFile+", Size {"+nf.format(gzbinFile.length())+"} % Compression: "+(inputFile.length()/gzbinFile.length())*100 +"%"+", Compression Time {"+nf.format((endTime-startTime)) + "} msecs");			
+						System.out.println(" Input File, Size {"+nf.format(inputFile.length())+"} compressed to gz file, Size {"+nf.format(gzbinFile.length())+"} % Compression: "+(inputFile.length()/gzbinFile.length())*100 +"%"+", Compression Time {"+nf.format((endTime-startTime)) + "} msecs");			
 				}finally
 				{
 					  if(gzOut!=null)
@@ -473,15 +484,10 @@ public class DatasetLoader {
 				gzbinFile = lastgzbinFile;
 			}
 			
-			//Upload the file			
-//			if(useSoapAPI)
 			long startTime = System.currentTimeMillis();
-			status = uploadEM(gzbinFile, uploadFormat, ExternalFileSchema.getSchemaFile(inputFile), datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson);
+			status = uploadEM(gzbinFile, uploadFormat, metadataJsonFile, datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
-				
-//			else
-//				status = DatasetUploader.uploadEM(gzbinFile, datasetAlias, username, password,endpoint,token, format);
 
 		} catch(MalformedInputException mie)
 		{
@@ -546,6 +552,9 @@ public class DatasetLoader {
 	 */
 	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson) throws Exception 
 	{
+		BlockingQueue<Map<Integer, File>> q = new LinkedBlockingQueue<Map<Integer, File>>(); 
+		LinkedList<Integer> existingFileParts = new LinkedList<Integer>();
+
 		if(datasetAlias==null||datasetAlias.trim().isEmpty())
 		{
 			throw new IllegalArgumentException("datasetAlias cannot be blank");
@@ -569,31 +578,111 @@ public class DatasetLoader {
 			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, metadataJsonBytes, dataFormat, Operation);
 		}else
 		{
-			LinkedList<Integer> existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
+			existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
 			if(updateHdrJson && existingFileParts.isEmpty())
 				updateFileHdr(partnerConnection, hdrId, datasetAlias, datasetFolder, metadataJsonBytes, dataFormat, "None", Operation);
 		}
 		
-		if(hdrId !=null && !hdrId.isEmpty())
-		{
-			Map<Integer, File> fileParts = chunkBinary(dataFile, datasetArchiveDir);
-			if(useBulk)
-			{
-					if(eu.insertFilePartsBulk(partnerConnection, hdrId, createBatchZip(fileParts, hdrId), 0))
-						return updateFileHdr(partnerConnection, hdrId, null, null, null, null, "Process", null);
-					else
-						return false;					
-			}else
-			{
-					if(eu.insertFileParts(partnerConnection, hdrId, fileParts, 0))
-						return updateFileHdr(partnerConnection, hdrId, null, null, null, null, "Process", null);
-					else
-						return false;
-			}
-		}else
+		if(hdrId ==null || hdrId.isEmpty())
 		{
 			return false;
 		}
+			Map<Integer, File> fileParts = chunkBinary(dataFile, datasetArchiveDir);
+			boolean allPartsUploaded = false;
+			int retryCount=0; 
+			int totalErrorCount = 0;
+			if(fileParts.size()<MAX_NUM_UPLOAD_THREADS)
+				MAX_NUM_UPLOAD_THREADS = 1; 
+			while(retryCount<3)
+			{
+				LinkedList<FilePartsUploaderThread> upThreads = new LinkedList<FilePartsUploaderThread>();
+				for(int i = 1;i<=MAX_NUM_UPLOAD_THREADS;i++)
+				{
+					FilePartsUploaderThread writer = new FilePartsUploaderThread(q, partnerConnection, hdrId);
+					Thread th = new Thread(writer,"FilePartsUploaderThread-"+i);
+					th.setDaemon(true);
+					th.start();
+					upThreads.add(writer);
+				}
+
+				if(useBulk)
+				{
+						if(eu.insertFilePartsBulk(partnerConnection, hdrId, createBatchZip(fileParts, hdrId), 0))
+							return updateFileHdr(partnerConnection, hdrId, null, null, null, null, "Process", null);
+						else
+							return false;					
+				}else
+				{
+					for(int i:fileParts.keySet())
+					{
+						if(!existingFileParts.contains(i))						
+						{	
+							HashMap<Integer, File> tmp = new HashMap<Integer, File>();
+							tmp.put(i,fileParts.get(i));
+							q.put(tmp);
+						}
+					}
+					while(!q.isEmpty())
+					{
+						try
+						{
+							Thread.sleep(1000);
+						}catch(InterruptedException in)
+						{
+							in.printStackTrace();
+						}
+					}
+				}
+				
+				for(int i = 0;i<MAX_NUM_UPLOAD_THREADS;i++)
+				{
+					FilePartsUploaderThread uploader = upThreads.get(i);
+					while(!uploader.isDone())
+					{
+						q.put(new HashMap<Integer, File>());
+						try
+						{
+							Thread.sleep(1000);
+						}catch(InterruptedException in)
+						{
+							in.printStackTrace();
+						}
+					}
+					totalErrorCount = totalErrorCount + uploader.getErrorRowCount();
+				}
+
+				allPartsUploaded = true;
+				existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
+				for(int i:fileParts.keySet())
+				{
+					if(!existingFileParts.contains(i))						
+					{	
+						allPartsUploaded = false;
+					}else
+					{
+						FileUtils.deleteQuietly(fileParts.get(i));
+					}
+				}
+				if(allPartsUploaded)
+					break;
+				retryCount++;
+			}
+
+				if(totalErrorCount==0 && allPartsUploaded)
+				{
+					return updateFileHdr(partnerConnection, hdrId, null, null, null, null, "Process", null);
+				}else
+				{
+					System.err.println("Not all file parts were uploaded to InsightsExternalDataPart, remaining files:");
+					for(int i:fileParts.keySet())
+					{
+						if(!existingFileParts.contains(i))						
+						{	
+							System.err.println(fileParts.get(i));
+						}
+					}
+					return false;
+				}
 	}
 
 	
@@ -652,6 +741,7 @@ public class DatasetLoader {
 		return rowId;
 	}
 
+	/*
 	private boolean insertFileParts(PartnerConnection partnerConnection, String insightsExternalDataId, Map<Integer,File> fileParts, int retryCount) throws Exception 
 	{
 		LinkedHashMap<Integer,File> failedFileParts = new LinkedHashMap<Integer,File>();
@@ -711,6 +801,7 @@ public class DatasetLoader {
 		}
 		return true;
 	}
+	*/
 
 	private boolean insertFilePartsBulk(PartnerConnection partnerConnection, String insightsExternalDataId, Map<Integer,File> fileParts, int retryCount) throws Exception 
 	{
@@ -962,13 +1053,13 @@ public class DatasetLoader {
 	
 	/**
 	 * This method will format the error message so that it can be logged by
-	 * INFA in the error csv file
+	 * in the error csv file
 	 * 
 	 * @param errors
 	 *            Array of com.sforce.soap.partner.Error[]
 	 * @return formated Error String
 	 */
-	private static String getErrorMessage(com.sforce.soap.partner.Error[] errors)
+	static String getErrorMessage(com.sforce.soap.partner.Error[] errors)
 	{
 		StringBuffer strBuf = new StringBuffer();
 		for(com.sforce.soap.partner.Error err:errors)
@@ -1300,7 +1391,6 @@ public class DatasetLoader {
 		return false;
 	}
 	
-	//SELECT Action,Id,Status FROM InsightsExternalData WHERE EdgemartAlias = 'puntest' AND Status = 'New' AND Action = 'None' ORDER BY CreatedDate ASC NULLS LAST
 
 	private static String getLastIncompleteFileHdr(PartnerConnection partnerConnection, String datasetAlias) throws Exception 
 	{
@@ -1342,11 +1432,9 @@ public class DatasetLoader {
 	private static LinkedList<Integer> getUploadedFileParts(PartnerConnection partnerConnection, String hdrId) throws Exception 
 	{
 		LinkedList<Integer> existingPartList = new LinkedList<Integer>();
-//		String rowId = null;
 		String soqlQuery = String.format("SELECT Id,PartNumber FROM InsightsExternalDataPart WHERE InsightsExternalDataId = '%s' ORDER BY PartNumber ASC",hdrId);
 		partnerConnection.setQueryOptions(2000);
 		QueryResult qr = partnerConnection.query(soqlQuery);
-//		int rowsSoFar = 0;
 		boolean done = false;
 		if (qr.getSize() > 0) 
 		{
@@ -1362,7 +1450,6 @@ public class DatasetLoader {
 							else
 								existingPartList.add(new Integer(value.toString()));
 						}
-//					rowsSoFar++;
 				}
 				if (qr.isDone()) {
 					done = true;

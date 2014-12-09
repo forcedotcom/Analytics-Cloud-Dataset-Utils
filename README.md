@@ -10,7 +10,7 @@ Just download the latest jar from release section (see link at the top) and foll
 
 Input Parameter
 
---action  :“load” OR “augment” OR “downloadxmd” OR “uploadxmd” OR "detectEncoding". Use load for loading csv, augment for augmenting existing datasets, downloadxmd to download existing xmd files, uploadxmd for uploading user.xmd.json, “extract” for extracting data from salesforce, "detectEncoding" to detect the encoding of the inputFile.
+--action  :"load"  OR "augment"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding". Use load for loading csv, augment for augmenting existing datasets, downloadxmd to download existing xmd files, uploadxmd for uploading user.xmd.json, "extract"  for extracting data from salesforce, "detectEncoding" to detect the encoding of the inputFile.
 
 --u       : Salesforce.com login
 
@@ -18,7 +18,7 @@ Input Parameter
 
 --token   : (Optional) Salesforce.com token
 
---endpoint: (Optional) The salesforce soap api endpoint (test/prod) Default: https://login.salesforce.com/services/Soap/u/31.0
+--endpoint: (Optional) The Salesforce soap api endpoint (test/prod) Default: https://login.salesforce.com/services/Soap/u/31.0
 
 --dataset : (Optional) the dataset alias. required if action=load
 
@@ -30,11 +30,14 @@ Input Parameter
 
 --rowLimit: (Optional) the number of rows to extract, -1=all, default=1000
 
---sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint
+--sessionId : (Optional) the Salesforce sessionId. if specified,specify endpoint
 
 --fileEncoding : (Optional) the encoding of the inputFile default UTF-8
 
 --CodingErrorAction:(optional) What to do in case input characters are not UTF8: IGNORE|REPORT|REPLACE. Default REPORT. If you change this option you risk importing garbage characters
+
+--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
+
 
 
 ## Usage Example 1: Only Generate the schema file from CSV
