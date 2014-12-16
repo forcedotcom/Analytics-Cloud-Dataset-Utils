@@ -23,27 +23,26 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.flow;
+package com.sforce.dataset;
 
-import java.util.Map;
+import java.nio.charset.CodingErrorAction;
 
-public class DataFlow {
-	
-	public String _type = null;
-	public Map<String,String> _lastModifiedBy;
-//    {
-//      String "_type"
-//      String "profilePhotoUrl"
-//      String "name" 
-//      String "_uid" 
-//    },
-	public String nextRun;
-	public String _url;
-	public String name;
-	public String MasterLabel;
-	public int RefreshFrequencySec;
-	public String _uid;
-	public String WorkflowType;
-    @SuppressWarnings("rawtypes")
-	public Map workflowDefinition;
+public class DatasetUtilParams {
+	String dataset = null;
+	String datasetLabel = null;
+	String app = null;
+	String username = null;
+	String password = null;
+	String token = null;
+	String sessionId = null;
+	String endpoint = null;
+	String inputFile = null;
+	String jsonConfig = null;
+	String rootObject = null;
+	String fileEncoding = null;
+	String uploadFormat = null;
+	String Operation = null;
+	int rowLimit = 0;
+	boolean useBulkAPI = false;
+	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 }

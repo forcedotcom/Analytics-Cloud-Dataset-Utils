@@ -25,6 +25,8 @@
  */
 package com.sforce.dataset.loader;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.concurrent.BlockingQueue;
  
 public class WriterThread implements Runnable {
@@ -32,48 +34,53 @@ public class WriterThread implements Runnable {
   private static final int max_error_threshhold = 10000;
 
   private final BlockingQueue<String[]> queue;
-  private final EbinFormatWriter w;
-  private final ErrorWriter ew;
+  @SuppressWarnings("deprecation")
+private final EbinFormatWriter ebinWriter;
+  private final ErrorWriter errorwriter;
+  private final PrintStream logger;
 
   private volatile boolean isDone = false;
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
 
 
-WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew) 
+@SuppressWarnings("deprecation")
+WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintStream logger) 
   { 
 	  if(q==null || w == null || ew == null)
 	  {
 		  throw new IllegalArgumentException("Constructor input cannot be null");
 	  }
 	  queue = q; 
-	  this.w = w;
-	  this.ew = ew;
+	  this.ebinWriter = w;
+	  this.errorwriter = ew;
+	  this.logger = logger;
   }
  
-  public void run() {
+  @SuppressWarnings("deprecation")
+public void run() {
+ 		logger.println("Start: " + Thread.currentThread().getName());
     try {
        String[] row = queue.take();
-   		System.out.println("Start: " + Thread.currentThread().getName());
        while (row != null && row.length!=0) {
 			try
 			{
 					totalRowCount++;
-					w.addrow(row);
+					ebinWriter.addrow(row);
 			}catch(Throwable t)
 			{
 				if(errorRowCount==0)
 				{
-					System.err.println();
+					logger.println();
 				}
-				System.err.println("Row {"+totalRowCount+"} has error {"+t+"}");
+				logger.println("Row {"+totalRowCount+"} has error {"+t+"}");
 				if(row!=null)
 				{
-					ew.addError(row, t.getMessage());
+					errorwriter.addError(row, t.getMessage());
 					errorRowCount++;
 					if(errorRowCount>=max_error_threshhold)
 					{
-						System.err.println("Max error threshold reached. Aborting processing");
+						logger.println("Max error threshold reached. Aborting processing");
 						break;
 					}
 				}
@@ -82,9 +89,19 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew)
          row = queue.take();
        }
     }catch (Throwable t) {
-       System.out.println (Thread.currentThread().getName() + " " + t.getMessage());
+       logger.println (Thread.currentThread().getName() + " " + t.getMessage());
     }
-	System.out.println("END: " + Thread.currentThread().getName());
+    try {
+		ebinWriter.finish();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+    try {
+    	errorwriter.finish();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+	logger.println("END: " + Thread.currentThread().getName());
     isDone = true;
   }
 

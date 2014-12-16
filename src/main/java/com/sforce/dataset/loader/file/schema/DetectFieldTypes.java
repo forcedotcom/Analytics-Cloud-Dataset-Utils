@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
@@ -56,7 +57,7 @@ public class DetectFieldTypes {
 	public static final String[] additionalDatePatterns ={"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss", "M/d/yy", "d/M/yy","M-d-yy", "d-M-yy"}; //
 	
 	
-	public LinkedList<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset) throws IOException
+	public LinkedList<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
 	{
 		CsvListReader reader = null;
 		LinkedList<FieldType> types = null;
@@ -109,14 +110,14 @@ public class DetectFieldTypes {
 				
 				if(first)
 				{
-					System.out.println("Detecting schema from csv file {"+ inputCsv +"} ...");
+					logger.println("Detecting schema from csv file {"+ inputCsv +"} ...");
 					first = false;
 				}
 
 				
 				LinkedList<String> columnValues = new LinkedList<String>();			
 				int rowCount = 0;
-				System.out.print("Column: "+ header[i]);
+				logger.print("Column: "+ header[i]);
 				try
 				{
 					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
@@ -148,25 +149,25 @@ public class DetectFieldTypes {
 				if(bd!=null)
 				{
 						newField = FieldType.GetMeasureKeyDataType(devNames[i], 0, bd.scale(), 0L);
-						System.out.println(", Type: Numeric, Scale: "+ bd.scale());
+						logger.println(", Type: Numeric, Scale: "+ bd.scale());
 				}else
 				{
 					SimpleDateFormat sdf = detectDate(columnValues);
 					if(sdf!= null)
 					{
 						newField =  FieldType.GetDateKeyDataType(devNames[i], sdf.toPattern(), null);
-						System.out.println(", Type: Date, Format: "+ sdf.toPattern());
+						logger.println(", Type: Date, Format: "+ sdf.toPattern());
 					}else
 					{
 						newField =  FieldType.GetStringKeyDataType(devNames[i], null, null);
 						int prec = detectTextPrecision(columnValues);
 						if(prec>255)
 						{
-							System.out.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)");
+							logger.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)");
 						}
 						else
 						{
-							System.out.println(", Type: Text, Precison: "+prec);
+							logger.println(", Type: Text, Precison: "+prec);
 						}
 						newField.setPrecision(255); //Assume upper limit for precision of text fields even if the values may be smaller
 					}
@@ -184,11 +185,11 @@ public class DetectFieldTypes {
 
 			if(!first)
 			{
-				System.out.println("Schema file {"+ ExternalFileSchema.getSchemaFile(inputCsv) +"} successfully generated...");
+				logger.println("Schema file {"+ ExternalFileSchema.getSchemaFile(inputCsv, logger) +"} successfully generated...");
 			}
 
 		} finally  {
-			System.out.println("");
+			logger.println("");
 			if(reader!=null)
 					reader.close();
 		}
@@ -215,7 +216,7 @@ public class DetectFieldTypes {
 	         try
 	         {
 	    		 bd = new BigDecimal(columnValue);
-	    		 //System.out.println("Value: {"+columnValue+"} Scale: {"+bd.scale()+"}");
+	    		 //logger.println("Value: {"+columnValue+"} Scale: {"+bd.scale()+"}");
 	    		 if(maxScale == null || bd.scale() > maxScale.scale())
 	    			 maxScale = bd;
 				success++;
@@ -274,8 +275,8 @@ public class DetectFieldTypes {
 		         {
 //				        if(dtf.toPattern().equals("MM/dd/yyyy hh:mm:ss a"))
 //				        {
-//							 System.out.println(i + "| " + locales[i].getDisplayCountry()+"| "+dtf.toPattern());
-//							 System.out.println(columnValue.trim());
+//							 logger.println(i + "| " + locales[i].getDisplayCountry()+"| "+dtf.toPattern());
+//							 logger.println(columnValue.trim());
 //							 t.printStackTrace();
 //				        }
 		         }

@@ -31,10 +31,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.text.DecimalFormat;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
@@ -43,14 +46,19 @@ import org.apache.commons.io.IOUtils;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.dataset.loader.EbinFormatWriter;
+import com.sforce.dataset.loader.file.listener.FileListener;
+import com.sforce.dataset.loader.file.listener.FileListenerThread;
+import com.sforce.dataset.loader.file.listener.FileListenerUtil;
 import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetAugmenter;
 import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.SfdcExtracter;
+import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.dataset.util.XmdUploader;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
@@ -58,58 +66,48 @@ import com.sforce.ws.ConnectionException;
 @SuppressWarnings("deprecation")
 public class DatasetUtilMain {
 	
-	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/31.0";
+	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/32.0";
+	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/32.0";
+	
+	public static final String[] validActions = {"load", "extract", "augment", "downloadXMD", "uploadXMD", "detectEncoding", "downloadErrorFile"};
 
 	public static void main(String[] args) {
 		
 		if(!printlneula())
 		{
-			System.err.println("You do not have permission to use this jar. Please delete it from this computer");
+			System.out.println("You do not have permission to use this jar. Please delete it from this computer");
 			System.exit(-1);
 		}
 
-		String dataset = null;
-		String datasetLabel = null;
-		String app = null;
-		String username = null;
-		String password = null;
-		String token = null;
-		String sessionId = null;
-		String endpoint = null;
+		DatasetUtilParams params = new DatasetUtilParams();
 		String action = null;
-		String inputFile = null;
-//		String jsonConfig = null;
-		String rootObject = null;
-		String fileEncoding = "UTF-8";
-		Charset fileCharset = null;
-		String uploadFormat = "binary";
-		String Operation = "Overwrite";
-		int rowLimit = 1000;
-		boolean useBulkAPI = false;
-		CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 				
 		if (args.length > 2) 
 		{
 			for (int i=1; i< args.length; i=i+2){
-				if(args[i-1].equalsIgnoreCase("--u"))
+				if(args[i-1].equalsIgnoreCase("--help") || args[i-1].equalsIgnoreCase("-help") || args[i-1].equalsIgnoreCase("help"))
 				{
-					username = args[i];
+					printUsage();
+				}
+				else if(args[i-1].equalsIgnoreCase("--u"))
+				{
+					params.username = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--p"))
 				{
-					password = args[i];
+					params.password = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--sessionId"))
 				{
-					sessionId = args[i];
+					params.sessionId = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--token"))
 				{
-					token = args[i];
+					params.token = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--endpoint"))
 				{
-					endpoint = args[i];
+					params.endpoint = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--action"))
 				{
@@ -117,30 +115,44 @@ public class DatasetUtilMain {
 				}
 				else if(args[i-1].equalsIgnoreCase("--inputFile"))
 				{
-					inputFile = args[i];
+					String tmp = args[i];
+					if(tmp!=null)
+					{
+					   File tempFile = new File (tmp);
+					   if(tempFile.exists())
+					   {
+						   params.inputFile =   tempFile.toString();
+					   }else
+					   {
+						   System.out.println("File {"+args[i]+"} does not exist");
+						   System.exit(-1);
+					   }
+					}
 				}
 				else if(args[i-1].equalsIgnoreCase("--dataset"))
 				{
-					dataset = args[i];
+					params.dataset = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--app"))
 				{
-					app = args[i];
+					params.app = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--useBulkAPI"))
 				{
 					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
-						useBulkAPI = true;
+						params.useBulkAPI = true;
 				}
 				else if(args[i-1].equalsIgnoreCase("--uploadFormat"))
 				{
 					if(args[i]!=null && args[i].trim().equalsIgnoreCase("csv"))
-						uploadFormat = "csv";
+						params.uploadFormat = "csv";
+					else if(args[i]!=null && args[i].trim().equalsIgnoreCase("binary"))
+						params.uploadFormat = "binary";
 				}
 				else if(args[i-1].equalsIgnoreCase("--rowLimit"))
 				{
 					if(args[i]!=null && !args[i].trim().isEmpty())
-						rowLimit = (new BigDecimal(args[i].trim())).intValue();
+						params.rowLimit = (new BigDecimal(args[i].trim())).intValue();
 				}
 //				else if(args[i-1].equalsIgnoreCase("--json"))
 //				{
@@ -148,11 +160,11 @@ public class DatasetUtilMain {
 //				}
 				else if(args[i-1].equalsIgnoreCase("--rootObject"))
 				{
-					rootObject = args[i];
+					params.rootObject = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--fileEncoding"))
 				{
-					fileEncoding = args[i];
+					params.fileEncoding = args[i];
 				}
 				else if(args[i-1].equalsIgnoreCase("--codingErrorAction"))
 				{
@@ -160,452 +172,158 @@ public class DatasetUtilMain {
 					{
 						if(args[i].equalsIgnoreCase("IGNORE"))
 						{
-							codingErrorAction = CodingErrorAction.IGNORE;
+							params.codingErrorAction = CodingErrorAction.IGNORE;
 						}else if(args[i].equalsIgnoreCase("REPORT"))
 						{
-							codingErrorAction = CodingErrorAction.REPORT;
+							params.codingErrorAction = CodingErrorAction.REPORT;
 						}else if(args[i].equalsIgnoreCase("REPLACE"))
 						{
-							codingErrorAction = CodingErrorAction.REPLACE;
+							params.codingErrorAction = CodingErrorAction.REPLACE;
 						}
 					}
 				}else
 				{
 					printUsage();
-					System.err.println("\nERROR: Invalid argument: "+args[i-1]);
+					System.out.println("\nERROR: Invalid argument: "+args[i-1]);
 					System.exit(-1);
 				}
-	
 			}//end for
-		}else
-		{
-			printUsage();
-			System.exit(-1);
-		}
-
-		if (action == null) 
-		{
-				printUsage();
-				System.err.println("\nERROR: action must be specified");
-				System.exit(-1);
-		}
-			
-		if(sessionId != null)
-		{
-			if(endpoint == null)
-			{
-				printUsage();
-				System.err.println("\nERROR: endpoint must be specified when sessionId is specified");
-				System.exit(-1);
-			}
-				
-				if(endpoint.equals(defaultEndpoint))
+				if(params.endpoint == null || params.endpoint.isEmpty())
 				{
-					printUsage();
-					System.err.println("\nERROR: endpoint must be the actual serviceURL and not the login url");
-					System.exit(-1);
-				}
-		}else
-		{
-				if(endpoint == null)
-				{
-					endpoint = defaultEndpoint;
+						params.endpoint = defaultEndpoint;
 				}
 		}
 		
-		if(endpoint!=null)
+		printBanner();
+
+
+		if(params.sessionId==null)
 		{
+			if(params.username == null || params.username.trim().isEmpty())
+			{
+				params.username = getInputFromUser("Enter salesforce username: ", true, false);						
+			}
+			
+			if(params.username.equals("-1"))
+			{
+				params.sessionId = getInputFromUser("Enter salesforce sessionId: ", true, false);
+				params.username = null;
+				params.password = null;
+			}else
+			{
+				if(params.password == null || params.password.trim().isEmpty())
+				{
+					params.password = getInputFromUser("Enter salesforce password: ", true, true);						
+				}
+			}
+		}
+		
+		
+		if(params.sessionId != null && !params.sessionId.isEmpty())
+		{
+			while(params.endpoint == null || params.endpoint.trim().isEmpty())
+			{
+				params.endpoint = getInputFromUser("Enter salesforce instance url: ", true, false);
+				if(params.endpoint==null || params.endpoint.trim().isEmpty())
+					System.out.println("\nERROR: endpoint must be specified when sessionId is specified");
+			}
+				
+			while(params.endpoint.toLowerCase().contains("login.salesforce.com") || params.endpoint.toLowerCase().contains("test.salesforce.com") || params.endpoint.toLowerCase().contains("test") || params.endpoint.toLowerCase().contains("prod") || params.endpoint.toLowerCase().contains("sandbox"))
+			{
+				System.out.println("\nERROR: endpoint must be the actual serviceURL and not the login url");
+				params.endpoint = getInputFromUser("Enter salesforce instance url: ", true, false);
+			}
+		}else
+		{
+			if(params.endpoint == null || params.endpoint.isEmpty())
+			{
+				params.endpoint = getInputFromUser("Enter salesforce instance url (default=prod): ", false, false);
+				if(params.endpoint == null || params.endpoint.trim().isEmpty())
+				{
+					params.endpoint = defaultEndpoint;
+				}
+			}
+		}
+		
 			try 
 			{
-				if(endpoint.equalsIgnoreCase("PROD") || endpoint.equalsIgnoreCase("PRODUCTION"))
+				if(params.endpoint.equalsIgnoreCase("PROD") || params.endpoint.equalsIgnoreCase("PRODUCTION"))
 				{
-					endpoint = defaultEndpoint;
-				}else if(endpoint.equalsIgnoreCase("TEST") || endpoint.equalsIgnoreCase("SANDBOX"))
+					params.endpoint = defaultEndpoint;
+				}else if(params.endpoint.equalsIgnoreCase("TEST") || params.endpoint.equalsIgnoreCase("SANDBOX"))
 				{
-					endpoint = defaultEndpoint.replace("login", "test");
+					params.endpoint = defaultEndpoint.replace("login", "test");
 				}
 				
-				URI uri = new URI(endpoint);
-				String scheme = uri.getScheme();
+				URL uri = new URL(params.endpoint);
+				String protocol = uri.getProtocol();
 				String host = uri.getHost();
-				if(!scheme.equalsIgnoreCase("https"))
+				if(protocol == null || !protocol.equalsIgnoreCase("https"))
 				{
-					if(!host.toLowerCase().endsWith("internal.salesforce.com") && !host.toLowerCase().endsWith("localhost"))
+					if(host == null || !host.toLowerCase().endsWith("internal.salesforce.com") && !host.toLowerCase().endsWith("localhost"))
 					{
-						System.err.println("\nERROR: UNSUPPORTED_CLIENT: HTTPS Required in endpoint");
+						System.out.println("\nERROR: Invalid endpoint. UNSUPPORTED_CLIENT: HTTPS Required in endpoint");
 						System.exit(-1);
 					}
 				}
 				
 				if(uri.getPath() == null || uri.getPath().isEmpty())
 				{
-					uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), "/services/Soap/u/31.0", uri.getQuery(), uri.getFragment()); 
+					uri = new URL(uri.getProtocol(), uri.getHost(), uri.getPort(), "/services/Soap/u/32.0"); 
 				}
-				endpoint = uri.toString();
-			} catch (URISyntaxException e) {
+				params.endpoint = uri.toString();
+			} catch (MalformedURLException e) {
 				e.printStackTrace();
-				System.err.println("\nERROR: endpoint is not a valid URL");
+				System.out.println("\nERROR: endpoint is not a valid URL");
 				System.exit(-1);
 			}
+
+		
+		PartnerConnection partnerConnection = null;
+		if(params.username!=null || params.sessionId != null)
+		{
+			try {
+				partnerConnection  = DatasetUtils.login(0, params.username, params.password, params.token, params.endpoint, params.sessionId);
+			} catch (ConnectionException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+		}
+
+		if(args.length==0)
+		{
+			System.out.println("\n*******************************************************************************");					
+			FileListenerUtil.startAllListener(partnerConnection);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+			System.out.println("*******************************************************************************\n");	
+			System.out.println();
+			while(true)
+			{
+				action = getActionFromUser();
+				if(action==null || action.isEmpty())
+				{
+					System.exit(-1);
+				}
+				params = new DatasetUtilParams();
+				getRequiredParams(action, partnerConnection, params);
+				boolean status = doAction(action, partnerConnection, params);
+				if(status)
+				{
+					if(action.equalsIgnoreCase("load"))
+						createListener(partnerConnection, params);
+				}
+			}
+		}else
+		{
+			doAction(action, partnerConnection, params);
 		}
 		
-		if (inputFile!=null) 
-		{
-			File temp = new File(inputFile);
-			if(!temp.exists() && !temp.canRead())
-			{
-				System.err.println("\nERROR: inputFile {"+temp+"} not found");
-				System.exit(-1);
-			}
-			
-			String ext = FilenameUtils.getExtension(temp.getName());
-			if(ext == null || !(ext.equalsIgnoreCase("csv") || ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz")  || ext.equalsIgnoreCase("json")))
-			{
-				System.err.println("\nERROR: inputFile does not have valid extension");
-				System.exit(-1);
-			}
-			
-			if(action.equalsIgnoreCase("load"))
-			{
-					byte[] binHeader = new byte[5];
-					if(ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz"))
-					{
-						try {
-							InputStream fis = new FileInputStream(temp);
-							if(ext.equalsIgnoreCase("gz"))
-								fis = new GzipCompressorInputStream(new FileInputStream(temp));
-							int cnt = fis.read(binHeader);
-							if(fis!=null)
-							{
-								IOUtils.closeQuietly(fis);
-							}
-							if(cnt<5)
-							{
-								System.err.println("\nERROR: inputFile {"+temp+"} in not valid");
-								System.exit(-1);
-							}
-						} catch (FileNotFoundException e) {
-							e.printStackTrace();
-							System.err.println("\nERROR: inputFile {"+temp+"} not found");
-							System.exit(-1);
-						} catch (IOException e) {
-							e.printStackTrace();
-							System.err.println("\nERROR: inputFile {"+temp+"} in not valid");
-							System.exit(-1);
-						}
-					
-						if(!EbinFormatWriter.isValidBin(binHeader))
-						{
-							if(ext.equalsIgnoreCase("bin"))
-							{
-								System.err.println("\nERROR: inputFile {"+temp+"} in not valid binary file");
-								System.exit(-1);
-							}else
-							{
-								uploadFormat = "csv"; //Assume the user is uploading a .gz csv
-							}
-						}
-					}
-			}
-			
-			if(ext.equalsIgnoreCase("json"))
-			{
-				try
-				{
-					ObjectMapper mapper = new ObjectMapper();	
-					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-					mapper.readValue(temp, Object.class);
-				}catch(Throwable t)
-				{
-					System.err.println("\nERROR: inputFile {"+temp+"} is not valid json, Error: " + t.getMessage());
-					System.exit(-1);
-				}
-			}
-					
-		}
-
-		if(dataset!=null)
-		{
-			datasetLabel = dataset;
-			dataset = ExternalFileSchema.createDevName(dataset, "Dataset", 1);
-			if(!dataset.equals(datasetLabel))
-			{
-				System.err.println("\n Warning: dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");
-				System.err.println("\n changing dataset name to: {"+dataset+"}");
-			}
-		}
-		
-		try
-		{
-			fileCharset = Charset.forName(fileEncoding);		
-		} catch (Throwable  e) {
-			e.printStackTrace();
-			System.err.println("\nERROR: Invalid fileEncoding {"+fileEncoding+"}");
-			System.exit(-1);
-		}
-			
-			if(action.equalsIgnoreCase("load"))
-			{
-				if (inputFile==null) 
-				{
-					printUsage();
-					System.err.println("\nERROR: inputFile must be specified");
-					System.exit(-1);
-				}
-				
-				if(dataset!=null && ((username == null) && (sessionId==null)))
-				{
-					printUsage();
-					System.err.println("\nERROR: username must be specified");
-					System.exit(-1);
-				}
-				
-				if(sessionId==null)
-				{
-					if((username != null) && dataset==null)
-					{
-						printUsage();
-						System.err.println("\nERROR: dataset must be specified");
-						System.exit(-1);
-					}
-					
-					if(dataset!=null && (password == null || password.isEmpty()))
-					{
-						try {
-							password = DatasetUtils.readPasswordFromConsole("Enter password: ");
-						} catch (IOException e) {
-						}						
-					}
-					
-					if(dataset!=null && (password == null || password.isEmpty()))
-					{
-						printUsage();
-						System.err.println("\nERROR: password must be specified");
-						System.exit(-1);
-					}
-				}else
-				{
-					if(dataset==null)
-					{
-						printUsage();
-						System.err.println("\nERROR: dataset must be specified");
-						System.exit(-1);
-					}
-				}
-				
-				PartnerConnection partnerConnection = null;
-				if(username!=null || sessionId != null)
-				{
-					try {
-						partnerConnection  = DatasetUtils.login(0, username, password, token, endpoint, sessionId);
-					} catch (ConnectionException e) {
-						e.printStackTrace();
-						System.exit(-1);
-					}
-				}
-				
-				try {
-					
-					DatasetLoader.uploadDataset(inputFile, uploadFormat, codingErrorAction, fileCharset, dataset, app, datasetLabel, Operation, useBulkAPI, partnerConnection);
-//						DatasetLoader.uploadDataset(inputFile, dataset, app, username, password, endpoint, token, sessionId, useBulkAPI, uploadFormat, codingErrorAction, fileCharset);
-				} catch (Exception e) {
-						System.err.println();
-						e.printStackTrace();
-						System.exit(-1);
-				}
-			} else if(action.equalsIgnoreCase("detectEncoding"))
-			{
-				if (inputFile==null) 
-				{
-					printUsage();
-					System.err.println("\nERROR: inputFile must be specified");
-					System.exit(-1);
-				}
-				
-				try {
-					CharsetChecker.detectCharset(new File(inputFile));
-				} catch (Exception e) {
-						e.printStackTrace();
-						System.exit(-1);
-				}
-			}else if(action.equalsIgnoreCase("uploadxmd"))
-				{
-					if (inputFile==null) 
-					{
-						printUsage();
-						System.err.println("\nERROR: inputFile must be specified");
-						System.exit(-1);
-					}
-					
-					if(dataset==null)
-					{
-						printUsage();
-						System.err.println("\nERROR: dataset must be specified");
-						System.exit(-1);
-					}else
-					{
-						
-					}
-
-					if(sessionId==null)
-					{
-						if(username == null)
-						{
-							printUsage();
-							System.err.println("\nERROR: username must be specified");
-							System.exit(-1);
-						}
-						
-						if(password == null || password.isEmpty())
-						{
-							try {
-								password = DatasetUtils.readPasswordFromConsole("Enter password: ");
-							} catch (IOException e) {
-							}						
-						}
-						
-						if(password == null || password.isEmpty())
-						{
-							printUsage();
-							System.err.println("\nERROR: password must be specified");
-							System.exit(-1);
-						}
-					}
-
-					try {
-						XmdUploader.uploadXmd(inputFile, dataset, username, password, endpoint, token, sessionId);
-					} catch (Exception e) {
-							e.printStackTrace();
-							System.exit(-1);
-					}
-			} else if(action.equalsIgnoreCase("downloadxmd"))
-			{
-				if (dataset==null) 
-				{
-					printUsage();
-					System.err.println("\nERROR: dataset alias must be specified");
-					System.exit(-1);
-				}
-
-				if(sessionId==null)
-				{
-					if(username == null)
-					{
-						printUsage();
-						System.err.println("\nERROR: username must be specified");
-						System.exit(-1);
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						try {
-							password = DatasetUtils.readPasswordFromConsole("Enter password: ");
-						} catch (IOException e) {
-						}						
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						printUsage();
-						System.err.println("\nERROR: password must be specified");
-						System.exit(-1);
-					}
-				}
-				
-				try {
-					DatasetDownloader.downloadEM(dataset, username, password, endpoint, token, sessionId);
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(-1);
-				}
-			}else if(action.equalsIgnoreCase("augment"))
-			{
-				if(sessionId==null)
-				{
-					if(username == null)
-					{
-						printUsage();
-						System.err.println("\nERROR: username must be specified");
-						System.exit(-1);
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						try {
-							password = DatasetUtils.readPasswordFromConsole("Enter password: ");
-						} catch (IOException e) {
-						}						
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						printUsage();
-						System.err.println("\nERROR: password must be specified");
-						System.exit(-1);
-					}
-				}
-				
-				try {
-					DatasetAugmenter.augmentEM(username, password, endpoint, token, sessionId);
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(-1);
-				}
-			}else if(action.equalsIgnoreCase("extract"))
-			{
-				if(rootObject==null)
-				{
-					printUsage();
-					System.err.println("\nERROR: rootObject must be specified");
-					System.exit(-1);
-				}
-
-//				if(dataset==null)
-//				{
-//					System.err.println("\nERROR: dataset must be specified");
-//					printUsage();
-//					System.exit(-1);
-//				}
-				
-				if(sessionId==null)
-				{
-					if(username == null)
-					{
-						printUsage();
-						System.err.println("\nERROR: username must be specified");
-						System.exit(-1);
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						try {
-							password = DatasetUtils.readPasswordFromConsole("Enter password: ");
-						} catch (IOException e) {
-						}						
-					}
-					
-					if(password == null || password.isEmpty())
-					{
-						printUsage();
-						System.err.println("\nERROR: password must be specified");
-						System.exit(-1);
-					}
-				}
-				
-				try{
-					SfdcExtracter.extract(rootObject,dataset, username, password, token, endpoint, sessionId, rowLimit);
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(-1);
-				}
-			}else
-			{
-				printUsage();
-				System.err.println("\nERROR: Invalid action {"+action+"}");
-				System.exit(-1);
-			}
 	}
-	
+
+
 	public static void printUsage()
 	{
 		System.out.println("\n*******************************************************************************");					
@@ -707,5 +425,521 @@ public class DatasetUtilMain {
  +"* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE \n"
  +"* POSSIBILITY OF SUCH DAMAGE. \n"
  +"*/\n";
+	
+	public static String getInputFromUser(String message, boolean isRequired, boolean isPassword)
+	{
+		String input = null;
+		while(true)
+		{
+			try
+			{
+				if(!isPassword)
+					input = DatasetUtils.readInputFromConsole(message);
+				else
+					input = DatasetUtils.readPasswordFromConsole(message);
+				
+				if(input==null || input.isEmpty())
+				{
+					if(!isRequired)
+						break;
+				}else
+				{
+					break;
+				}
+			}catch(Throwable me)
+			{				
+				input = null;
+			}
+		}
+		return input;
+	}
+	
+	public static String getActionFromUser()
+	{
+		System.out.println();
+		String selectedAction = "load";
+			int cnt=1;
+		    DecimalFormat df = new DecimalFormat("00");
+		    df.setMinimumIntegerDigits(2);
+			for(String action:validActions)
+			{
+				if(cnt==1)
+					System.out.println("Available Datasetutil Actions: ");
+				System.out.print(" ");
+				System.out.println(DatasetUtils.padLeft(cnt+"",3)+". "+action);
+				cnt++;
+			}
+			System.out.println();
+	
+			while(true)
+			{
+				try
+				{
+					String tmp = DatasetUtils.readInputFromConsole("Enter Action number (0  = Exit): ");
+					if(tmp==null)
+						return null;
+					if(tmp.trim().isEmpty())
+						continue;
+					long choice = Long.parseLong(tmp.trim());
+					if(choice==0)
+						return null; 
+					cnt = 1;
+					if(choice>0 && choice <= validActions.length)
+					{
+						for(String action:validActions)
+						{
+							if(cnt==choice)
+							{
+								selectedAction = action;
+								return selectedAction;
+							}
+							cnt++;
+						}
+					}
+				}catch(Throwable me)
+				{				
+				}
+			}
+		}
+	
+	public static boolean doAction(String action, PartnerConnection partnerConnection, DatasetUtilParams params)
+	{
+		
+		if (params.inputFile!=null) 
+		{
+			   File tempFile = validateInputFile(params.inputFile, action);
+			   if(tempFile == null)
+			   {
+				   System.out.println("Inputfile {"+params.inputFile+"} is not valid");
+				   return false;
+			   }
+		}
+
+		if(params.dataset!=null && !params.dataset.isEmpty())
+		{
+			params.datasetLabel = params.dataset;
+			params.dataset = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1);
+			if(!params.dataset.equals(params.datasetLabel))
+			{
+				System.out.println("\n Warning: dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");
+				System.out.println("\n changing dataset name to: {"+params.dataset+"}");
+			}
+		}
+		
+		Charset fileCharset = null;
+		try
+		{
+			if(params.fileEncoding!=null && !params.fileEncoding.trim().isEmpty())
+				fileCharset = Charset.forName(params.fileEncoding);
+			else
+				fileCharset = Charset.forName("UTF-8");
+		} catch (Throwable  e) {
+			e.printStackTrace();
+			System.out.println("\nERROR: Invalid fileEncoding {"+params.fileEncoding+"}");
+			return false;
+		}
+			
+			if(action.equalsIgnoreCase("load"))
+			{
+				if (params.inputFile==null || params.inputFile.isEmpty()) 
+				{
+					System.out.println("\nERROR: inputFile must be specified");
+					return false;
+				}
+				
+				if (params.dataset==null || params.dataset.isEmpty()) 
+				{
+					System.out.println("\nERROR: dataset name must be specified");
+					return false;
+				}
+				
+				try {
+					return DatasetLoader.uploadDataset(params.inputFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, System.out);
+				} catch (Exception e) {
+						System.out.println();
+						e.printStackTrace();
+						return false;
+				}
+			} else if(action.equalsIgnoreCase("detectEncoding"))
+			{
+				if (params.inputFile==null) 
+				{
+					System.out.println("\nERROR: inputFile must be specified");
+					return false;
+				}
+				
+				try {
+					CharsetChecker.detectCharset(new File(params.inputFile));
+				} catch (Exception e) {
+						e.printStackTrace();
+						return false;
+				}
+			}else if(action.equalsIgnoreCase("uploadxmd"))
+				{
+					if (params.inputFile==null) 
+					{
+						System.out.println("\nERROR: inputFile must be specified");
+						return false;
+					}
+					
+					if(params.dataset==null)
+					{
+						System.out.println("\nERROR: dataset must be specified");
+						return false;
+					}
+
+
+					try {
+						XmdUploader.uploadXmd(params.inputFile, params.dataset, partnerConnection);
+					} catch (Exception e) {
+							e.printStackTrace();
+							return false;
+					}
+			} else if(action.equalsIgnoreCase("downloadxmd"))
+			{
+				if (params.dataset==null) 
+				{
+					System.out.println("\nERROR: dataset alias must be specified");
+					return false;
+				}
+				
+				try {
+					DatasetDownloader.downloadEM(params.dataset, partnerConnection);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			}else if(action.equalsIgnoreCase("augment"))
+			{
+				
+				try {
+					DatasetAugmenter.augmentEM(partnerConnection);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			}else if(action.equalsIgnoreCase("extract"))
+			{
+				if(params.rootObject==null)
+				{
+					System.out.println("\nERROR: rootObject must be specified");
+					return false;
+				}
+				
+				try{
+					SfdcExtracter.extract(params.rootObject,params.dataset, partnerConnection, params.rowLimit);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			}else if(action.equalsIgnoreCase("downloadErrorFile"))
+			{
+				if (params.dataset==null) 
+				{
+					System.out.println("\nERROR: dataset alias must be specified");
+					return false;
+				}
+
+				try {
+					DataFlowMonitorUtil.getJobsAndErrorFiles(partnerConnection, params.dataset);
+				} catch (Exception e) {
+						System.out.println();
+						e.printStackTrace();
+						return false;
+				}
+				
+			}else
+			{
+				printUsage();
+				System.out.println("\nERROR: Invalid action {"+action+"}");
+				return false;
+			}
+			return true;
+	}
+	
+	
+	public static void getRequiredParams(String action,PartnerConnection partnerConnection, DatasetUtilParams params)
+	{
+		if (action == null || action.trim().isEmpty())
+		{
+				System.out.println("\nERROR: Invalid action {"+action+"}");
+				System.out.println();
+				return;
+		}else
+		if(action.equalsIgnoreCase("load"))
+		{
+			while (params.inputFile==null || params.inputFile.isEmpty()) 
+			{
+				String tmp = getInputFromUser("Enter inputFile: ", true, false);
+				if(tmp!=null)
+				{
+					   File tempFile = validateInputFile(tmp, action);
+					   if(tempFile !=null)
+					   {
+						   params.inputFile =   tempFile.toString();
+						   break;
+					   }
+				}else 
+				 System.out.println("File {"+tmp+"} not found");
+				System.out.println();
+			}
+
+			if (params.dataset==null || params.dataset.isEmpty()) 
+			{
+				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
+			}
+
+			if (params.datasetLabel==null || params.datasetLabel.isEmpty()) 
+			{
+				params.datasetLabel = getInputFromUser("Enter datasetLabel (Optional): ", false, false);						
+			}
+
+			if (params.app==null || params.app.isEmpty()) 
+			{
+				params.app = getInputFromUser("Enter datasetFolder (Optional): ", false, false);
+				if(params.app != null && params.app.isEmpty())
+					params.app = null;
+			}
+
+			if (params.fileEncoding==null || params.fileEncoding.isEmpty()) 
+			{
+				while(true)
+				{
+					params.fileEncoding = getInputFromUser("Enter fileEncoding (default=UTF-8): ", false, false);
+					if(params.fileEncoding == null || params.fileEncoding.trim().isEmpty())
+						params.fileEncoding = "UTF-8";
+					try
+					{
+						Charset.forName(params.fileEncoding);
+						break;
+					} catch (Throwable  e) {
+					}
+					System.out.println("\nERROR: Invalid fileEncoding {"+params.fileEncoding+"}");
+					System.out.println();
+				}
+			}
+
+			while (params.uploadFormat==null || params.uploadFormat.isEmpty()) 
+			{
+				params.uploadFormat = getInputFromUser("Enter uploadFormat (csv or binary) (default=binary): ", false, false);						
+				if(params.uploadFormat == null || params.uploadFormat.trim().isEmpty())
+					params.uploadFormat = "binary";
+				if(!params.uploadFormat.equalsIgnoreCase("csv") && !params.uploadFormat.equalsIgnoreCase("binary"))
+				{
+					System.out.println("Invalid upload format {"+params.uploadFormat+"}");
+				}else
+				{
+					break;
+				}
+				System.out.println();
+			}
+			
+		}else if(action.equalsIgnoreCase("downloadErrorFile"))
+		{
+			if (params.dataset==null || params.dataset.isEmpty()) 
+			{
+				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
+			}
+			
+		} else if(action.equalsIgnoreCase("detectEncoding"))
+		{
+			while (params.inputFile==null || params.inputFile.isEmpty()) 
+			{
+				String tmp = getInputFromUser("Enter inputFile: ", true, false);
+				if(tmp!=null)
+				{
+					   File tempFile = validateInputFile(tmp, action);
+					   if(tempFile !=null)
+					   {
+						   params.inputFile =   tempFile.toString();
+						   break;
+					   }
+				} else
+					System.out.println("File {"+tmp+"} not found");
+				System.out.println();
+			}
+				
+		}else if(action.equalsIgnoreCase("uploadxmd"))
+		{
+			while (params.inputFile==null || params.inputFile.isEmpty()) 
+			{
+				String tmp = getInputFromUser("Enter inputFile: ", true, false);
+				if(tmp!=null)
+				{
+				   File tempFile = validateInputFile(tmp, action);
+				   if(tempFile !=null)
+				   {
+					   params.inputFile =   tempFile.toString();
+					   break;
+				   }
+				}else
+					System.out.println("File {"+tmp+"} not found");
+				System.out.println();
+			}
+
+			if (params.dataset==null || params.dataset.isEmpty()) 
+			{
+				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
+			}
+		} else if(action.equalsIgnoreCase("downloadxmd"))
+		{
+			if (params.dataset==null || params.dataset.isEmpty()) 
+			{
+				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
+			}
+		}else if(action.equalsIgnoreCase("augment"))
+		{
+				
+		}else if(action.equalsIgnoreCase("extract"))
+		{
+			while (params.rootObject==null || params.rootObject.isEmpty()) 
+			{
+				String tmp = getInputFromUser("Enter root SObject name for Extract: ", true, false);
+				Map<String, String> objectList = null;
+				try {
+					objectList = SfdcUtils.getObjectList(partnerConnection, Pattern.compile("\\b"+tmp+"\\b"), false);
+				} catch (ConnectionException e) {
+				}
+				if(objectList==null || objectList.size()==0)
+				{
+					System.out.println("\nError: Object {"+tmp+"} not found");
+					System.out.println();
+				}else
+				{
+					params.rootObject = tmp;
+					break;
+				}
+			}
+				
+		}else if(action.equalsIgnoreCase("downloadErrorFile"))
+		{
+			if (params.dataset==null || params.dataset.isEmpty()) 
+			{
+				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
+			}
+		}else
+		{
+				printUsage();
+				System.out.println("\nERROR: Invalid action {"+action+"}");
+		}
+	}
+	
+	public static File validateInputFile(String inputFile, String action)
+	{
+		File temp = null;
+		if (inputFile!=null) 
+		{
+			temp = new File(inputFile);
+			if(!temp.exists() && !temp.canRead())
+			{
+				System.out.println("\nERROR: inputFile {"+temp+"} not found");
+				return null;
+			}
+			
+			String ext = FilenameUtils.getExtension(temp.getName());
+			if(ext == null || !(ext.equalsIgnoreCase("csv") || ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz")  || ext.equalsIgnoreCase("json")))
+			{
+				System.out.println("\nERROR: inputFile does not have valid extension");
+				return null;
+			}
+			
+			if(action.equalsIgnoreCase("load"))
+			{
+					byte[] binHeader = new byte[5];
+					if(ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz"))
+					{
+						try {
+							InputStream fis = new FileInputStream(temp);
+							if(ext.equalsIgnoreCase("gz"))
+								fis = new GzipCompressorInputStream(new FileInputStream(temp));
+							int cnt = fis.read(binHeader);
+							if(fis!=null)
+							{
+								IOUtils.closeQuietly(fis);
+							}
+							if(cnt<5)
+							{
+								System.out.println("\nERROR: inputFile {"+temp+"} in not valid");
+								return null;
+							}
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+							System.out.println("\nERROR: inputFile {"+temp+"} not found");
+							return null;
+						} catch (IOException e) {
+							e.printStackTrace();
+							System.out.println("\nERROR: inputFile {"+temp+"} in not valid");
+							return null;
+						}
+					
+						if(!EbinFormatWriter.isValidBin(binHeader))
+						{
+							if(ext.equalsIgnoreCase("bin"))
+							{
+								System.out.println("\nERROR: inputFile {"+temp+"} in not valid binary file");
+								return null;
+							}
+						}
+					}
+			}
+			
+			if(ext.equalsIgnoreCase("json"))
+			{
+				try
+				{
+					ObjectMapper mapper = new ObjectMapper();	
+					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+					mapper.readValue(temp, Object.class);
+				}catch(Throwable t)
+				{
+					System.out.println("\nERROR: inputFile {"+temp+"} is not valid json, Error: " + t.getMessage());
+					return null;
+				}
+			}
+					
+		}
+		return temp;
+		
+	}
+	
+
+	private static void createListener(PartnerConnection partnerConnection,
+			DatasetUtilParams params) {
+		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);
+		if(response!=null && (response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("yes")))
+		{
+			FileListener fileListener = new FileListener();
+			fileListener.setApp(params.app);
+			fileListener.setCea(params.codingErrorAction);
+			fileListener.setDataset(params.dataset);
+			fileListener.setDatasetLabel(params.datasetLabel);
+			fileListener.setFilecharset(params.fileEncoding);
+			fileListener.setInputFileDirectory(params.inputFile);
+//			fileListener.setInputFilePattern(inputFilePattern);
+			fileListener.setOperation(params.Operation);
+			fileListener.setUploadFormat(params.uploadFormat);
+			fileListener.setUseBulkAPI(params.useBulkAPI);
+//			fileListener.setFileAge(fileAge);
+//			fileListener.setPollingInterval();
+			try {
+				FileListenerThread.moveInputFile(new File(params.inputFile), System.currentTimeMillis(), true);
+				FileListenerUtil.addAndStartListener(fileListener, partnerConnection);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	
+	public static void printBanner()
+	{
+		for(int i=0;i<5;i++)
+			System.out.println();
+		System.out.println("\n\t\t****************************************");
+		System.out.println("\t\tSalesforce Analytics Cloud Dataset Utils");
+		System.out.println("\t\t****************************************\n");					
+	}
+	
+
 			
 }

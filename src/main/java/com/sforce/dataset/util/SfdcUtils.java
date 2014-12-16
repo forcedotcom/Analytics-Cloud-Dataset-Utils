@@ -155,7 +155,7 @@ public class SfdcUtils {
 
 				if(excludedObjects.contains(sObjectResult.getName()))
 				{
-//					System.err.println("Skipping object {"+sObjectResult.getName()+"}");
+//					System.out.println("Skipping object {"+sObjectResult.getName()+"}");
 					continue;
 				}
 
@@ -229,7 +229,7 @@ public class SfdcUtils {
 //
 						if(excludedObjects.contains(relatedSObjectType))
 						{
-							System.err.println("Skipping object {"+relatedSObjectType+"}");
+							System.out.println("Skipping object {"+relatedSObjectType+"}");
 							continue;
 						}
 
@@ -318,7 +318,7 @@ public class SfdcUtils {
 					
 					if(labels.containsKey(field.getLabel()))
 					{
-						System.err.println("{"+field.getName()+"} has duplicate label matching field {"+labels.get(field.getLabel()).getName()+"}");
+						System.out.println("{"+field.getName()+"} has duplicate label matching field {"+labels.get(field.getLabel()).getName()+"}");
 //						continue;
 					}
 					
@@ -355,7 +355,7 @@ public class SfdcUtils {
 					// Set the Business Name (Name used in UI)
 					if(bField==null)
 					{
-						System.err.println("field: "+ field);
+						System.out.println("field: "+ field);
 					}
 					bField.setLabel(field.getLabel());
 					
@@ -393,14 +393,13 @@ public class SfdcUtils {
 	 * @param pagesize
 	 * @param dataDir
 	 * @return
-	 * @throws ReflectiveOperationException
 	 * @throws ConnectionException
 	 * @throws UnsupportedEncodingException
 	 */
 	public static boolean read(PartnerConnection partnerConnection,String recordInfo,
 			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList,
 			long pagesize, File dataDir) throws 
-			ReflectiveOperationException, ConnectionException, UnsupportedEncodingException, IOException
+		ConnectionException, UnsupportedEncodingException, IOException
 			 {
 			// These debug statements should help you understand what is being
 			// passed back to your calls. You can comment these out if you like
@@ -431,7 +430,7 @@ public class SfdcUtils {
 						bos = null;
 					}catch(Throwable t)
 					{	
-//						System.err.println(t.getMessage());
+//						System.out.println(t.getMessage());
 						canWrite = false;
 						DatasetUtils.readInputFromConsole("file {"+csvFile+"} is open in excel please close it first, press enter when done: ");
 					}
@@ -661,7 +660,7 @@ public class SfdcUtils {
 			
 			if((soql.length()+(", " + field.name).length())>(20000-varLen))
 			{
-				System.err.println("Too many fields in object {"+topLevelSObjectName+"} truncating query to 20,000 chars");
+				System.out.println("Too many fields in object {"+topLevelSObjectName+"} truncating query to 20,000 chars");
 				break;
 			}
 

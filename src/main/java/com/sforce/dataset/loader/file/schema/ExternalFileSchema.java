@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -90,27 +91,27 @@ public class ExternalFileSchema {
 		return true;
 	}
 	
-	public static ExternalFileSchema init(File csvFile, Charset fileCharset) throws JsonParseException, JsonMappingException, IOException
+	public static ExternalFileSchema init(File csvFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
 	{
 		ExternalFileSchema newSchema = null;
 		//try 
 		//{
-			ExternalFileSchema userSchema = ExternalFileSchema.load(csvFile, fileCharset);
-			ExternalFileSchema autoSchema = ExternalFileSchema.createAutoSchema(csvFile, userSchema, fileCharset);
+			ExternalFileSchema userSchema = ExternalFileSchema.load(csvFile, fileCharset, logger);
+			ExternalFileSchema autoSchema = ExternalFileSchema.createAutoSchema(csvFile, userSchema, fileCharset, logger);
 			
 			if(userSchema==null)
 			{
-				ExternalFileSchema.save(csvFile, autoSchema);
+				ExternalFileSchema.save(csvFile, autoSchema, logger);
 				userSchema = autoSchema; 
 			}
 
 			if(userSchema!=null && !userSchema.equals(autoSchema))
 			{			
-				ExternalFileSchema schema = ExternalFileSchema.merge(userSchema, autoSchema);
+				ExternalFileSchema schema = ExternalFileSchema.merge(userSchema, autoSchema, logger);
 				if(!schema.equals(userSchema))
 				{
-					System.err.println("Saving merged schema");
-					ExternalFileSchema.save(csvFile, schema);
+					logger.println("Saving merged schema");
+					ExternalFileSchema.save(csvFile, schema, logger);
 				}
 //				newSchema = ExternalFileSchema.load(csvFile);
 				newSchema = schema;
@@ -121,13 +122,13 @@ public class ExternalFileSchema {
 		//} catch (Throwable t) {
 		//	t.printStackTrace();
 		//}
-		validateSchema(newSchema);			
+		validateSchema(newSchema, logger);			
 		return newSchema;
 	}
 
 
 	
-	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset) throws IOException
+	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
 	{
 		ExternalFileSchema emd = null;
 		String baseName = FilenameUtils.getBaseName(csvFile.getName());
@@ -146,7 +147,7 @@ public class ExternalFileSchema {
 			}
 		
 			DetectFieldTypes detEFT = new DetectFieldTypes();
-			LinkedList<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset);
+			LinkedList<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset, logger);
 			FileFormat fileFormat = new FileFormat();
 
 			ObjectType od = new ObjectType();
@@ -169,12 +170,12 @@ public class ExternalFileSchema {
 		//} catch (Throwable t) {
 		//	t.printStackTrace();
 		//}
-		validateSchema(emd);
+		validateSchema(emd, logger);
 		return emd;
 	}
 
 	
-	public static void save(File schemaFile,ExternalFileSchema emd)
+	public static void save(File schemaFile,ExternalFileSchema emd, PrintStream logger)
 	{
 		ObjectMapper mapper = new ObjectMapper();	
 		try 
@@ -190,7 +191,7 @@ public class ExternalFileSchema {
 		}
 	}
 	
-	public static ExternalFileSchema load(File inputCSV, Charset fileCharset) throws JsonParseException, JsonMappingException, IOException
+	public static ExternalFileSchema load(File inputCSV, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
 	{
 		File schemaFile = inputCSV;
 		ObjectMapper mapper = new ObjectMapper();	
@@ -203,7 +204,7 @@ public class ExternalFileSchema {
 		ExternalFileSchema userSchema = null;
 		if(schemaFile.exists())
 		{
-			System.out.println("Loading existing schema from file {"+ schemaFile +"}");
+			logger.println("Loading existing schema from file {"+ schemaFile +"}");
 			userSchema  =  mapper.readValue(schemaFile, ExternalFileSchema.class);			
 		}
 
@@ -280,7 +281,7 @@ public class ExternalFileSchema {
 									}
 									if(!found)
 									{
-										System.err.println("Field {"+field.getName()+"} not found in schema file {"+ schemaFile +"}");
+										logger.println("Field {"+field.getName()+"} not found in schema file {"+ schemaFile +"}");
 										fields.remove(field);
 									}
 										
@@ -289,12 +290,12 @@ public class ExternalFileSchema {
 						}
 					}
 			}
-			validateSchema(userSchema);
+			validateSchema(userSchema, logger);
 			return userSchema;
 	}
 	
 
-	private static void validateSchema(ExternalFileSchema schema) throws IllegalArgumentException
+	private static void validateSchema(ExternalFileSchema schema, PrintStream logger) throws IllegalArgumentException
 	{
 		StringBuffer message = new StringBuffer();
 		if(schema!=null)
@@ -413,7 +414,7 @@ public class ExternalFileSchema {
 		}
 	}
 
-	public static ExternalFileSchema merge(ExternalFileSchema userSchema, ExternalFileSchema autoSchema)
+	public static ExternalFileSchema merge(ExternalFileSchema userSchema, ExternalFileSchema autoSchema, PrintStream logger)
 	{
 		ExternalFileSchema mergedSchema = null;
 		try 
@@ -457,7 +458,7 @@ public class ExternalFileSchema {
 									found = true;
 									if(!auto_field.equals(user_field))
 									{
-										System.err.println("Field {"+user_field+"} has been modified by user");
+										logger.println("Field {"+user_field+"} has been modified by user");
 										merged_field = new FieldType(user_field.name!=null?user_field.name:auto_field.name);
 										merged_field.type =  user_field.type!=null?user_field.type:auto_field.type;
 //										merged_field.acl =  user_field.acl!=null?user_field.acl:auto_field.acl;
@@ -481,7 +482,7 @@ public class ExternalFileSchema {
 							}
 							if(!found)
 							{
-								System.err.println("Found new field {"+auto_field+"} in CSV");
+								logger.println("Found new field {"+auto_field+"} in CSV");
 							}
 							if(merged_field==null)
 							{
@@ -525,7 +526,7 @@ public class ExternalFileSchema {
 	}
 
 
-	public static File getSchemaFile(File csvFile) {
+	public static File getSchemaFile(File csvFile, PrintStream logger) {
 		try 
 		{
 			//init(csvFile);

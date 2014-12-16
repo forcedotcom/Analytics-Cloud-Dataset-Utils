@@ -59,27 +59,26 @@ public class SfdcExtracter {
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 
 	@SuppressWarnings("rawtypes")
-	public static void extract(String rootSObject,String datasetAlias, String username, String password,String token, String endpoint, String sessionId, int rowLimit) throws Exception
+	public static void extract(String rootSObject,String datasetAlias, PartnerConnection partnerConnection, int rowLimit) throws Exception
 	{
 		if(SfdcUtils.excludedObjects.contains(rootSObject))
 		{
-			System.err.println("Error: Object {"+rootSObject+"} not supported");
+			System.out.println("Error: Object {"+rootSObject+"} not supported");
 			return;
 		}
 
 		Map<String,String> selectedObjectList = new LinkedHashMap<String,String>();
 
-		PartnerConnection partnerConnection = DatasetUtils.login(0,username, password, token, endpoint, sessionId);
 		Map<String,String> objectList = SfdcUtils.getObjectList(partnerConnection, Pattern.compile("\\b"+rootSObject+"\\b"), false);
 		System.out.println("\n");
 		if(objectList==null || objectList.size()==0)
 		{
-			System.err.println("Error: Object {"+rootSObject+"} not found");
+			System.out.println("Error: Object {"+rootSObject+"} not found");
 			return;
 		}
 		if( objectList.size()>1)
 		{
-			System.err.println("Error: More than one Object found {"+objectList.keySet()+"}");
+			System.out.println("Error: More than one Object found {"+objectList.keySet()+"}");
 			return;
 		}
 		selectedObjectList.putAll(objectList);
@@ -191,7 +190,7 @@ public class SfdcExtracter {
 						canWrite = true;
 					}catch(Throwable t)
 					{	
-//						System.err.println(t.getMessage());
+//						System.out.println(t.getMessage());
 						canWrite = false;
 						DatasetUtils.readInputFromConsole("file {"+csvFile+"} is open in excel please close it first, press enter when done: ");
 					}
@@ -235,7 +234,7 @@ public class SfdcExtracter {
 			}
 		}else
 		{
-			System.err.println("The Dataflow file is > 100K consider removing fields and upload the file manually");
+			System.out.println("The Dataflow file is > 100K consider removing fields and upload the file manually");
 		}
 	}
 	
@@ -252,7 +251,7 @@ public class SfdcExtracter {
 		{	
 			if(SfdcUtils.excludedObjects.contains(selectedObjectList.get(alias)))
 			{
-				System.err.println("Skipping object {"+selectedObjectList.get(alias)+"}");
+				System.out.println("Skipping object {"+selectedObjectList.get(alias)+"}");
 				continue;
 			}
 			
@@ -305,7 +304,7 @@ public class SfdcExtracter {
 					{
 						if(labels.containsKey(fld.getLabel()))
 						{
-							System.err.println("field {"+fld.getName()+"} has duplicate label matching field {"+labels.get(fld.getLabel())+"}");
+							System.out.println("field {"+fld.getName()+"} has duplicate label matching field {"+labels.get(fld.getLabel())+"}");
 //							continue;
 						}
 						labels.put(fld.getLabel(), fld.getName());
@@ -315,7 +314,7 @@ public class SfdcExtracter {
 						flds.add(temp);
 					}else
 					{
-						System.err.println("user has skipped field:"+selectedObjectList.get(alias)+"."+fld.getName());
+						System.out.println("user has skipped field:"+selectedObjectList.get(alias)+"."+fld.getName());
 					}
 				}
 //				SfdcUtils.read(partnerConnection, selectedObjectList.get(alias), fields, 1000,dataDir);

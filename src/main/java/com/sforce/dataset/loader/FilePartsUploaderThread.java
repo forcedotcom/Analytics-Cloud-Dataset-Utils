@@ -26,6 +26,7 @@
 package com.sforce.dataset.loader;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -46,10 +47,11 @@ public class FilePartsUploaderThread implements Runnable {
   private volatile boolean isDone = false;
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
+  private final PrintStream logger;
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 
-FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection partnerConnection, String insightsExternalDataId) 
+FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection partnerConnection, String insightsExternalDataId, PrintStream logger) 
   { 
 	  if(partnerConnection==null || insightsExternalDataId == null || q == null)
 	  {
@@ -58,12 +60,13 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
 	  queue = q; 
 	  this.partnerConnection = partnerConnection;
 	  this.insightsExternalDataId = insightsExternalDataId;
+	  this.logger = logger;
   }
  
   public void run() {
     try {
        Map<Integer, File> row = queue.take();
-   		System.out.println("Start: " + Thread.currentThread().getName());
+   		logger.println("Start: " + Thread.currentThread().getName());
        while (!row.isEmpty()) {
 			try
 			{
@@ -78,9 +81,9 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
          row = queue.take();
        }
     }catch (Throwable t) {
-       System.out.println (Thread.currentThread().getName() + " " + t.getMessage());
+       logger.println (Thread.currentThread().getName() + " " + t.getMessage());
     }
-	System.out.println("END: " + Thread.currentThread().getName());
+	logger.println("END: " + Thread.currentThread().getName());
     isDone = true;
   }
 
@@ -114,16 +117,16 @@ public int getErrorRowCount() {
 	    		{ 	
 	    			if(sv.isSuccess())
 	    			{
-	    				System.out.println("File Part {"+ fileParts.get(i) + "} Inserted into InsightsExternalDataPart: " +sv.getId() + ", upload time {"+nf.format(endTime-startTime)+"} msec");
+	    				logger.println("File Part {"+ fileParts.get(i) + "} Inserted into InsightsExternalDataPart: " +sv.getId() + ", upload time {"+nf.format(endTime-startTime)+"} msec");
 	    				return true;
 	    			}else
 	    			{
-						System.err.println("File Part {"+ fileParts.get(i) + "} Insert Failed: " + (DatasetLoader.getErrorMessage(sv.getErrors())));
+						logger.println("File Part {"+ fileParts.get(i) + "} Insert Failed: " + (DatasetLoader.getErrorMessage(sv.getErrors())));
 	    			}
 	    		}
 			} catch (Throwable t) {
 				t.printStackTrace();
-				System.err.println("File Part {"+ fileParts.get(i) + "} Insert Failed: " + t.toString());
+				logger.println("File Part {"+ fileParts.get(i) + "} Insert Failed: " + t.toString());
 			}
 		}
 //			if(retryCount<3)

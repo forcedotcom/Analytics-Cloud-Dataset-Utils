@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.force.ac</groupId>
 	<name>Dataset Utils</name>
@@ -17,14 +18,14 @@
 		<java.compile.version>1.6</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-  <distributionManagement>
-    <repository>
-      <id>local-proj-repo</id>
-      <name>Project Local Repository</name>
-      <layout>default</layout>
-      <url>file://${basedir}/local-proj-repo/</url>
-    </repository>
-  </distributionManagement>
+	<distributionManagement>
+		<repository>
+			<id>local-proj-repo</id>
+			<name>Project Local Repository</name>
+			<layout>default</layout>
+			<url>file://${basedir}/local-proj-repo/</url>
+		</repository>
+	</distributionManagement>
 	<licenses>
 		<license>
 			<name>BSD License (FreeBSD)</name>
@@ -37,8 +38,8 @@
 		<connection>scm:git:git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git</connection>
 		<developerConnection>scm:git:git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git</developerConnection>
 		<url>scm:git:git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 	<dependencies>
 		<dependency>
 			<groupId>com.force.api</groupId>
@@ -102,10 +103,10 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-                <groupId>com.google.code.externalsortinginjava</groupId>
-                <artifactId>externalsortinginjava</artifactId>
-                <version>0.1.9</version>
-        </dependency>
+			<groupId>com.google.code.externalsortinginjava</groupId>
+			<artifactId>externalsortinginjava</artifactId>
+			<version>0.1.9</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<defaultGoal>clean install</defaultGoal>
@@ -143,7 +144,8 @@
 							<finalName>${project.build.finalName}</finalName>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<transformers>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>com.sforce.dataset.DatasetUtilMain</mainClass>
 								</transformer>
 							</transformers>

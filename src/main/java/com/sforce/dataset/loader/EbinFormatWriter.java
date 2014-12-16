@@ -26,6 +26,7 @@
 package com.sforce.dataset.loader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -71,6 +72,7 @@ public class EbinFormatWriter {
 
 	private int numColumns = 0;	
 	private OutputStream out;
+	private final PrintStream logger;
 	int interval = 10;
 	
 
@@ -84,17 +86,17 @@ public class EbinFormatWriter {
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 	long startTime = 0L;
 	
-	public EbinFormatWriter(OutputStream out, List<FieldType> dataTypes)
+	public EbinFormatWriter(OutputStream out, List<FieldType> dataTypes,PrintStream logger)
 			throws IOException 
 	{
-		this(out,dataTypes.toArray(new FieldType[0]));
+		this(out,dataTypes.toArray(new FieldType[0]), logger);
 	}
 
 	
-	public EbinFormatWriter(OutputStream out, FieldType[] dataTypes)
+	public EbinFormatWriter(OutputStream out, FieldType[] dataTypes,PrintStream logger)
 			throws IOException 
 	{
-		this(out);
+		this(out, logger);
 //		this.numColumns = dataTypes.length;
 		for (FieldType dataType: dataTypes)
 		{
@@ -119,9 +121,10 @@ public class EbinFormatWriter {
 	    df.setMinimumIntegerDigits(2);
 	}
 	
-	protected EbinFormatWriter(OutputStream out)  throws IOException
+	protected EbinFormatWriter(OutputStream out,PrintStream logger)  throws IOException
 	{
 		this.out = out;
+		this.logger = logger;
 		totalRowCount = 0;
 		out.write(magic, 0, 3);
 		out.write(version_high);
@@ -151,7 +154,7 @@ public class EbinFormatWriter {
 			long newStartTime = System.currentTimeMillis();
 			if(startTime==0)
 				startTime = newStartTime;
-			System.out.println("Processing row {"+nf.format(totalRowCount) +"} time {"+nf.format(newStartTime-startTime)+"}");			
+			logger.println("Processing row {"+nf.format(totalRowCount) +"} time {"+nf.format(newStartTime-startTime)+"}");			
 			startTime = newStartTime;
 		}
 		
@@ -185,7 +188,7 @@ public class EbinFormatWriter {
 	            }
 	            }catch(Throwable t)
 	            {
-	            	System.out.println("Field {"+_dataTypes.get(key_value_count).name+"} has Invalid Expression {"+_dataTypes.get(key_value_count).getComputedFieldExpression()+"}");
+	            	logger.println("Field {"+_dataTypes.get(key_value_count).name+"} has Invalid Expression {"+_dataTypes.get(key_value_count).getComputedFieldExpression()+"}");
 	            	t.printStackTrace();
 	            }
 			}else
@@ -468,15 +471,15 @@ public class EbinFormatWriter {
 			out.close();
 		}
 		out = null;
-		if(totalRowCount==0)
+		if(totalRowCount!=0)
 		{
-			throw new IOException("Atleast one row must be written");
-		}else
-		{
+//			throw new IOException("Atleast one row must be written");
+//		}else
+//		{
 			long newStartTime = System.currentTimeMillis();
 			if(startTime==0)
 				startTime = newStartTime;
-			System.out.println("Processed last row {"+nf.format(totalRowCount) +"} time {"+nf.format(newStartTime-startTime)+"}");			
+			logger.println("Processed last row {"+nf.format(totalRowCount) +"} time {"+nf.format(newStartTime-startTime)+"}");			
 			startTime = newStartTime;
 		}
 	}

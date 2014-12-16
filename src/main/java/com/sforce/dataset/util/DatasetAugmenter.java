@@ -79,14 +79,13 @@ public class DatasetAugmenter {
 */
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void augmentEM(String username, String password,String endpoint,String token, String sessionId) throws Exception
+	public static void augmentEM(PartnerConnection partnerConnection) throws Exception
 	{
-		PartnerConnection partnerConnection = DatasetUtils.login(0,username, password, token, endpoint, sessionId);
 		Map<String, Map> map = DatasetUtils.listPublicDataset(partnerConnection);
 		System.out.println("\n");
 		if(map==null || map.size()==0)
 		{
-			System.err.println("No dataset found in org");
+			System.out.println("No dataset found in org");
 			return;
 		}
 		int cnt = 1;
@@ -162,7 +161,7 @@ public class DatasetAugmenter {
 		System.out.println("\n");
 		if(leftDims==null || leftDims.size()==0)
 		{
-			System.err.println("No Dimensions found in Datasets {"+leftDataSet+"}");
+			System.out.println("No Dimensions found in Datasets {"+leftDataSet+"}");
 			return;
 		}
 		cnt = 1;
@@ -202,7 +201,7 @@ public class DatasetAugmenter {
 		System.out.println("\n");
 		if(rightDims==null || rightDims.size()==0)
 		{
-			System.err.println("No Dimensions found in Datasets {"+rightDataSet+"}");
+			System.out.println("No Dimensions found in Datasets {"+rightDataSet+"}");
 			return;
 		}
 		cnt = 1;
@@ -403,7 +402,7 @@ public class DatasetAugmenter {
 			   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 		       int statusCode = emresponse1.getStatusLine().getStatusCode();
 		       if (statusCode != HttpStatus.SC_OK) {
-		           System.err.println("Method failed: " + reasonPhrase);
+		           System.out.println("Method failed: " + reasonPhrase);
 		           continue;
 		       }
 //		       System.out.println(String.format("statusCode: %d", statusCode));

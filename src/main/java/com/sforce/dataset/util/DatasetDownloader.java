@@ -59,9 +59,8 @@ public class DatasetDownloader {
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean downloadEM(String EM_NAME, String username, String password,String endpoint,String token,String sessionId) throws Exception {
+	public static boolean downloadEM(String EM_NAME, PartnerConnection connection) throws Exception {
 
-			PartnerConnection connection = DatasetUtils.login(0, username, password, token, endpoint, sessionId);
 			ConnectorConfig config = connection.getConfig();			
 			String sessionID = config.getSessionId();
 			String _alias = null;
@@ -113,7 +112,7 @@ public class DatasetDownloader {
 						{
 							_alias = (String) resp.get("_alias");
 							Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-							//System.err.println("_createdDateTime: "+ _createdDateTime);
+							//System.out.println("_createdDateTime: "+ _createdDateTime);
 							if(_createdDateTime != null)
 							{
 								createdDateTime = new Date(1000L*_createdDateTime);
@@ -145,7 +144,6 @@ public class DatasetDownloader {
 									URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 									HttpGet listEMPost1 = new HttpGet(listEMURI1);
 
-//									System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
 									System.out.println("Downloading file {"+filename+"}");
 									listEMPost1.setConfig(requestConfig);
 									listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
@@ -155,7 +153,7 @@ public class DatasetDownloader {
 								   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 							       int statusCode = emresponse1.getStatusLine().getStatusCode();
 							       if (statusCode != HttpStatus.SC_OK) {
-							           System.err.println("Method failed: " + reasonPhrase);
+							           System.out.println("Method failed: " + reasonPhrase);
 								       System.out.println(String.format("%s download failed: %d %s", filename,statusCode,reasonPhrase));
 							           continue;
 							       }
@@ -190,7 +188,7 @@ public class DatasetDownloader {
 					t.printStackTrace();
 				}
 
-				//System.err.println(emList);
+				//System.out.println(emList);
 			}
 
 			

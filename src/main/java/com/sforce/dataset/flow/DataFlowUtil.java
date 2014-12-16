@@ -94,8 +94,6 @@ public class DataFlowUtil {
 		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url, null,null);			
 		
         HttpPatch httpPatch = new HttpPatch(patchURI);
-//        httpPatch.addHeader("Accept", "*/*");
-//        httpPatch.addHeader("Content-Type", "application/json");
         
 		Map map = new LinkedHashMap();
 		map.put("workflowDefinition", df.workflowDefinition);
@@ -142,13 +140,6 @@ public class DataFlowUtil {
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/workflow", null,null);			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
-//		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-//		builder.addTextBody("jsonMetadata", "{\"_alias\":\""+EM_NAME+"\",\"_type\":\"ebin\"}", ContentType.TEXT_PLAIN);
-//		builder.addBinaryBody(binFile.getName(), binFile,
-//				ContentType.APPLICATION_OCTET_STREAM, binFile.getName());
-//		HttpEntity multipart = builder.build();
-//
-//		uploadFile.setEntity(multipart);
 		listEMPost.setConfig(requestConfig);
 		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
 		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
@@ -165,8 +156,6 @@ public class DataFlowUtil {
 		
 		if(emList!=null && !emList.isEmpty())
 		{
-//			try 
-//			{
 				ObjectMapper mapper = new ObjectMapper();	
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				Map res =  mapper.readValue(emList, Map.class);
@@ -200,14 +189,12 @@ public class DataFlowUtil {
 								{
 									t.printStackTrace();
 								}
-//								File dataflowFile = new File(dataDir,df.name+".json");
-//								
 								File dataFlowFile = new File(dataDir,df.name+"_"+sdf.format(new Date())+".json");
 								CloseableHttpClient httpClient1 = HttpClients.createDefault();
 								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url, null,null);			
 								HttpGet listEMPost1 = new HttpGet(listEMURI1);
 	
-	//							System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
+//								System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
 //								System.out.println("Downloading file {"+dataFlowFile+"}");
 								listEMPost1.setConfig(requestConfig);
 								listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
@@ -217,11 +204,8 @@ public class DataFlowUtil {
 							   reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 						        statusCode = emresponse1.getStatusLine().getStatusCode();
 						       if (statusCode != HttpStatus.SC_OK) {
-//						           System.err.println("Method failed: " + reasonPhrase);
 							       throw new IOException(String.format("Dataflow %s download failed: %d %s", dataFlowFile,statusCode,reasonPhrase));
 						       }
-	//					       System.out.println(String.format("statusCode: %d %s", statusCode,reasonPhrase));
-	//					       System.out.println(String.format("reasonPhrase: %s", reasonPhrase));
 	
 								HttpEntity emresponseEntity1 = emresponse1.getEntity();
 								InputStream emis1 = emresponseEntity1.getContent();
@@ -232,8 +216,6 @@ public class DataFlowUtil {
 								
 								if(dataFlowJson!=null && !dataFlowJson.isEmpty())
 								{
-//									try 
-//									{
 										Map res2 =  mapper.readValue(dataFlowJson, Map.class);
 //										mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
 										List<Map> flows2 = (List<Map>) res2.get("result");
@@ -254,19 +236,10 @@ public class DataFlowUtil {
 										{
 										       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
 										}
-//									} catch (Throwable t) {
-//										t.printStackTrace();
-//									}
 								}else
 								{
 								       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
 								}
-//								BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(dataFlowFile));
-//								JsonNode node = mapper.readTree(df.workflowDefinition);
-//								mapper.writerWithDefaultPrettyPrinter().writeValue(dataFlowFile, node);
-//								df.workflowDefinition = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(node);
-//								IOUtils.copy(emis1, out);
-//								out.close();
 							}else
 							{
 						       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
@@ -281,16 +254,11 @@ public class DataFlowUtil {
 				{
 			       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
 				}
-//			} catch (Throwable t) {
-//				t.printStackTrace();
-//			}
-			//System.err.println(emList);
 		}
-		System.err.println("Dataflow {"+workflowName+"} not found");
+		System.out.println("Dataflow {"+workflowName+"} not found");
 		return null;
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void startDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		System.out.println();
@@ -310,16 +278,7 @@ public class DataFlowUtil {
 		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url.replace("json", "start"), null,null);			
 		
         HttpPut httput = new HttpPut(patchURI);
-//        httpPatch.addHeader("Accept", "*/*");
-//        httpPatch.addHeader("Content-Type", "application/json");
-        
-//		Map map = new LinkedHashMap();
-//		map.put("_uid", df._uid);
-//		ObjectMapper mapper = new ObjectMapper();			
-//        StringEntity entity = new StringEntity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map), "UTF-8");        
-//        entity.setContentType("application/json");
         httput.setConfig(requestConfig);
-//        httpPatch.setEntity(entity);
         httput.addHeader("Authorization","OAuth "+sessionID);			
 		CloseableHttpResponse emresponse = httpClient.execute(httput);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
@@ -331,7 +290,6 @@ public class DataFlowUtil {
 		InputStream emis = emresponseEntity.getContent();			
 		@SuppressWarnings("unused")
 		String emList = IOUtils.toString(emis, "UTF-8");
-//		System.out.println(emList);
 		System.out.println("Dataflow {"+df.name+"} succesfully started");
 		emis.close();
 		httpClient.close();

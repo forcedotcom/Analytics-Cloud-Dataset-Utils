@@ -53,7 +53,7 @@ import com.sforce.dataset.util.DatasetUtils;
 
 public class CsvExternalSort extends ExternalSort {
 	
-    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize) throws IOException
+    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema) throws IOException
     {
     	if(inputCsv==null || !inputCsv.canRead())
     	{
@@ -62,10 +62,10 @@ public class CsvExternalSort extends ExternalSort {
     	
 		File outputFile = new File(inputCsv.getParent(), FilenameUtils.getBaseName(inputCsv.getName())+ "_sorted." + FilenameUtils.getExtension(inputCsv.getName()));		
     			
-		ExternalFileSchema schema = ExternalFileSchema.load(inputCsv, cs);
+//		ExternalFileSchema schema = ExternalFileSchema.load(inputCsv, cs);
 		if(schema==null || schema.objects == null || schema.objects.size()==0 || schema.objects.get(0).fields == null)
 		{
-			throw new IOException("File does not have valid metadata json {"+ExternalFileSchema.getSchemaFile(inputCsv)+"}");
+			throw new IOException("File does not have valid metadata json {"+ExternalFileSchema.getSchemaFile(inputCsv, System.out)+"}");
 		}
 		
 		CsvRowComparator cmp = null;
@@ -81,7 +81,7 @@ public class CsvExternalSort extends ExternalSort {
 //		}
 	
 		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize);
-		System.out.println("CsvExternalSort created " + l.size() + " tmp files");
+//		System.out.println("CsvExternalSort created " + l.size() + " tmp files");
 		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize);
 		return outputFile;
     }

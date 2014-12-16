@@ -169,7 +169,7 @@ public class DatasetUtils {
 				t.printStackTrace();
 			}
 
-			//System.err.println(emList);
+			//System.out.println(emList);
 		}
 
 		
@@ -240,7 +240,7 @@ public class DatasetUtils {
 						{
 							_alias = (String) resp.get("_alias");
 							Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-							//System.err.println("_createdDateTime: "+ _createdDateTime);
+							//System.out.println("_createdDateTime: "+ _createdDateTime);
 							if(_createdDateTime != null)
 							{
 								createdDateTime = new Date(1000L*_createdDateTime);
@@ -278,7 +278,7 @@ public class DatasetUtils {
 								   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 							       int statusCode = emresponse1.getStatusLine().getStatusCode();
 							       if (statusCode != HttpStatus.SC_OK) {
-							           System.err.println("Method failed: " + reasonPhrase);
+							           System.out.println("Method failed: " + reasonPhrase);
 							           continue;
 							       }
 							       System.out.println(String.format("statusCode: %d", statusCode));
@@ -308,7 +308,7 @@ public class DatasetUtils {
 					t.printStackTrace();
 				}
 
-				//System.err.println(emList);
+				//System.out.println(emList);
 			}
 
 			
@@ -357,6 +357,7 @@ public class DatasetUtils {
 				@SuppressWarnings("unused")
 				GetUserInfoResult userInfo = connection.getUserInfo();
 				System.out.println("Service Endpoint: " + config.getServiceEndpoint());
+				System.out.println("SessionId Endpoint: " + config.getSessionId());
 //				System.out.println("User Id: " + userInfo.getUserName());
 //				System.out.println("User Email: " + userInfo.getUserEmail());
 				System.out.println();
@@ -364,7 +365,7 @@ public class DatasetUtils {
 			}
 			return connection;
 		}catch (ConnectionException e) {	
-			System.err.println(e.getClass().getCanonicalName());
+			System.out.println(e.getClass().getCanonicalName());
 			e.printStackTrace();
 			boolean retryError = true;	
 			if(e instanceof LoginFault || sessionId != null)
@@ -425,7 +426,7 @@ public class DatasetUtils {
  }
 	 
 	 
-	public static String readInputFromConsole(String prompt) throws IOException {
+	public static String readInputFromConsole(String prompt) {
 		String line = null;
 		Console c = System.console();
 		if (c != null) {
@@ -443,7 +444,7 @@ public class DatasetUtils {
 		return line;
 	}
 	
-	public static String readPasswordFromConsole(String prompt) throws IOException {
+	public static String readPasswordFromConsole(String prompt) {
 		String line = null;
 		Console c = System.console();
 		if (c != null) {

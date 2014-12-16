@@ -23,27 +23,20 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.flow;
+package com.sforce.dataset.flow.monitor;
 
-import java.util.Map;
-
-public class DataFlow {
-	
-	public String _type = null;
-	public Map<String,String> _lastModifiedBy;
-//    {
-//      String "_type"
-//      String "profilePhotoUrl"
-//      String "name" 
-//      String "_uid" 
-//    },
-	public String nextRun;
-	public String _url;
-	public String name;
-	public String MasterLabel;
-	public int RefreshFrequencySec;
-	public String _uid;
-	public String WorkflowType;
-    @SuppressWarnings("rawtypes")
-	public Map workflowDefinition;
+public class JobEntry {
+    String errorMessage = null;
+    long startTimeEpoch = 0;
+    int status = 0;
+    long endTimeEpoch = 0;
+    String _uid = null;
+    String type = null;
+    String endTime = null;
+    String startTime = null;
+    String _type = null;
+    long duration= 0;
+    long _createdDateTime = 0;
+    String workflowName = null;
+    String nodeUrl = null;
 }

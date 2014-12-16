@@ -55,9 +55,6 @@ public class ErrorWriter {
 	private CsvPreference preference = CsvPreference.STANDARD_PREFERENCE;
 	private DefaultCsvEncoder csvEncoder = new DefaultCsvEncoder();
 
-	//private int numColumns;  
-	
-	
 	public static final char LF = '\n';
 
 	public static final char CR = '\r';
@@ -83,11 +80,6 @@ public class ErrorWriter {
 
 		this.delimiter = delimiter;
 
-//		CsvReader reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null, null)));
-//		reader.readHeaders();
-//		String header = reader.getRawRecord();
-//		headerColumns = reader.getHeaders();
-		
 		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(CodingErrorAction.IGNORE, null)), CsvPreference.STANDARD_PREFERENCE);
 		headerColumns = reader.getHeader(true);		
 		reader.close();
@@ -152,9 +144,6 @@ public class ErrorWriter {
 		if (fWriter != null) {
 			fWriter.flush();
 			fWriter.close();
-			System.out.println("\n*******************************************************************************");					
-			System.out.println("Error rows written to: "+this.errorCsv.getAbsolutePath());			
-			System.out.println("*******************************************************************************\n");					
 		}
 		fWriter = null;
 	}

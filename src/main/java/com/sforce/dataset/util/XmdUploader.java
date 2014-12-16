@@ -64,8 +64,7 @@ public class XmdUploader {
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean uploadXmd(String userXmdFile, String datasetAlias,
-			String username, String password, String endpoint, String token, String sessionId) throws URISyntaxException, ClientProtocolException, IOException, ConnectionException
+	public static boolean uploadXmd(String userXmdFile, String datasetAlias, PartnerConnection connection) throws URISyntaxException, ClientProtocolException, IOException, ConnectionException
 	{
 		if(datasetAlias==null||datasetAlias.trim().isEmpty())
 		{
@@ -95,7 +94,6 @@ public class XmdUploader {
 //			t.printStackTrace();
 		}
 
-		PartnerConnection connection = DatasetUtils.login(0,username, password, token, endpoint, sessionId);
 
 		System.out.println();
 			
@@ -145,7 +143,7 @@ public class XmdUploader {
 							edgemartId = (String) resp.get("_uid");
 							
 							Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-							//System.err.println("_createdDateTime: "+ _createdDateTime);
+							//System.out.println("_createdDateTime: "+ _createdDateTime);
 							if(_createdDateTime != null)
 							{
 								createdDateTime = new Date(1000L*_createdDateTime);
@@ -179,7 +177,7 @@ public class XmdUploader {
 					t.printStackTrace();
 				}
 
-				//System.err.println(emList);
+				//System.out.println(emList);
 			}
 
 			if(_alias != null && _alias.equals(datasetAlias))
@@ -187,7 +185,7 @@ public class XmdUploader {
 				System.out.println("Found existing Dataset {"+_alias+"} version {"+versionID+"}, created on {"+createdDateTime+"}, in folder {"+folderID+"}");
 			}else
 			{
-				System.err.println("Dataset {"+_alias+"} not found");
+				System.out.println("Dataset {"+_alias+"} not found");
 				return false;
 			}
 			
@@ -237,14 +235,14 @@ public class XmdUploader {
 								return true;
 							}else
 							{
-								System.err.println("User XMD uploaded to Dataset {"+_alias+"} failed");
-								System.err.println(resp);
+								System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
+								System.out.println(resp);
 								return false;
 							}
 						}else
 						{
-							System.err.println("User XMD uploaded to Dataset {"+_alias+"} failed");
-							System.err.println(res);
+							System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
+							System.out.println(res);
 							return false;
 						}
 //						if(name_param.equals("name"))
@@ -253,8 +251,8 @@ public class XmdUploader {
 //							System.out.println("EM {"+emName+"} : is being updated");
 					}else
 					{
-						System.err.println("User XMD uploaded to Dataset {"+_alias+"} failed");
-						System.err.println(responseString);
+						System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
+						System.out.println(responseString);
 						return false;
 					}
 				} catch (Throwable t) {
@@ -263,54 +261,6 @@ public class XmdUploader {
 			}		
 		return false;
 	}
-
-	/*
-	public static PartnerConnection login(final String username,
-			String password, String token, String endpoint) throws Exception {
-		
-		if (username == null || username.isEmpty()) {
-			throw new Exception("username is required");
-		}
-
-		if (password == null || password.isEmpty()) {
-			throw new Exception("password is required");
-		}
-
-		if (endpoint == null || endpoint.isEmpty()) {
-			throw new Exception("endpoint is required");
-		}
-
-		if (token == null)
-			token = "";
-
-		password = password + token;
-
-		try {
-			ConnectorConfig config = new ConnectorConfig();
-			config.setUsername(username);
-			config.setPassword(password);
-			config.setAuthEndpoint(endpoint);
-			config.setSessionRenewer(new SessionRenewerImpl(username, password, null, endpoint));
-
-			PartnerConnection connection = new PartnerConnection(config);
-			GetUserInfoResult userInfo = connection.getUserInfo();
-
-			System.out.println("\nLogging in ...\n");
-			//System.out.println("UserID: " + userInfo.getUserId());
-			//System.out.println("User Full Name: " + userInfo.getUserFullName());
-			System.out.println("User Email: " + userInfo.getUserEmail());
-			//System.out.println("SessionID: " + config.getSessionId());
-			//System.out.println("Auth End Point: " + config.getAuthEndpoint());
-			//System.out.println("Service End Point: " + config.getServiceEndpoint());
-			
-			return connection;
-
-		} catch (ConnectionException e) {
-			e.printStackTrace();
-			throw new Exception(e.getLocalizedMessage());
-		}
-	}
-	*/
 	
 	@SuppressWarnings("rawtypes")
 	static Map getAlias(List<Map> emarts, String alias)
