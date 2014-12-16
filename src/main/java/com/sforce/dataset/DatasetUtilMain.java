@@ -113,6 +113,10 @@ public class DatasetUtilMain {
 				{
 					action = args[i];
 				}
+				else if(args[i-1].equalsIgnoreCase("--debug"))
+				{
+					params.debug = true;
+				}
 				else if(args[i-1].equalsIgnoreCase("--inputFile"))
 				{
 					String tmp = args[i];
@@ -283,7 +287,7 @@ public class DatasetUtilMain {
 		if(params.username!=null || params.sessionId != null)
 		{
 			try {
-				partnerConnection  = DatasetUtils.login(0, params.username, params.password, params.token, params.endpoint, params.sessionId);
+				partnerConnection  = DatasetUtils.login(0, params.username, params.password, params.token, params.endpoint, params.sessionId, params.debug);
 			} catch (ConnectionException e) {
 				e.printStackTrace();
 				System.exit(-1);

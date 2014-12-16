@@ -75,7 +75,7 @@ public void run() {
        while (!isDone) {
 			try
 			{
-				long cutOff = System.currentTimeMillis() - (1000*fileListener.fileAge);
+				long cutOff = System.currentTimeMillis() - (fileListener.fileAge);
 				IOFileFilter ageFilter = FileFilterUtils.ageFileFilter(cutOff);
 				IOFileFilter nameFilter = FileFilterUtils.nameFileFilter(fileListener.inputFilePattern, IOCase.INSENSITIVE);
 //				IOFileFilter suffixFileFilter1 = FileFilterUtils.suffixFileFilter(".zip", IOCase.INSENSITIVE);

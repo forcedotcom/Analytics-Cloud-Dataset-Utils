@@ -44,5 +44,6 @@ public class DatasetUtilParams {
 	String Operation = null;
 	int rowLimit = 0;
 	boolean useBulkAPI = false;
+	boolean debug = false;
 	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 }

@@ -316,7 +316,7 @@ public class DatasetUtils {
 	}
 
 	
-	public static PartnerConnection login(int retryCount,String username,String password, String token, String endpoint, String sessionId) throws ConnectionException  {
+	public static PartnerConnection login(int retryCount,String username,String password, String token, String endpoint, String sessionId, boolean debug) throws ConnectionException  {
 
 		if(sessionId==null)
 		{
@@ -357,7 +357,8 @@ public class DatasetUtils {
 				@SuppressWarnings("unused")
 				GetUserInfoResult userInfo = connection.getUserInfo();
 				System.out.println("Service Endpoint: " + config.getServiceEndpoint());
-				System.out.println("SessionId Endpoint: " + config.getSessionId());
+				if(debug)
+					System.out.println("SessionId: " + config.getSessionId());
 //				System.out.println("User Id: " + userInfo.getUserName());
 //				System.out.println("User Email: " + userInfo.getUserEmail());
 				System.out.println();
@@ -378,7 +379,7 @@ public class DatasetUtils {
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
-				return login(retryCount,username, password, null, endpoint, sessionId);
+				return login(retryCount,username, password, null, endpoint, sessionId, debug);
 			}
 			throw new ConnectionException(e.toString());
 		}
