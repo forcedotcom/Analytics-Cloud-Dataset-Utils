@@ -294,7 +294,7 @@ public class DatasetUtilMain {
 			}
 		}
 
-		if(args.length==0)
+		if(args.length==0 || action == null)
 		{
 			System.out.println("\n*******************************************************************************");					
 			FileListenerUtil.startAllListener(partnerConnection);
@@ -508,7 +508,14 @@ public class DatasetUtilMain {
 	
 	public static boolean doAction(String action, PartnerConnection partnerConnection, DatasetUtilParams params)
 	{
-		
+
+		if(action==null)
+		{
+			printUsage();
+			System.out.println("\nERROR: Invalid action {"+action+"}");
+			return false;
+		}
+
 		if (params.inputFile!=null) 
 		{
 			   File tempFile = validateInputFile(params.inputFile, action);
@@ -543,6 +550,8 @@ public class DatasetUtilMain {
 			return false;
 		}
 			
+
+		
 			if(action.equalsIgnoreCase("load"))
 			{
 				if (params.inputFile==null || params.inputFile.isEmpty()) 
@@ -910,22 +919,22 @@ public class DatasetUtilMain {
 	private static void createListener(PartnerConnection partnerConnection,
 			DatasetUtilParams params) {
 		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);
-		if(response!=null && (response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("yes")))
+		if(response!=null && (response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES")))
 		{
-			FileListener fileListener = new FileListener();
-			fileListener.setApp(params.app);
-			fileListener.setCea(params.codingErrorAction);
-			fileListener.setDataset(params.dataset);
-			fileListener.setDatasetLabel(params.datasetLabel);
-			fileListener.setFilecharset(params.fileEncoding);
-			fileListener.setInputFileDirectory(params.inputFile);
-//			fileListener.setInputFilePattern(inputFilePattern);
-			fileListener.setOperation(params.Operation);
-			fileListener.setUploadFormat(params.uploadFormat);
-			fileListener.setUseBulkAPI(params.useBulkAPI);
-//			fileListener.setFileAge(fileAge);
-//			fileListener.setPollingInterval();
 			try {
+				FileListener fileListener = new FileListener();
+				fileListener.setApp(params.app);
+				fileListener.setCea(params.codingErrorAction);
+				fileListener.setDataset(params.dataset);
+				fileListener.setDatasetLabel(params.datasetLabel);
+				fileListener.setFilecharset(params.fileEncoding);
+				fileListener.setInputFileDirectory(params.inputFile);
+//				fileListener.setInputFilePattern(inputFilePattern);
+				fileListener.setOperation(params.Operation);
+				fileListener.setUploadFormat(params.uploadFormat);
+				fileListener.setUseBulkAPI(params.useBulkAPI);
+//				fileListener.setFileAge(fileAge);
+//				fileListener.setPollingInterval();
 				FileListenerThread.moveInputFile(new File(params.inputFile), System.currentTimeMillis(), true);
 				FileListenerUtil.addAndStartListener(fileListener, partnerConnection);
 			} catch (Throwable e) {

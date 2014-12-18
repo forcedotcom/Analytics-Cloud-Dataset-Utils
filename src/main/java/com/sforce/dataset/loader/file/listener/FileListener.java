@@ -32,18 +32,18 @@ import java.nio.charset.CodingErrorAction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class FileListener {
-	String dataset = null;
-	String datasetLabel = null;
-	String app = null;
-	String filecharset = "UTF-8";
-	String uploadFormat = "binary"; 
-	String codingErrorAction = "REPORT";
-	String operation = "Overwrite"; 
-	boolean useBulkAPI = false;
-	String inputFileDirectory = null;
-	String inputFilePattern = null;
-	int pollingInterval = 10000;
-	int fileAge = 10000;
+	private String dataset = null;
+	private String datasetLabel = null;
+	private String app = null;
+	private String filecharset = "UTF-8";
+	private String uploadFormat = "binary"; 
+	private String codingErrorAction = "REPORT";
+	private String operation = "Overwrite"; 
+	private boolean useBulkAPI = false;
+	private String inputFileDirectory = null;
+	private String inputFilePattern = null;
+	private int pollingInterval = 10000;
+	private int fileAge = 10000;
 	
 	@JsonIgnore
 	Charset charset = Charset.forName("UTF-8");
@@ -154,6 +154,7 @@ public class FileListener {
 	public String getInputFileDirectory() {
 		return inputFileDirectory;
 	}
+	
 	public void setInputFileDirectory(String inputFileDirectory) {
 		if(inputFileDirectory!=null)
 		{
@@ -166,29 +167,44 @@ public class FileListener {
 					this.fileDir = temp;
 				}else
 				{
-					this.fileDir = temp.getParentFile();
-					this.inputFileDirectory = this.fileDir.toString();
-					this.inputFilePattern = temp.getName();
+					this.fileDir = temp.getAbsoluteFile().getParentFile();
+					if(this.fileDir != null)
+						this.inputFileDirectory = this.fileDir.toString();
+					setInputFilePattern(temp.getName());
 				}
 			}
+		}else
+		{
+			throw new IllegalArgumentException("inputFileDirectory cannot be null");
 		}
 	}
+	
 	public String getInputFilePattern() {
 		return inputFilePattern;
 	}
+
 	public void setInputFilePattern(String inputFilePattern) {
-		if(inputFilePattern!=null)
+		if(inputFilePattern!=null && !inputFilePattern.isEmpty())
+		{
 			this.inputFilePattern = inputFilePattern;
+		}else
+		{
+			throw new IllegalArgumentException("inputFilePattern cannot be null");
+		}
 	}
+
 	public int getPollingInterval() {
 		return pollingInterval;
 	}
+
 	public void setPollingInterval(int pollingInterval) {
 		this.pollingInterval = pollingInterval;
 	}
+
 	public int getFileAge() {
 		return fileAge;
 	}
+
 	public void setFileAge(int fileAge) {
 		this.fileAge = fileAge;
 	}

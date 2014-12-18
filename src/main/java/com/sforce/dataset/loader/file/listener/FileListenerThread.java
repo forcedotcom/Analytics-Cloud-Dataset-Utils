@@ -44,14 +44,18 @@ import com.sforce.soap.partner.PartnerConnection;
  
 public class FileListenerThread implements Runnable {
 	
+private static final String success = "Success";
+private static final String error = "Error";
+private static final String log = "Logs";
+
 
   private volatile boolean isDone = false;
 
   private final  FileListener fileListener;
   private final PartnerConnection partnerConnection;
-  private static final File errorDir = new File("error");
-  private static final File successDir = new File("success");
-  private static final File logsDir = new File("logs");
+  private final File errorDir;
+  private final File successDir;
+  private final File logsDir;
   
   FileListenerThread(FileListener fileListener, PartnerConnection partnerConnection) throws IOException 
   { 
@@ -61,23 +65,24 @@ public class FileListenerThread implements Runnable {
 	  }
 	  this.fileListener = fileListener;
 	  this.partnerConnection = partnerConnection;
-//	   errorDir = new File("Error"); 
-//	   successDir = new File("Success"); 
+	  errorDir = new File(this.fileListener.fileDir,success); 
+	  successDir = new File(this.fileListener.fileDir,error); 
+	  logsDir = new File(this.fileListener.fileDir, log);
 	  FileUtils.forceMkdir(errorDir);
 	  FileUtils.forceMkdir(successDir);
 	  FileUtils.forceMkdir(logsDir);
   }
  
 public void run() {
- 		System.out.println("Starting FileListener for Dataset {"+fileListener.dataset+"} ");
+ 		System.out.println("Starting FileListener for Dataset {"+fileListener.getDataset()+"} ");
  		
     try {
        while (!isDone) {
 			try
 			{
-				long cutOff = System.currentTimeMillis() - (fileListener.fileAge);
+				long cutOff = System.currentTimeMillis() - (fileListener.getFileAge());
 				IOFileFilter ageFilter = FileFilterUtils.ageFileFilter(cutOff);
-				IOFileFilter nameFilter = FileFilterUtils.nameFileFilter(fileListener.inputFilePattern, IOCase.INSENSITIVE);
+				IOFileFilter nameFilter = FileFilterUtils.nameFileFilter(fileListener.getInputFilePattern(), IOCase.INSENSITIVE);
 //				IOFileFilter suffixFileFilter1 = FileFilterUtils.suffixFileFilter(".zip", IOCase.INSENSITIVE);
 //				IOFileFilter suffixFileFilter2 = FileFilterUtils.suffixFileFilter(".csv", IOCase.INSENSITIVE);
 //				IOFileFilter orFilter = FileFilterUtils.and(suffixFileFilter1, suffixFileFilter2);				
@@ -88,7 +93,7 @@ public void run() {
 				{
 					try
 					{
-						Thread.sleep(fileListener.pollingInterval);
+						Thread.sleep(fileListener.getPollingInterval());
 					}catch(Throwable t)
 					{
 						t.printStackTrace();
@@ -107,7 +112,7 @@ public void run() {
 						long timeStamp = System.currentTimeMillis();
 						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
 						logger = new PrintStream(new FileOutputStream(logFile), true, "UTF-8");
-						boolean status = DatasetLoader.uploadDataset(file.toString(), fileListener.uploadFormat, fileListener.cea, fileListener.charset, fileListener.dataset, fileListener.app, fileListener.datasetLabel, fileListener.operation, fileListener.useBulkAPI, partnerConnection, logger);
+						boolean status = DatasetLoader.uploadDataset(file.toString(), fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDataset(), fileListener.getApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, logger);
 						moveInputFile(file, timeStamp, status);
 					}catch(Throwable t)
 					{
@@ -131,7 +136,7 @@ public void run() {
     }catch (Throwable t) {
        System.out.println (Thread.currentThread().getName() + " " + t.getMessage());
     }
-	System.out.println("Starting FileListener for Dataset {"+fileListener.dataset+"} ");
+	System.out.println("Starting FileListener for Dataset {"+fileListener.getDataset()+"} ");
     isDone = true;
   }
 
@@ -142,6 +147,9 @@ public boolean isDone() {
 	public static File[] getFiles(File directory, IOFileFilter fileFilter) {
 //		 File[] files = directory.listFiles(fileFilter);
 //		Collection<File> list = FileUtils.listFiles(directory, fileFilter,TrueFileFilter.INSTANCE);
+		if(directory==null)
+			directory = new File("").getAbsoluteFile();
+		FileUtils.listFiles(directory, fileFilter, null);
 		Collection<File> list = FileUtils.listFiles(directory, fileFilter, null);
 
 		File[] files = list.toArray(new File[0]);
@@ -172,9 +180,20 @@ public boolean isDone() {
 	
 	public static void moveInputFile(File inputFile, long timeStamp, boolean isSuccess) 
 	{
-		File directory = successDir;
+		if(inputFile == null)
+			return;
+
+		if(!inputFile.exists())
+			return;
+
+		if(inputFile.isDirectory())
+			return;
+
+		File parent = inputFile.getAbsoluteFile().getParentFile();
+			
+		File directory = new File(parent,success);
 		if(!isSuccess)
-			directory = errorDir;
+			directory = new File(parent,error);
 			
 		File doneFile = new File(directory,timeStamp+"."+inputFile.getName());
 		try {

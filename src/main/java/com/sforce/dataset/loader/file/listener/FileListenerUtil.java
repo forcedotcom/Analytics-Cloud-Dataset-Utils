@@ -85,7 +85,7 @@ public class FileListenerUtil {
 	public static boolean startListener(FileListener listener, PartnerConnection partnerConnection) throws IOException
 	{
 		FileListenerThread fileListenerThread = new FileListenerThread(listener, partnerConnection);
-		Thread th = new Thread(fileListenerThread,"FileListener-"+listener.dataset);
+		Thread th = new Thread(fileListenerThread,"FileListener-"+listener.getDataset());
 		th.setDaemon(true);
 		th.start();
 		return true;

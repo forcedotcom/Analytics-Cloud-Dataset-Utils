@@ -23,3 +23,8 @@ Thumbs.db
 /bin/
 *.releaseBackup
 release.properties
+*.gz
+*.json
+/Logs/
+/Success/
+/Error/
