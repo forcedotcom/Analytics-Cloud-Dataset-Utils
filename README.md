@@ -6,6 +6,12 @@ Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the
 ## Running DatasetUtils
 Just download the latest jar from release section (see link at the top) and follow the examples below:
 
+Best is to run in interactive mode. open a terminal and type in the following command and follow the prompts on the console: 
+
+    java -jar datasetutil-<version>.jar
+
+Or you can pass in all the param in the command line and let it run in uninterrupted.
+
     java -jar datasetutil-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
 
 Input Parameter
@@ -58,8 +64,11 @@ Input Parameter
 ## Usage Example 6: Extract salesforce data
     java -jar datasetutils-32.0.0.jar --action extract --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
 
-## Usage Example 7: Detect inputFie encoding
+## Usage Example 7: Detect inputFile encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
+
+## Usage Example 8: download erroor logs file for csv uploads
+    java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
 
 
 ## Building DatasetUtils
