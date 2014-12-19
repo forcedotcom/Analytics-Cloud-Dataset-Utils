@@ -44,7 +44,7 @@ public class FilePartsUploaderThread implements Runnable {
   private final PartnerConnection partnerConnection;
   private final String insightsExternalDataId;
 
-  private volatile boolean isDone = false;
+  private volatile boolean done = false;
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
   private final PrintStream logger;
@@ -67,6 +67,7 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
     try {
        Map<Integer, File> row = queue.take();
    		logger.println("Start: " + Thread.currentThread().getName());
+   		done = false;
        while (!row.isEmpty()) {
 			try
 			{
@@ -81,14 +82,14 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
          row = queue.take();
        }
     }catch (Throwable t) {
-       logger.println (Thread.currentThread().getName() + " " + t.getMessage());
+       logger.println (Thread.currentThread().getName() + " " + t);
     }
+    done = true;
 	logger.println("END: " + Thread.currentThread().getName());
-    isDone = true;
   }
 
 public boolean isDone() {
-	return isDone;
+	return done;
 }
 
 public int getErrorRowCount() {

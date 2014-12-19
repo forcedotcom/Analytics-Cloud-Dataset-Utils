@@ -657,6 +657,7 @@ public class DatasetLoader {
 							in.printStackTrace();
 						}
 					}
+					logger.println("FilePartsUploaderThread-"+(i+1)+" is done");
 					totalErrorCount = totalErrorCount + uploader.getErrorRowCount();
 				}
 
@@ -674,6 +675,8 @@ public class DatasetLoader {
 				}
 				if(allPartsUploaded)
 					break;
+				else
+					logger.println("Not all file parts uplaoded trying again");
 				retryCount++;
 			}
 
