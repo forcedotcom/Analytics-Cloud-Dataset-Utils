@@ -658,7 +658,7 @@ public class SfdcUtils {
 		int i = 0;
 		for (com.sforce.dataset.loader.file.schema.FieldType field : fieldList) {
 			
-			if((soql.length()+(", " + field.name).length())>(20000-varLen))
+			if((soql.length()+(", " + field.getName()).length())>(20000-varLen))
 			{
 				System.out.println("Too many fields in object {"+topLevelSObjectName+"} truncating query to 20,000 chars");
 				break;
@@ -667,7 +667,7 @@ public class SfdcUtils {
 			if (i > 0)
 				soql.append(", ");
 
-			soql.append(field.name);
+			soql.append(field.getName());
 			i++;
 		}
 

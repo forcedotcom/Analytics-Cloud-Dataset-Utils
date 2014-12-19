@@ -122,6 +122,8 @@ public class ErrorWriter {
 				fWriter = new BufferedWriter(new FileWriter(this.errorCsv));
 					fWriter.write(this.HeaderLine+"\n");
 			}
+			if(error==null)
+				error="null";
 			fWriter.write(getCSVFriendlyString(error));
 			for(String val:values)
 			{

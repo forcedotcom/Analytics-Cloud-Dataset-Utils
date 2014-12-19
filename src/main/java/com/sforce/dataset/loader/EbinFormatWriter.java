@@ -63,7 +63,7 @@ public class EbinFormatWriter {
 	static final byte checksum = 17;
 	static final long edgeMinValue = -36028797018963968L;
 	static final long edgeMaxValue = 36028797018963967L;
-	static final int maxTextLength = 256;
+	static final int maxTextLength = 255;
 
 	
 	LinkedList<Integer> measure_index = new  LinkedList<Integer>();
@@ -188,7 +188,7 @@ public class EbinFormatWriter {
 	            }
 	            }catch(Throwable t)
 	            {
-	            	logger.println("Field {"+_dataTypes.get(key_value_count).name+"} has Invalid Expression {"+_dataTypes.get(key_value_count).getComputedFieldExpression()+"}");
+	            	logger.println("Field {"+_dataTypes.get(key_value_count).getName()+"} has Invalid Expression {"+_dataTypes.get(key_value_count).getComputedFieldExpression()+"}");
 	            	t.printStackTrace();
 	            }
 			}else
@@ -223,7 +223,7 @@ public class EbinFormatWriter {
 							throw new ParseException("Value {"+mv+"} out of range ("+edgeMinValue+"-"+edgeMaxValue+")",0);
 					}
 					measure_values.add((long)mv);
-					curr.put(_dataTypes.get(key_value_count).name, (long)v);
+					curr.put(_dataTypes.get(key_value_count).getName(), (long)v);
 					key_value_count++;
 				} catch(Throwable t)
 				{
@@ -239,42 +239,42 @@ public class EbinFormatWriter {
 					//The date is null or blank so add default
 					dim_values.add("");
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
 					measure_values.add(0L);
-					curr.put(_dataTypes.get(key_value_count).name, 0L);
+					curr.put(_dataTypes.get(key_value_count).getName(), 0L);
 					key_value_count++;
 
 					measure_values.add(0L);
-					curr.put(_dataTypes.get(key_value_count).name, 0L);
+					curr.put(_dataTypes.get(key_value_count).getName(), 0L);
 					key_value_count++;
 
 					//Skip the rest
 				    //DecimalFormat df = new DecimalFormat("00");
 				    //dim_values.add(df.parse(Integer.toString(day)).toString());
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
 					//dim_values.add(df.parse(Integer.toString(month)).toString());
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
 					//dim_values.add(Integer.toString(year));
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
 					//dim_values.add(Integer.toString(quarter));
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
 					//dim_values.add(Integer.toString(week));
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, null);
+					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;					
 				}else
 				{	
@@ -311,37 +311,37 @@ public class EbinFormatWriter {
 				    long day_epoch = dt.getTime()/(1000*60*60*24);
 
 					measure_values.add(sec_epoch);
-					curr.put(_dataTypes.get(key_value_count).name, sec_epoch);
+					curr.put(_dataTypes.get(key_value_count).getName(), sec_epoch);
 					key_value_count++;
 	
 					measure_values.add(day_epoch);
-					curr.put(_dataTypes.get(key_value_count).name, day_epoch);
+					curr.put(_dataTypes.get(key_value_count).getName(), day_epoch);
 					key_value_count++;
 	
 				    // format number as String
 				    dim_values.add(df.format(day));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, day);
+					curr.put(_dataTypes.get(key_value_count).getName(), day);
 					key_value_count++;
 	
 					dim_values.add(df.format(month));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, month);
+					curr.put(_dataTypes.get(key_value_count).getName(), month);
 					key_value_count++;
 	
 					dim_values.add(Integer.toString(year));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, year);
+					curr.put(_dataTypes.get(key_value_count).getName(), year);
 					key_value_count++;
 	
 					dim_values.add(Integer.toString(quarter));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, quarter);
+					curr.put(_dataTypes.get(key_value_count).getName(), quarter);
 					key_value_count++;
 	
 					dim_values.add(df.format(week));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).name, week);
+					curr.put(_dataTypes.get(key_value_count).getName(), week);
 					key_value_count++;
 				}
 
@@ -354,17 +354,22 @@ public class EbinFormatWriter {
 			{
 				if(columnValue!=null)
 				{					
-					int precision = _dataTypes.get(key_value_count).precision > 0 ? _dataTypes.get(key_value_count).precision: maxTextLength;
+					int precision = _dataTypes.get(key_value_count).getPrecision() > 0 ? _dataTypes.get(key_value_count).getPrecision(): maxTextLength;
 					if(_dataTypes.get(key_value_count).isMultiValue())
 					{
+						if(_dataTypes.get(key_value_count).getMultiValueSeparator()==null)
+							_dataTypes.get(key_value_count).setMultiValueSeparator(";"); //Default MultivalueSeparator
 						String vals[] = columnValue.toString().split(Pattern.quote(_dataTypes.get(key_value_count).getMultiValueSeparator()));
 						for(String val:vals)
 						{
-							if(val!=null && val.length() > precision)
-								dim_values.add(val.substring(0, precision));
-							else
-								dim_values.add(val);
-							dim_keys.add(_dataTypes.get(key_value_count).getName());
+							if(val!=null)
+							{
+								if(val.length() > precision)
+									dim_values.add(val.substring(0, precision));
+								else
+									dim_values.add(val);
+								dim_keys.add(_dataTypes.get(key_value_count).getName());
+							}
 						}
 					}else
 					{
@@ -374,7 +379,7 @@ public class EbinFormatWriter {
 							dim_values.add(columnValue.toString());
 						dim_keys.add(_dataTypes.get(key_value_count).getName());
 					}
-					curr.put(_dataTypes.get(key_value_count).name, columnValue.toString());
+					curr.put(_dataTypes.get(key_value_count).getName(), columnValue.toString());
 					key_value_count++;
 				}
 			}

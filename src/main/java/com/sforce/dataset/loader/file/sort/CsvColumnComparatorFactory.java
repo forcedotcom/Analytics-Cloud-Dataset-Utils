@@ -45,27 +45,27 @@ public class CsvColumnComparatorFactory {
 			StringSortAttributes attributes = new StringSortAttributes();
 			attributes.setCaseSensitive(true);
 			attributes.setAscendingOrder(fieldType.isSortAscending);
-			comparator = new StringComparator(fieldType.name, fieldType.sortIndex, attributes);
+			comparator = new StringComparator(fieldType.getName(), fieldType.getSortIndex(), attributes);
 		}
 		else if(fieldType.getfType() == FieldType.DATE) {
 			DateTimeSortAttributes attributes = new DateTimeSortAttributes();
 			attributes.setAscendingOrder(fieldType.isSortAscending);
-			attributes.setPattern(fieldType.format);
-			comparator = new DateTimeComparator(fieldType.name, fieldType.sortIndex, attributes);				
+			attributes.setPattern(fieldType.getFormat());
+			comparator = new DateTimeComparator(fieldType.getName(), fieldType.getSortIndex(), attributes);				
 		}
 		else if(fieldType.getfType() == FieldType.MEASURE)
 		{
-			if(fieldType.scale > 0) 
+			if(fieldType.getScale() > 0) 
 			{
 				DecimalSortAttributes attributes = new DecimalSortAttributes();
 				attributes.setAscendingOrder(fieldType.isSortAscending);
-				attributes.setScale(fieldType.scale);
-				comparator = new DecimalComparator(fieldType.name, fieldType.sortIndex, attributes);
+				attributes.setScale(fieldType.getScale());
+				comparator = new DecimalComparator(fieldType.getName(), fieldType.getSortIndex(), attributes);
 			}else
 			{
 				SortAttributes attributes = new SortAttributes();
 				attributes.setAscendingOrder(fieldType.isSortAscending);
-				comparator = new IntegerComparator(fieldType.name, fieldType.sortIndex, attributes);
+				comparator = new IntegerComparator(fieldType.getName(), fieldType.getSortIndex(), attributes);
 			}
 			
 		}

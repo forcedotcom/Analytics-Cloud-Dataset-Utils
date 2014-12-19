@@ -47,7 +47,7 @@ public class CsvRowComparator implements Comparator<List<String>> {
 	{
 		List<IColumnComparator> list = new LinkedList<IColumnComparator>();
 		for(FieldType fld:fields) {
-			if(!fld.isComputedField && fld.sortIndex > 0) {
+			if(!fld.isComputedField && fld.getSortIndex() > 0) {
 				list.add(CsvColumnComparatorFactory.createColumnComparator(fld));
 			}
 		}
@@ -73,7 +73,7 @@ public class CsvRowComparator implements Comparator<List<String>> {
 		for( int sortOrder = 1; sortOrder <= size; sortOrder++ ) {
 			foundIndex = false;
 			for( int comparatorIndex = 0; comparatorIndex < fields.size(); comparatorIndex++ ) {
-				if( fields.get(comparatorIndex).sortIndex == sortOrder ) {
+				if( fields.get(comparatorIndex).getSortIndex() == sortOrder ) {
 					_sortColumnIndices[sortOrder - 1] = comparatorIndex;
 					if(comparatorIndex > maxSortIndex)
 						maxSortIndex = comparatorIndex;

@@ -67,7 +67,7 @@ Input Parameter
 ## Usage Example 7: Detect inputFile encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
 
-## Usage Example 8: download erroor logs file for csv uploads
+## Usage Example 8: download error logs file for csv uploads
     java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
 
 

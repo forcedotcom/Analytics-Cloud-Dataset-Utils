@@ -264,7 +264,7 @@ public class DatasetUtilMain {
 				String host = uri.getHost();
 				if(protocol == null || !protocol.equalsIgnoreCase("https"))
 				{
-					if(host == null || !host.toLowerCase().endsWith("internal.salesforce.com") && !host.toLowerCase().endsWith("localhost"))
+					if(host == null || !(host.toLowerCase().endsWith("internal.salesforce.com") || host.toLowerCase().endsWith("localhost")))
 					{
 						System.out.println("\nERROR: Invalid endpoint. UNSUPPORTED_CLIENT: HTTPS Required in endpoint");
 						System.exit(-1);

@@ -76,7 +76,7 @@ public void run() {
 				logger.println("Row {"+totalRowCount+"} has error {"+t+"}");
 				if(row!=null)
 				{
-					errorwriter.addError(row, t.getMessage());
+					errorwriter.addError(row, t.getMessage()!=null?t.getMessage():t.toString());
 					errorRowCount++;
 					if(errorRowCount>=max_error_threshhold)
 					{

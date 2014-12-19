@@ -335,50 +335,50 @@ public class ExternalFileSchema {
 							for(FieldType user_field:user_fields)
 							{
 								fieldCount++;
-								if(user_field != null && user_field.name!=null || !user_field.name.isEmpty())
+								if(user_field != null && user_field.getName()!=null || !user_field.getName().isEmpty())
 								{
-									if(user_field.name.length()>255)
+									if(user_field.getName().length()>255)
 									{
-										message.append("field name {"+user_field.name+"} is greater than 255 characters\n");
+										message.append("field name {"+user_field.getName()+"} is greater than 255 characters\n");
 									}
 
-									if(!createDevName(user_field.name, "Column", (fieldCount-1)).equals(user_field.name))
+									if(!createDevName(user_field.getName(), "Column", (fieldCount-1)).equals(user_field.getName()))
 									{
-										message.append("field name {"+user_field.name+"} contains invalid characters \n");
+										message.append("field name {"+user_field.getName()+"} contains invalid characters \n");
 									}
 									
-									if(!field.add(user_field.name))
+									if(!field.add(user_field.getName()))
 									{
-										message.append("Duplicate field name {"+user_field.name+"}\n");
+										message.append("Duplicate field name {"+user_field.getName()+"}\n");
 									}
 									
-									if(user_field.name.endsWith("_sec_epoch") || user_field.name.endsWith("_day_epoch") || user_field.name.endsWith("_Day") || user_field.name.endsWith("_Month") || user_field.name.endsWith("_Year") || user_field.name.endsWith("_Quarter") || user_field.name.endsWith("_Week"))
+									if(user_field.getName().endsWith("_sec_epoch") || user_field.getName().endsWith("_day_epoch") || user_field.getName().endsWith("_Day") || user_field.getName().endsWith("_Month") || user_field.getName().endsWith("_Year") || user_field.getName().endsWith("_Quarter") || user_field.getName().endsWith("_Week"))
 									{
 										for(FieldType user_field_2:user_fields)
 										{
-											if(user_field_2 !=null && user_field_2.type!=null && user_field_2.type.equalsIgnoreCase("date") && user_field.name.contains(user_field_2.name))
+											if(user_field_2 !=null && user_field_2.getType()!=null && user_field_2.getType().equalsIgnoreCase("date") && user_field.getName().contains(user_field_2.getName()))
 											{
-												message.append("field name {"+user_field.name+"} not allowed. When there is field {"+user_field_2.name+"} of type Date\n");
+												message.append("field name {"+user_field.getName()+"} not allowed. When there is field {"+user_field_2.getName()+"} of type Date\n");
 											}
 										}
 									}
 									
-									if(user_field.label!=null || user_field.label.trim().isEmpty())
+									if(user_field.getLabel()!=null || user_field.getLabel().trim().isEmpty())
 									{
-										if(user_field.label.length()>255)
+										if(user_field.getLabel().length()>255)
 										{
-											message.append("field label {"+user_field.label+"} is greater than 255 characters\n");
+											message.append("field label {"+user_field.getLabel()+"} is greater than 255 characters\n");
 										}
 									}else
 									{
 										message.append("[objects["+objectCount+"].fields["+fieldCount+"].label] in schema cannot be null or empty\n");
 									}
 
-									if(user_field.fullyQualifiedName!=null || user_field.fullyQualifiedName.trim().isEmpty())
+									if(user_field.getFullyQualifiedName()!=null || user_field.getFullyQualifiedName().trim().isEmpty())
 									{
-										if(user_field.fullyQualifiedName.length()>255)
+										if(user_field.getFullyQualifiedName().length()>255)
 										{
-											message.append("field fullyQualifiedName {"+user_field.fullyQualifiedName+"} is greater than 255 characters\n");
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
 										}
 									}else
 									{
@@ -389,7 +389,55 @@ public class ExternalFileSchema {
 									{
 										if(user_field.getDefaultValue()==null|| !isLatinNumber(user_field.getDefaultValue()))
 										{
-											message.append("field fullyQualifiedName {"+user_field.fullyQualifiedName+"}  in schema must have default numeric value\n");
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
+										}
+										
+										if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <19)\n");
+										}
+										
+										if(user_field.getScale()>=user_field.getPrecision())
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have scale less than the precision\n");
+										}
+										
+									}else if(user_field.getfType()==FieldType.STRING)
+									{
+										if(user_field.getPrecision()>32000)
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <32,000)\n");
+										}
+										
+										if(user_field.getPrecision()==0)
+										{
+											user_field.setPrecision(255);
+										}
+									}else if(user_field.getfType()==FieldType.DATE)
+									{
+										if(user_field.getCompiledDateFormat()==null)
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid date format {"+user_field.getFormat()+"}\n");
+										}
+									}else
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
+									}
+										
+
+									if(user_field.isMultiValue())
+									{
+										if(user_field.getMultiValueSeparator()==null)
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have 'multiValueSeparator' value when 'isMultiValue' is 'true'\n");
+										}
+									}
+									
+									if(user_field.isComputedField)
+									{
+										if(user_field.getCompiledScript()==null)
+										{
+											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid 'computedFieldExpression' value {"+user_field.getComputedFieldExpression()+"}\n");
 										}
 									}
 									
@@ -453,30 +501,27 @@ public class ExternalFileSchema {
 							boolean found = false;
 							for(FieldType user_field:user_fields)
 							{
-								if(auto_field.fullyQualifiedName.equals(user_field.fullyQualifiedName))
+								if(auto_field.getFullyQualifiedName().equals(user_field.getFullyQualifiedName()))
 								{
 									found = true;
 									if(!auto_field.equals(user_field))
 									{
 										logger.println("Field {"+user_field+"} has been modified by user");
-										merged_field = new FieldType(user_field.name!=null?user_field.name:auto_field.name);
-										merged_field.type =  user_field.type!=null?user_field.type:auto_field.type;
-//										merged_field.acl =  user_field.acl!=null?user_field.acl:auto_field.acl;
-										merged_field.defaultValue =  user_field.defaultValue!=null?user_field.defaultValue:auto_field.defaultValue;
-										merged_field.description =  user_field.description!=null?user_field.description:auto_field.description;
-										merged_field.fiscalMonthOffset =  user_field.fiscalMonthOffset!=0?user_field.fiscalMonthOffset:auto_field.fiscalMonthOffset;
-										merged_field.setFormat(user_field.format!=null?user_field.format:auto_field.format);
-										merged_field.fullyQualifiedName =  user_field.fullyQualifiedName!=null?user_field.fullyQualifiedName:auto_field.fullyQualifiedName;
-//										merged_field.isAclField =  user_field.isAclField!=false?user_field.isAclField:auto_field.isAclField;
+										merged_field = new FieldType(user_field);
+										merged_field.setName(user_field.getName()!=null?user_field.getName():auto_field.getName());
+										merged_field.setType(user_field.getType()!=null?user_field.getType():auto_field.getType());
+										merged_field.setDefaultValue(user_field.getDefaultValue()!=null?user_field.getDefaultValue():auto_field.getDefaultValue());
+										merged_field.setDescription(user_field.getDescription()!=null?user_field.getDescription():auto_field.getDescription());
+										merged_field.setFiscalMonthOffset(user_field.getFiscalMonthOffset()!=0?user_field.getFiscalMonthOffset():auto_field.getFiscalMonthOffset());
+										merged_field.setFormat(user_field.getFormat()!=null?user_field.getFormat():auto_field.getFormat());
+										merged_field.setFullyQualifiedName(user_field.getFullyQualifiedName()!=null?user_field.getFullyQualifiedName():auto_field.getFullyQualifiedName());
 										merged_field.isMultiValue =  user_field.isMultiValue!=false?user_field.isMultiValue:auto_field.isMultiValue;
-//										merged_field.isNillable =  user_field.isNillable!=true?user_field.isNillable:auto_field.isNillable;
 										merged_field.isSystemField =  user_field.isSystemField!=false?user_field.isSystemField:auto_field.isSystemField;
 										merged_field.isUniqueId =  user_field.isUniqueId!=false?user_field.isUniqueId:auto_field.isUniqueId;
-										merged_field.label =  user_field.label!=null?user_field.label:auto_field.label;
-										merged_field.multiValueSeparator =  user_field.multiValueSeparator!=null?user_field.multiValueSeparator:auto_field.multiValueSeparator;
-//										merged_field.name =  user_field.name!=null?user_field.name:auto_field.name;
-										merged_field.precision =  user_field.precision!=0?user_field.precision:auto_field.precision;
-										merged_field.scale =  user_field.scale!=0?user_field.scale:auto_field.scale;
+										merged_field.setLabel(user_field.getLabel()!=null?user_field.getLabel():auto_field.getLabel());
+										merged_field.setMultiValueSeparator(user_field.getMultiValueSeparator()!=null?user_field.getMultiValueSeparator():auto_field.getMultiValueSeparator());
+										merged_field.setPrecision(user_field.getPrecision()!=0?user_field.getPrecision():auto_field.getPrecision());
+										merged_field.setScale(user_field.getScale()!=0?user_field.getScale():auto_field.getScale());
 									}
 								}								
 							}
