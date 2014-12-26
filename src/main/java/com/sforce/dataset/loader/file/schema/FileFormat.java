@@ -32,11 +32,28 @@ public class FileFormat {
 	public char fieldsEnclosedBy = '"';
 	public String linesTerminatedBy = "\n";
 	//public String RECORD_TYPE_IDENTIFIER_POSITION; //COLUMN NUMBER or the "PREFIX"
-	//public boolean CREATE_SEPERATE_EM_FOR_EACH_RECORD_TYPE = false;
 	//public String LINES_STARTING_BY;
 	//public char FIELDS_ESCAPED_BY = '\\';
     public int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS HEADER LINE IN CSV
 	
+    public FileFormat()
+    {
+    	super();
+    }
+    
+    public FileFormat(FileFormat old)
+    {
+    	super();
+    	if(old!=null)
+    	{
+	    	this.charsetName = old.charsetName;
+	    	this.fieldsDelimitedBy = old.fieldsDelimitedBy;
+	    	this.fieldsEnclosedBy = old.fieldsEnclosedBy;
+	    	this.linesTerminatedBy = old.linesTerminatedBy;
+	    	this.numberOfLinesToIgnore = old.numberOfLinesToIgnore;
+    	}
+    }
+
     @Override
 	public int hashCode() {
 		final int prime = 31;

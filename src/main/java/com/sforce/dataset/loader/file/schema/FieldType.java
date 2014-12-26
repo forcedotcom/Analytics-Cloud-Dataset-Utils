@@ -178,38 +178,41 @@ public class FieldType {
 	
 	public FieldType(FieldType old) {
 		super();
-		this.canTruncateValue = old.canTruncateValue;
-		this.compiledDateFormat = old.compiledDateFormat;
-		this.compiledScript = old.compiledScript;
-		this.computedFieldExpression = old.computedFieldExpression;
-		this.decimalSeparator = old.decimalSeparator;
-		this.defaultDate = old.defaultDate;
-		this.defaultValue = old.defaultValue;
-		this.description = old.description;
-		this.firstDayOfWeek = old.firstDayOfWeek;
-		this.fiscalMonthOffset = old.fiscalMonthOffset;
-		this.format = old.format;
-		this.fType = old.fType;
-		this.fullyQualifiedName = old.fullyQualifiedName;
-		this.isComputedField = old.isComputedField;
-		this.isMultiValue = old.isMultiValue;
-		this.isSkipped = old.isSkipped;
-		this.isSortAscending = old.isSortAscending;
-		this.isSystemField = old.isSystemField;
-		this.isUniqueId = old.isUniqueId;
-		this.isYearEndFiscalYear = old.isYearEndFiscalYear;
-		this.label = old.label;
-		this.measure_multiplier = old.measure_multiplier;
-		this.multiValueSeparator = old.multiValueSeparator;
-		this.name = old.name;
-		this.precision = old.precision;
-		this.scale = old.scale;
-		this.sortIndex = old.sortIndex;
-		this.type = old.type;
-		
-		if(!this.equals(old))
+		if(old!=null)
 		{
-			System.out.println("FieldType Copy constructor is missing functionality");
+			this.canTruncateValue = old.canTruncateValue;
+			this.compiledDateFormat = old.compiledDateFormat;
+			this.compiledScript = old.compiledScript;
+			this.computedFieldExpression = old.computedFieldExpression;
+			this.decimalSeparator = old.decimalSeparator;
+			this.defaultDate = old.defaultDate;
+			this.defaultValue = old.defaultValue;
+			this.description = old.description;
+			this.firstDayOfWeek = old.firstDayOfWeek;
+			this.fiscalMonthOffset = old.fiscalMonthOffset;
+			this.format = old.format;
+			this.fType = old.fType;
+			this.fullyQualifiedName = old.fullyQualifiedName;
+			this.isComputedField = old.isComputedField;
+			this.isMultiValue = old.isMultiValue;
+			this.isSkipped = old.isSkipped;
+			this.isSortAscending = old.isSortAscending;
+			this.isSystemField = old.isSystemField;
+			this.isUniqueId = old.isUniqueId;
+			this.isYearEndFiscalYear = old.isYearEndFiscalYear;
+			this.label = old.label;
+			this.measure_multiplier = old.measure_multiplier;
+			this.multiValueSeparator = old.multiValueSeparator;
+			this.name = old.name;
+			this.precision = old.precision;
+			this.scale = old.scale;
+			this.sortIndex = old.sortIndex;
+			this.type = old.type;
+			
+			if(!this.equals(old))
+			{
+				System.out.println("FieldType Copy constructor is missing functionality");
+			}
 		}
 	}
 	

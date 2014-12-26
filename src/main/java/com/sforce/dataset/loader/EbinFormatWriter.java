@@ -44,7 +44,9 @@ import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.SimpleBindings;
 
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.util.FiscalDateUtil;
 
 /**
  * @author pgupta
@@ -80,7 +82,7 @@ public class EbinFormatWriter {
 	private volatile int successRowCount = 0;
 	private volatile int totalRowCount = 0;
 
-	Calendar cal = Calendar.getInstance();
+	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     DecimalFormat df = new DecimalFormat("00");
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
@@ -110,14 +112,29 @@ public class EbinFormatWriter {
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Year", null, null));
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter", null, null));
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week", null, null));
+
+				if(DatasetUtilConstants.createNewDateParts)
+				{
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Hour", null, null));
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Minute", null, null));
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Second", null, null));
+					
+					if(dataType.getFiscalMonthOffset()>0)
+					{
+						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Month_Fiscal", null, null));
+						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Year_Fiscal", null, null));
+						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter_Fiscal", null, null));
+						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week_Fiscal", null, null));
+					}
+				}
 			}
+			
 			if(!dataType.isComputedField)
 				numColumns++;	
 		}
 
 		this.initmeasures(_dataTypes);
 		
-		cal.setTimeZone(TimeZone.getTimeZone("GMT"));
 	    df.setMinimumIntegerDigits(2);
 	}
 	
@@ -275,11 +292,60 @@ public class EbinFormatWriter {
 					//dim_values.add(Integer.toString(week));
 					//dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), null);
-					key_value_count++;					
+					key_value_count++;	
+
+					//This check is temporary remove when schema supports these new data parts
+					if(DatasetUtilConstants.createNewDateParts)
+					{		
+						//dim_values.add(Integer.toString(hour));
+						//dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), null);
+						key_value_count++;	
+	
+						//dim_values.add(Integer.toString(minute));
+						//dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), null);
+						key_value_count++;	
+	
+						//dim_values.add(Integer.toString(second));
+						//dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), null);
+						key_value_count++;	
+						
+						if(_dataTypes.get(key_value_count).getFiscalMonthOffset()>0)
+						{
+							//dim_values.add(Integer.toString(month_Fiscal));
+							//dim_keys.add(_dataTypes.get(key_value_count).getName()+"_Month_Fiscal");
+							curr.put(_dataTypes.get(key_value_count).getName(), null);
+							key_value_count++;	
+	
+							//dim_values.add(Integer.toString(year_Fiscal));
+							//dim_keys.add(_dataTypes.get(key_value_count).getName()+"_Year_Fiscal");
+							curr.put(_dataTypes.get(key_value_count).getName(), null);
+							key_value_count++;	
+	
+							//dim_values.add(Integer.toString(quarter_Fiscal));
+							//dim_keys.add(_dataTypes.get(key_value_count).getName()+"_Quarter_Fiscal");
+							curr.put(_dataTypes.get(key_value_count).getName(), null);
+							key_value_count++;	
+	
+							//dim_values.add(Integer.toString(week_Fiscal));
+							//dim_keys.add(_dataTypes.get(key_value_count).getName()+"_Week_Fiscal");
+							curr.put(_dataTypes.get(key_value_count).getName(), null);
+							key_value_count++;	
+						}
+					}
 				}else
 				{	
 					Date dt = null;
 					SimpleDateFormat sdt = _dataTypes.get(key_value_count).getCompiledDateFormat();
+					int fiscalMonthOffset = _dataTypes.get(key_value_count).getFiscalMonthOffset();
+					boolean isYearEndFiscalYear = _dataTypes.get(key_value_count).isYearEndFiscalYear;
+					int firstDayOfWeek = _dataTypes.get(key_value_count).getFirstDayOfWeek();
+
+					cal.setFirstDayOfWeek(firstDayOfWeek);
+
+					
 					if(columnValue instanceof String)
 					{
 						dt = sdt.parse((String)columnValue);
@@ -302,14 +368,16 @@ public class EbinFormatWriter {
 				    cal.setTime(dt);
 				    
 				    int day = cal.get(Calendar.DAY_OF_MONTH);
-				    int month = cal.get(Calendar.MONTH)+1;
+				    int month = cal.get(Calendar.MONTH);
 				    int year = cal.get(Calendar.YEAR);
-				    //int quarter = (int)((month-1)/3 + 1); 
-				    int quarter = (int) ((((Math.ceil(1.0*(22-_dataTypes.get(key_value_count).getFiscalMonthOffset()+month-1)/3.0)*3.0)/3)%4)+1);
-				    int week = cal.get(Calendar.WEEK_OF_YEAR);
+				    int quarter = FiscalDateUtil.getCalendarQuarter(month);
+				    int week = FiscalDateUtil.getCalendarWeek(cal, firstDayOfWeek);
+				    int hour = cal.get(Calendar.HOUR_OF_DAY);
+				    int minute = cal.get(Calendar.MINUTE);
+				    int second = cal.get(Calendar.SECOND);
 				    long sec_epoch = dt.getTime()/(1000);
 				    long day_epoch = dt.getTime()/(1000*60*60*24);
-
+				    
 					measure_values.add(sec_epoch);
 					curr.put(_dataTypes.get(key_value_count).getName(), sec_epoch);
 					key_value_count++;
@@ -343,6 +411,54 @@ public class EbinFormatWriter {
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), week);
 					key_value_count++;
+					
+					//This check is temporary remove when schema supports these new data parts
+					if(DatasetUtilConstants.createNewDateParts)
+					{		
+						dim_values.add(df.format(hour));
+						dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), hour);
+						key_value_count++;
+	
+						dim_values.add(df.format(minute));
+						dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), minute);
+						key_value_count++;
+	
+						dim_values.add(df.format(second));
+						dim_keys.add(_dataTypes.get(key_value_count).getName());
+						curr.put(_dataTypes.get(key_value_count).getName(), second);
+						key_value_count++;
+	
+						if(fiscalMonthOffset>0)
+						{
+							int fiscal_month = FiscalDateUtil.getFiscalMonth(month, fiscalMonthOffset);
+							int fiscal_year = FiscalDateUtil.getFiscalYear(year, month, fiscalMonthOffset, isYearEndFiscalYear);
+						    int fiscal_quarter = FiscalDateUtil.getFiscalQuarter(month, fiscalMonthOffset);
+							int fiscal_week = FiscalDateUtil.getFiscalWeek(cal, fiscalMonthOffset, firstDayOfWeek);
+	
+							dim_values.add(df.format(fiscal_month));
+							dim_keys.add(_dataTypes.get(key_value_count).getName());
+							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_month);
+							key_value_count++;
+			
+							dim_values.add(Integer.toString(fiscal_year));
+							dim_keys.add(_dataTypes.get(key_value_count).getName());
+							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_year);
+							key_value_count++;
+			
+							dim_values.add(Integer.toString(fiscal_quarter));
+							dim_keys.add(_dataTypes.get(key_value_count).getName());
+							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_quarter);
+							key_value_count++;
+							
+							dim_values.add(df.format(fiscal_week));
+							dim_keys.add(_dataTypes.get(key_value_count).getName());
+							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_week);
+							key_value_count++;
+						}
+					}
+					
 				}
 
 			} catch(Throwable t)
@@ -530,5 +646,20 @@ public class EbinFormatWriter {
 	public int getTotalRowCount() {
 		return totalRowCount;
 	}
+
+	
+    public int getFiscalWeek(int fiscalMonthOffset, int weeksinYear, int firstDayOfWeek, int year, int week) {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        calendar.setFirstDayOfWeek(firstDayOfWeek);
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, fiscalMonthOffset);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        int weekOffset = calendar.get(Calendar.WEEK_OF_YEAR)-1;
+        int result = ((week - weekOffset - 1) % weeksinYear) + 1;
+        if (result <= 0) {
+            result += weeksinYear;
+        }
+        return result;
+    }
 
 }

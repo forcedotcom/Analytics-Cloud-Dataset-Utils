@@ -3,6 +3,7 @@ package com.foundations.comparator.column;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import com.foundations.comparator.attributes.DateTimeSortAttributes;
 
@@ -13,6 +14,7 @@ public final class DateTimeComparator extends AbstractComparator {
 	public DateTimeComparator(String name, int sortOrder, DateTimeSortAttributes sortAttributes) {
 		super(name, sortOrder, sortAttributes);
 		_formatter = new SimpleDateFormat(sortAttributes.getPattern());
+		_formatter.setTimeZone(TimeZone.getTimeZone("GMT")); //All dates must be in GMT
 	}
 
 	protected int extendedCompare(String a, String b) {

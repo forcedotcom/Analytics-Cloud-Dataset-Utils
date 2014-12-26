@@ -51,6 +51,28 @@ public class ExternalFileSchema {
 
 	public FileFormat fileFormat; 
 	public LinkedList<ObjectType> objects;
+	
+	public ExternalFileSchema()
+	{
+		super();
+	}
+
+	public ExternalFileSchema(ExternalFileSchema old)
+	{
+		super();
+		if(old != null)
+		{
+			this.fileFormat = new FileFormat(old.fileFormat);
+			this.objects = new LinkedList<ObjectType>();
+			if(old.objects!=null)
+			{
+				for(ObjectType obj:old.objects)
+				{
+					this.objects.add(new ObjectType(obj));
+				}
+			}
+		}
+	}
 
 	@Override
 	public int hashCode() {
@@ -587,6 +609,56 @@ public class ExternalFileSchema {
 		return null;
 	}
 	
+	
+	public static ExternalFileSchema getSchemaWithNewDateParts(ExternalFileSchema inSchema) 
+	{
+		if(inSchema == null)
+		{
+			return inSchema;
+		}
+
+		ExternalFileSchema newSchema = new ExternalFileSchema(inSchema);
+		try 
+		{
+			LinkedList<ObjectType> user_objects = newSchema.objects;
+			if(user_objects==null || user_objects.isEmpty())
+				return newSchema;
+			
+			for(ObjectType user_object:user_objects)
+			{
+					List<FieldType> user_fields = user_object.fields;
+					LinkedList<FieldType> merged_fields = new LinkedList<FieldType>();
+					if(user_fields==null || user_fields.isEmpty())
+					{
+						return newSchema;
+					}
+					for(FieldType user_field:user_fields)
+					{
+						merged_fields.add(user_field);
+						if(user_field.getfType() == FieldType.DATE)
+						{
+							merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Hour", null, null));
+							merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Minute", null, null));
+							merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Second", null, null));
+						
+							if(user_field.getFiscalMonthOffset()>0)
+							{
+								merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Month_Fiscal", null, null));
+								merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Year_Fiscal", null, null));
+								merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Quarter_Fiscal", null, null));
+								merged_fields.add(FieldType.GetStringKeyDataType(user_field.getName() + "_Week_Fiscal", null, null));
+							}
+						}
+					}
+					user_object.fields = merged_fields;
+				}
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+		return newSchema;
+	}
+	
+	
 	public static String[] createUniqueDevName(String[] headers) 
 	{
 		if(headers==null)
@@ -762,6 +834,33 @@ public class ExternalFileSchema {
 		}
 		return true;
 	}
-
+	
+	@Override
+	public String toString()
+	{
+		try 
+		{
+				ObjectMapper mapper = new ObjectMapper();	
+				return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+		} catch (Throwable t) 
+		{
+				t.printStackTrace();
+				return super.toString();
+		}
+	}
+	
+	public byte[] toBytes()
+	{
+		try 
+		{
+				ObjectMapper mapper = new ObjectMapper();	
+				return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this).getBytes(Charset.forName("UTF-8"));
+		} catch (Throwable t) 
+		{
+				t.printStackTrace();
+				return super.toString().getBytes();
+		}
+		
+	}
 	
 }

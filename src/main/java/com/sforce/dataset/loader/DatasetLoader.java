@@ -73,6 +73,7 @@ import com.sforce.async.ContentType;
 import com.sforce.async.JobInfo;
 import com.sforce.async.JobStateEnum;
 import com.sforce.async.OperationEnum;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.FieldType;
 import com.sforce.dataset.loader.file.sort.CsvExternalSort;
@@ -207,18 +208,23 @@ public class DatasetLoader {
 				t.printStackTrace();
 			}
 			
+
 			//Insert header
-			File metadataJsonFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
-			if(metadataJsonFile == null || !metadataJsonFile.canRead())
-			{
-				logger.println("Error: metadata Json file {"+metadataJsonFile+"} not found");		
-				return false;
-			}
+//			File metadataJsonFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
+//			if(metadataJsonFile == null || !metadataJsonFile.canRead())
+//			{
+//				logger.println("Error: metadata Json file {"+metadataJsonFile+"} not found");		
+//				return false;
+//			}
+			
+			ExternalFileSchema altSchema = schema;
+			if(DatasetUtilConstants.createNewDateParts)
+				altSchema = ExternalFileSchema.getSchemaWithNewDateParts(schema);
 			
 			String hdrId = getLastIncompleteFileHdr(partnerConnection, datasetAlias, logger);
 			if(hdrId==null)
 			{
-				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, FileUtils.readFileToByteArray(metadataJsonFile), uploadFormat, Operation, logger);
+				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, altSchema.toBytes(), uploadFormat, Operation, logger);
 			}else
 			{
 				logger.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
@@ -490,9 +496,9 @@ public class DatasetLoader {
 				updateHdrJson = false; //The file is already digested, we cannot update the hdr now
 				gzbinFile = lastgzbinFile;
 			}
-			
+
 			long startTime = System.currentTimeMillis();
-			status = uploadEM(gzbinFile, uploadFormat, metadataJsonFile, datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
+			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 

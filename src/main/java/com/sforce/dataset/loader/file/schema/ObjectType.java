@@ -25,6 +25,7 @@
  */
 package  com.sforce.dataset.loader.file.schema;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class ObjectType {	
@@ -43,6 +44,39 @@ public class ObjectType {
 	 public String rowLevelSecurityFilter = null; //(Required)
 	 //public boolean supportsIncrementalExtract = false; //(optional)
 	 public List<FieldType> fields = null;
+	 
+	public ObjectType() {
+		super();
+	}
+	 
+	public ObjectType(ObjectType old) 
+	{
+		super();
+		if(old!=null)
+		{
+			this.acl = old.acl;
+			this.connector = old.connector;
+			this.description = old.description;
+			this.fields = new LinkedList<FieldType>();
+			if(old.fields!=null)
+			{
+				for(FieldType obj:old.fields)
+				{
+					this.fields.add(new FieldType(obj));
+				}
+			}
+			this.fullyQualifiedName = old.fullyQualifiedName;
+			this.label = old.fullyQualifiedName;
+			this.name = old.name;
+			this.rowLevelSecurityFilter = old.rowLevelSecurityFilter;
+		
+			if(!this.equals(old))
+			{
+				System.out.println("ObjectType Copy constructor is missing functionality");
+			}
+		}
+	}
+
 	 
 	@Override
 	public int hashCode() {
