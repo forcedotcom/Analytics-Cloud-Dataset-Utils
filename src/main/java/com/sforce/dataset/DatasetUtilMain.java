@@ -354,6 +354,7 @@ public class DatasetUtilMain {
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
 		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
+		System.out.println("--createNewDateParts : (Optional) wether to create new date parts");
 //		System.out.println("jsonConfig: (Optional) the dataflow definition json file");
 		System.out.println("*******************************************************************************\n");
 		System.out.println("Usage Example 1: Upload a csv to a dataset");
