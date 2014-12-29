@@ -201,7 +201,7 @@ public class FiscalDateUtil {
 	    	boolean isYearEndFiscalYear = true;
 	    	sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 	    	
-	    	for(int firstDayOfWeek = 0; firstDayOfWeek<7;firstDayOfWeek++)
+	    	for(int firstDayOfWeek = -1; firstDayOfWeek<7;firstDayOfWeek++)
 	    	{
 	    		int year = 2012;
 		    	Calendar cal = setDate(year,0,1);

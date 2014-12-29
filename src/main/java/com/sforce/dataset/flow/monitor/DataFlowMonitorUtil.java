@@ -60,9 +60,13 @@ public class DataFlowMonitorUtil {
 		List<JobEntry> jobs = getDataFlowJobs(partnerConnection, datasetName);
 		if(jobs!=null)
 		{
+			int cnt = 0;
 			for(JobEntry job:jobs)
 			{
+				if(cnt>4)
+					break;
 				getJobErrorFile(partnerConnection, datasetName, job._uid);
+				cnt++;
 			}
 		}
 	}

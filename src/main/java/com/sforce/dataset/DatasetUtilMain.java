@@ -69,7 +69,7 @@ public class DatasetUtilMain {
 	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/32.0";
 	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/32.0";
 	
-	public static final String[] validActions = {"load", "extract", "augment", "downloadXMD", "uploadXMD", "detectEncoding", "downloadErrorFile"};
+	public static final String[][] validActions = {{"load","Load CSV"}, {"defineExtractFlow","Define SFDC Extract Data Flow"}, {"defineAugmentFlow","Define Dataset Augment Data Flow"},{"downloadXMD","Download All XMD Json Files"}, {"uploadXMD","Upload User XMD Json File"}, {"detectEncoding","Detect file encoding"}, {"downloadErrorFile","Fetch CSV Upload Error Report"}};
 
 	public static void main(String[] args) {
 		
@@ -339,8 +339,8 @@ public class DatasetUtilMain {
 		System.out.println("Usage:");
 		System.out.print("java -jar datasetutil.jar --action load --u userName --p password ");
 		System.out.println("--dataset datasetAlias --inputFile inputFile --endpoint endPoint");
-		System.out.println("--action  : Use either:load,extract,augment,downloadxmd,uploadxmd,detectEncoding");
-		System.out.println("          : Use load for loading csv, augment for augmenting existing dataset");
+		System.out.println("--action  : load,defineExtractFlow,defineAugmentFlow,downloadxmd,uploadxmd,detectEncoding");
+		System.out.println("          : Use load for loading csv, defineAugmentFlow for augmenting existing dataset");
 		System.out.println("--u       : Salesforce.com login");
 		System.out.println("--p       : (Optional) Salesforce.com password,if omitted you will be prompted");
 		System.out.println("--token   : (Optional) Salesforce.com token");
@@ -349,8 +349,8 @@ public class DatasetUtilMain {
 		System.out.println("--dataset : (Optional) the dataset alias. required if action=load");
 		System.out.println("--app     : (Optional) the app name for the dataset");
 		System.out.println("--inputFile : (Optional) the input csv file. required if action=load");
-		System.out.println("--rootObject: (Optional) the root SObject for the extract");
-		System.out.println("--rowLimit: (Optional) the number of rows to extract, -1=all, deafult=1000");
+		System.out.println("--rootObject: (Optional) the root SObject for the defineExtractFlow");
+		System.out.println("--rowLimit: (Optional) the number of rows to defineExtractFlow, -1=all, deafult=1000");
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
 		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
@@ -367,13 +367,13 @@ public class DatasetUtilMain {
 		System.out.println("java -jar datasetutil.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset test");
 		System.out.println("");
 		System.out.println("Usage Example 4: Augment 2 datasets");
-		System.out.println("java -jar datasetutil.jar --action augment --u pgupta@force.com --p @#@#@#");
+		System.out.println("java -jar datasetutil.jar --action defineAugmentFlow --u pgupta@force.com --p @#@#@#");
 		System.out.println("");
 		System.out.println("Usage Example 5: Generate the schema file from CSV");
 		System.out.println("java -jar datasetutil.jar --action load --inputFile Opportunity.csv");
 		System.out.println("");
-		System.out.println("Usage Example 6: Extract salesforce data");
-		System.out.println("java -jar datasetutil.jar --action extract --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem");
+		System.out.println("Usage Example 6: defineExtractFlow salesforce data");
+		System.out.println("java -jar datasetutil.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem");
 		System.out.println("");
 	}
 	
@@ -468,15 +468,15 @@ public class DatasetUtilMain {
 	{
 		System.out.println();
 		String selectedAction = "load";
-			int cnt=1;
-		    DecimalFormat df = new DecimalFormat("00");
-		    df.setMinimumIntegerDigits(2);
-			for(String action:validActions)
+	    DecimalFormat df = new DecimalFormat("00");
+	    df.setMinimumIntegerDigits(2);
+		int cnt = 1;
+			for(String[] action:validActions)
 			{
 				if(cnt==1)
 					System.out.println("Available Datasetutil Actions: ");
 				System.out.print(" ");
-				System.out.println(DatasetUtils.padLeft(cnt+"",3)+". "+action);
+				System.out.println(DatasetUtils.padLeft(cnt+"",3)+". "+action[1]);
 				cnt++;
 			}
 			System.out.println();
@@ -496,11 +496,11 @@ public class DatasetUtilMain {
 					cnt = 1;
 					if(choice>0 && choice <= validActions.length)
 					{
-						for(String action:validActions)
+						for(String[] action:validActions)
 						{
 							if(cnt==choice)
 							{
-								selectedAction = action;
+								selectedAction = action[0];
 								return selectedAction;
 							}
 							cnt++;
@@ -628,7 +628,7 @@ public class DatasetUtilMain {
 					e.printStackTrace();
 					return false;
 				}
-			}else if(action.equalsIgnoreCase("augment"))
+			}else if(action.equalsIgnoreCase("defineAugmentFlow"))
 			{
 				
 				try {
@@ -637,7 +637,7 @@ public class DatasetUtilMain {
 					e.printStackTrace();
 					return false;
 				}
-			}else if(action.equalsIgnoreCase("extract"))
+			}else if(action.equalsIgnoreCase("defineExtractFlow"))
 			{
 				if(params.rootObject==null)
 				{
@@ -806,10 +806,10 @@ public class DatasetUtilMain {
 			{
 				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
 			}
-		}else if(action.equalsIgnoreCase("augment"))
+		}else if(action.equalsIgnoreCase("defineAugmentFlow"))
 		{
 				
-		}else if(action.equalsIgnoreCase("extract"))
+		}else if(action.equalsIgnoreCase("defineExtractFlow"))
 		{
 			while (params.rootObject==null || params.rootObject.isEmpty()) 
 			{

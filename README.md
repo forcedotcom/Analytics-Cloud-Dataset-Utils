@@ -16,7 +16,7 @@ Or you can pass in all the param in the command line and let it run in uninterru
 
 Input Parameter
 
---action  :"load"  OR "augment"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding". Use load for loading csv, augment for augmenting existing datasets, downloadxmd to download existing xmd files, uploadxmd for uploading user.xmd.json, "extract"  for extracting data from salesforce, "detectEncoding" to detect the encoding of the inputFile.
+--action  :"load" OR "defineExtractFlow" OR "defineAugmentFlow"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding" OR "downloadErrorFile". Use load for loading csv, defineAugmentFlow for augmenting existing datasets, downloadxmd to download existing xmd files, uploadxmd for uploading user.xmd.json, "defineExtractFlow"  for extracting data from salesforce, "detectEncoding" to detect the encoding of the inputFile, "downloadErrorFile" for downloading the error file for csv upload jobs.
 
 --u       : Salesforce.com login
 
@@ -45,29 +45,25 @@ Input Parameter
 --uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
 
 
-
-## Usage Example 1: Only Generate the schema file from CSV
-    java -jar datasetutils-32.0.0.jar --action load --inputFile Opportunity.csv
-
-## Usage Example 2: Upload a local csv to a dataset
+## Usage Example 1: Upload a local csv to a dataset
     java -jar datasetutils-32.0.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
 
-## Usage Example 3: Download dataset xmd files
+## Usage Example 2: Download dataset xmd files
     java -jar datasetutils-32.0.0.jar --action downloadxmd --u pgupta@force.com --p @#@#@# --dataset puntest
 
-## Usage Example 4: Upload user.xmd.json
+## Usage Example 3: Upload user.xmd.json
     java -jar datasetutils-32.0.0.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset puntest
 
-## Usage Example 5: Augment datasets
-    java -jar datasetutils-32.0.0.jar --action augment --u pgupta@force.com --p @#@#@#
+## Usage Example 4: Augment datasets
+    java -jar datasetutils-32.0.0.jar --action defineAugmentFlow --u pgupta@force.com --p @#@#@#
 
-## Usage Example 6: Extract salesforce data
-    java -jar datasetutils-32.0.0.jar --action extract --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
+## Usage Example 5: Extract salesforce data
+    java -jar datasetutils-32.0.0.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
 
-## Usage Example 7: Detect inputFile encoding
+## Usage Example 6: Detect inputFile encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
 
-## Usage Example 8: download error logs file for csv uploads
+## Usage Example 7: download error logs file for csv uploads
     java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
 
 

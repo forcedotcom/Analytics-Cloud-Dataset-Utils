@@ -83,7 +83,7 @@ public class FieldType {
 	//public String acl = null; //Optional
 	//public boolean isAclField = false; //Optional
 	private int fiscalMonthOffset = 0;
-	private int firstDayOfWeek = 1; //1=SUNDAY, 2=MONDAY etc..
+	private int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
 	public boolean canTruncateValue = true; //Optional 
 	public boolean isYearEndFiscalYear = true; //Optional 
 	public boolean isSkipped = false; //Optional 
