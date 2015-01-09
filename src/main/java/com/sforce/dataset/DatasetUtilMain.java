@@ -53,6 +53,7 @@ import com.sforce.dataset.loader.file.listener.FileListener;
 import com.sforce.dataset.loader.file.listener.FileListenerThread;
 import com.sforce.dataset.loader.file.listener.FileListenerUtil;
 import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
+import com.sforce.dataset.server.DatasetUtilServer;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetAugmenter;
 import com.sforce.dataset.util.DatasetDownloader;
@@ -309,6 +310,18 @@ public class DatasetUtilMain {
 			}
 			System.out.println("*******************************************************************************\n");	
 			System.out.println();
+
+			System.out.println("\n*******************************************************************************");					
+	        try {
+		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
+				datasetUtilServer.init(args, false, partnerConnection);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.out.println("*******************************************************************************\n");	
+			System.out.println();
+	        
+
 			while(true)
 			{
 				action = getActionFromUser();

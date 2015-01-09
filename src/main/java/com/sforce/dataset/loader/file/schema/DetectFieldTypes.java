@@ -36,6 +36,7 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,6 +76,7 @@ public class DetectFieldTypes {
 			
 			List<String> nextLine = null;
 			types = new LinkedList<FieldType>();
+			boolean uniqueColumnFound = false;
 			String devNames[] = ExternalFileSchema.createUniqueDevName(header);
 			boolean first = true;
 			for (int i=0; i< header.length; i++) 
@@ -116,6 +118,7 @@ public class DetectFieldTypes {
 
 				
 				LinkedList<String> columnValues = new LinkedList<String>();			
+				HashSet<String> uniqueColumnValues = new HashSet<String>();			
 				int rowCount = 0;
 				logger.print("Column: "+ header[i]);
 				try
@@ -129,7 +132,10 @@ public class DetectFieldTypes {
 						if(i>=nextLine.size())
 							continue; //This line does not have enough columns
 						if(nextLine.get(i) != null && !nextLine.get(i).trim().isEmpty())
-							columnValues.add(nextLine.get(i).trim());					
+						{
+							columnValues.add(nextLine.get(i).trim());
+							uniqueColumnValues.add(nextLine.get(i).trim());
+						}
 						if(columnValues.size()>=sampleSize || rowCount > 10000)
 						{
 							break;
@@ -161,13 +167,18 @@ public class DetectFieldTypes {
 					{
 						newField =  FieldType.GetStringKeyDataType(devNames[i], null, null);
 						int prec = detectTextPrecision(columnValues);
+						if(!uniqueColumnFound && uniqueColumnValues.size() == (rowCount-1) && prec<32)
+						{
+							newField.isUniqueId = true;
+							uniqueColumnFound = true;
+						}
 						if(prec>255)
 						{
-							logger.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)");
+							logger.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)" + (newField.isUniqueId? ", isUniqueId=true":""));
 						}
 						else
 						{
-							logger.println(", Type: Text, Precison: "+prec);
+							logger.println(", Type: Text, Precison: "+prec + (newField.isUniqueId? ", isUniqueId=true":""));
 						}
 						newField.setPrecision(255); //Assume upper limit for precision of text fields even if the values may be smaller
 					}

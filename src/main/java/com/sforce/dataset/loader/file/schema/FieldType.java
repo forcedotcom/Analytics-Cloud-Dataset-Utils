@@ -253,9 +253,9 @@ public class FieldType {
 	public int getfType() {
 		if(fType==0)
 		{
-			if(type.equals(FieldType.DATE_TYPE))
+			if(this.type != null && this.type.equals(FieldType.DATE_TYPE))
 				fType = FieldType.DATE;
-			else if(type.equals(FieldType.NUMERIC_TYPE))
+			else if(this.type != null && this.type.equals(FieldType.NUMERIC_TYPE))
 				fType = FieldType.MEASURE;
 			else
 				fType = FieldType.STRING;
@@ -272,11 +272,25 @@ public class FieldType {
 	}
 
 	public String getType() {
-		return type;
+		if(type!=null)
+			return type;
+		else
+			return FieldType.TEXT_TYPE;
 	}
 
 	public void setType(String type) {
-		this.type = type;
+		if(type!=null)
+		{
+			if(type.equalsIgnoreCase(FieldType.DATE_TYPE))
+				this.type = FieldType.DATE_TYPE;
+			else if(type.equalsIgnoreCase(FieldType.NUMERIC_TYPE))
+				this.type = FieldType.NUMERIC_TYPE;
+			else if(type.equalsIgnoreCase(FieldType.TEXT_TYPE))
+				this.type = FieldType.TEXT_TYPE;
+			else
+				throw new IllegalArgumentException("Invalid type: "+type);
+		}else
+			throw new IllegalArgumentException("Invalid type: "+type);
 	}
 
 	public int getPrecision() {
@@ -300,7 +314,7 @@ public class FieldType {
 	}
 
 	public void setFormat(String format) {
-		if(this.type.equals(FieldType.DATE_TYPE) && format != null)
+		if(this.type != null && this.type.equals(FieldType.DATE_TYPE) && format != null)
 		{
 			compiledDateFormat = new SimpleDateFormat(format);
 			compiledDateFormat.setTimeZone(TimeZone.getTimeZone("GMT")); //All dates must be in GMT
@@ -318,11 +332,30 @@ public class FieldType {
 	
 	@JsonIgnore
 	public SimpleDateFormat getCompiledDateFormat() {
+		if(compiledDateFormat==null)
+		{
+			if(this.type != null && this.type.equals(FieldType.DATE_TYPE) && format != null)
+			{
+				compiledDateFormat = new SimpleDateFormat(format);
+				compiledDateFormat.setTimeZone(TimeZone.getTimeZone("GMT")); //All dates must be in GMT
+			}
+		}
 		return compiledDateFormat;
 	}
 
 	@JsonIgnore
 	public Date getDefaultDate() {
+		if(defaultDate==null)
+		{
+			if(getCompiledDateFormat() != null && defaultValue!=null && !defaultValue.isEmpty())
+			{
+				try {
+					this.defaultDate = getCompiledDateFormat().parse(defaultValue);
+				} catch (ParseException e) {
+					throw new IllegalArgumentException(e.toString());
+				}
+			}
+		}
 		return defaultDate;
 	}
 
@@ -339,12 +372,12 @@ public class FieldType {
 	}
 
 	public void setDefaultValue(String defaultValue) {
-		if(this.type.equals(FieldType.DATE_TYPE) && compiledDateFormat != null)
+		if(this.type != null && this.type.equals(FieldType.DATE_TYPE) && getCompiledDateFormat() != null)
 		{
 			if(defaultValue!=null && !defaultValue.isEmpty())
 			{
 				try {
-					this.defaultDate = compiledDateFormat.parse(defaultValue);
+					this.defaultDate = getCompiledDateFormat().parse(defaultValue);
 				} catch (ParseException e) {
 					throw new IllegalArgumentException(e.toString());
 				}
@@ -805,4 +838,6 @@ public class FieldType {
 		return true;
 	}
 
+
+	
 }

@@ -27,6 +27,7 @@ package com.sforce.dataset.loader.file.schema;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
@@ -74,6 +75,7 @@ public class ExternalFileSchema {
 		}
 	}
 
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -83,7 +85,7 @@ public class ExternalFileSchema {
 		result = prime * result + ((objects == null) ? 0 : objects.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -112,7 +114,7 @@ public class ExternalFileSchema {
 		}
 		return true;
 	}
-	
+
 	public static ExternalFileSchema init(File csvFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
 	{
 		ExternalFileSchema newSchema = null;
@@ -209,7 +211,7 @@ public class ExternalFileSchema {
 			}
 			mapper.writerWithDefaultPrettyPrinter().writeValue(schemaFile, emd);
 		} catch (Throwable t) {
-			t.printStackTrace();
+			t.printStackTrace(logger);
 		}
 	}
 	
@@ -245,24 +247,8 @@ public class ExternalFileSchema {
 				CsvListReader reader = null;
 				try 
 				{
-//					reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null, fileCharset)));
 					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
 					header = reader.getHeader(true);
-//					if(header!=null)
-//					{
-////					header = reader.getHeaders();		
-////					String[] nextLine;
-////					reader = new CSVReader(new FileReader(inputCSV));			
-////					header = reader.readNext();
-//					if(reader!=null)
-//					{
-//						try {
-//							reader.close();
-//							reader = null;
-//						} catch (Throwable e) {
-//						}
-//					}
-//					}
 				}catch(Throwable t){t.printStackTrace();}
 				finally{
 					if(reader!=null)
@@ -333,16 +319,25 @@ public class ExternalFileSchema {
 						if(user_object.name==null||user_object.name.trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].name] in schema cannot be null or empty\n");
+						}else if(user_object.name.length()>255)
+						{
+							message.append("object name ["+user_object.name+"] in schema cannot be greater than 255 characters in length\n");
 						}
 
 						if(user_object.label==null||user_object.label.trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].label] in schema cannot be null or empty\n");
+						}else if(user_object.label.length()>255)
+						{
+							message.append("object label ["+user_object.label+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 
 						if(user_object.fullyQualifiedName==null||user_object.fullyQualifiedName.trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
+						}else if(user_object.fullyQualifiedName.length()>255)
+						{
+							message.append("object fullyQualifiedName ["+user_object.fullyQualifiedName+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 						
 						if(!createDevName(user_object.name, "Dataset", (objectCount-1)).equals(user_object.name))
@@ -352,7 +347,8 @@ public class ExternalFileSchema {
 
 						if(user_fields!=null && !user_fields.isEmpty())
 						{
-							HashSet<String> field = new HashSet<String>();
+							HashSet<String> fieldNames = new HashSet<String>();
+							HashSet<String> uniqueIdfieldNames = new HashSet<String>();
 							int fieldCount=0;
 							for(FieldType user_field:user_fields)
 							{
@@ -369,7 +365,7 @@ public class ExternalFileSchema {
 										message.append("field name {"+user_field.getName()+"} contains invalid characters \n");
 									}
 									
-									if(!field.add(user_field.getName()))
+									if(!fieldNames.add(user_field.getName().toUpperCase()))
 									{
 										message.append("Duplicate field name {"+user_field.getName()+"}\n");
 									}
@@ -463,10 +459,19 @@ public class ExternalFileSchema {
 										}
 									}
 									
+									if(user_field.isUniqueId)
+									{
+										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
+									}
+									
 								}else
 								{
 									message.append("[objects["+objectCount+"].fields["+fieldCount+"].name] in schema cannot be null or empty\n");
 								}
+							} //End for
+							if(uniqueIdfieldNames.size()>1)
+							{
+								message.append("More than one field has 'isUniqueId' attribute set to true {"+uniqueIdfieldNames+"}\n");
 							}
 						}else
 						{
@@ -564,7 +569,6 @@ public class ExternalFileSchema {
 								merged_fields.add(user_field);
 						}
 						
-						merged_object.acl =  user_object.acl!=null?user_object.acl:auto_object.acl;
 						merged_object.connector =  user_object.connector!=null?user_object.connector:auto_object.connector;
 						merged_object.description =  user_object.description!=null?user_object.description:auto_object.description;
 						merged_object.fullyQualifiedName =  user_object.fullyQualifiedName!=null?user_object.fullyQualifiedName:auto_object.fullyQualifiedName;
@@ -587,7 +591,7 @@ public class ExternalFileSchema {
 			mergedSchema.fileFormat = userSchema.fileFormat!=null?userSchema.fileFormat:autoSchema.fileFormat;
 			mergedSchema.objects = merged_objects;
 		} catch (Throwable t) {
-			t.printStackTrace();
+			t.printStackTrace(logger);
 		}
 		return mergedSchema;
 	}
@@ -602,9 +606,12 @@ public class ExternalFileSchema {
 				FilenameUtils.getBaseName(csvFile.getName());
 				csvFile = new File(csvFile.getParent(),FilenameUtils.getBaseName(csvFile.getName())+SCHEMA_FILE_SUFFIX);
 				return csvFile;
+			}else
+			{
+				return csvFile;
 			}
 		} catch (Throwable t) {
-			t.printStackTrace();
+			t.printStackTrace(logger);
 		}
 		return null;
 	}
@@ -862,5 +869,62 @@ public class ExternalFileSchema {
 		}
 		
 	}
+	
+	public static ExternalFileSchema load(InputStream inputStream, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
+	{
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		ExternalFileSchema userSchema = mapper.readValue(inputStream, ExternalFileSchema.class);
+		if(userSchema!=null)
+		{
+			throw new IllegalArgumentException("Could not read schema from stream {null}");
+		}
+		validateSchema(userSchema, logger);
+		return userSchema;
+	}
+	
+	
+	public static HashSet<String> getUniqueId(ExternalFileSchema inSchema) 
+	{
+		HashSet<String> uniqueIdfieldNames = new HashSet<String>();
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		{
+			for(FieldType user_field: inSchema.objects.get(0).fields)
+			{
+				if(user_field != null && user_field.isUniqueId)
+					uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
+			}
+		}
+		return uniqueIdfieldNames;
+	}
+
+	public static boolean hasUniqueID(ExternalFileSchema inSchema) 
+	{
+		boolean hasUniqueID = false;
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		{
+			for(FieldType user_field: inSchema.objects.get(0).fields)
+			{
+				if(user_field != null && user_field.isUniqueId)
+					hasUniqueID = true;
+			}
+		}
+		return hasUniqueID;
+	}
+	
+
+	public static void setUniqueId(ExternalFileSchema inSchema, HashSet<String> uniqueIdfieldNames) 
+	{
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null && uniqueIdfieldNames != null)
+		{
+			for(FieldType user_field: inSchema.objects.get(0).fields)
+			{
+				if(uniqueIdfieldNames.contains(user_field.getFullyQualifiedName()))
+						user_field.isUniqueId = true;
+			}
+		}
+	}
+
+
 	
 }

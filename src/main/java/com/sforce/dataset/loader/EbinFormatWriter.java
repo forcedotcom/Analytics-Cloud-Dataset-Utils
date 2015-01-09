@@ -392,9 +392,9 @@ public class EbinFormatWriter {
 					curr.put(_dataTypes.get(key_value_count).getName(), day);
 					key_value_count++;
 	
-					dim_values.add(df.format(month));
+					dim_values.add(df.format(month+1));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).getName(), month);
+					curr.put(_dataTypes.get(key_value_count).getName(), (month+1));
 					key_value_count++;
 	
 					dim_values.add(Integer.toString(year));
@@ -437,9 +437,9 @@ public class EbinFormatWriter {
 						    int fiscal_quarter = FiscalDateUtil.getFiscalQuarter(month, fiscalMonthOffset);
 							int fiscal_week = FiscalDateUtil.getFiscalWeek(cal, fiscalMonthOffset, firstDayOfWeek);
 	
-							dim_values.add(df.format(fiscal_month));
+							dim_values.add(df.format(fiscal_month+1));
 							dim_keys.add(_dataTypes.get(key_value_count).getName());
-							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_month);
+							curr.put(_dataTypes.get(key_value_count).getName(), (fiscal_month+1));
 							key_value_count++;
 			
 							dim_values.add(Integer.toString(fiscal_year));

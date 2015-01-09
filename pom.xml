@@ -106,7 +106,27 @@
 			<artifactId>externalsortinginjava</artifactId>
 			<version>0.1.9</version>
 		</dependency>
-	</dependencies>
+   <dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>javax.servlet-api</artifactId>
+		<version>3.1.0</version>
+	</dependency>
+	<dependency>
+		<groupId>commons-fileupload</groupId>
+		<artifactId>commons-fileupload</artifactId>
+		<version>1.3</version>
+	</dependency>
+    <dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+		<artifactId>jetty-server</artifactId>
+		<version>9.2.6.v20141205</version>
+    </dependency>
+    <dependency>
+		<groupId>org.eclipse.jetty</groupId>
+		<artifactId>jetty-webapp</artifactId>
+		<version>9.2.6.v20141205</version>
+	</dependency>
+ 	</dependencies>
 	<build>
 		<defaultGoal>clean install</defaultGoal>
 		<resources>
@@ -126,6 +146,9 @@
 				<excludes>
 					<exclude>**/*.java</exclude>
 				</excludes>
+			</resource>
+			<resource>
+				<directory>${basedir}/src/main/webapp</directory>
 			</resource>
 		</resources>
 		<plugins>
@@ -221,6 +244,7 @@
 						<exclude>**/*.sh</exclude>
 						<exclude>local-proj-repo/**</exclude>
 						<exclude>src/main/resources/**</exclude>
+						<exclude>src/main/webapp/**</exclude>
 						<exclude>src/test/resources/**</exclude>
 						<exclude>.gitignore</exclude>
 						<exclude>.gitmodules</exclude>

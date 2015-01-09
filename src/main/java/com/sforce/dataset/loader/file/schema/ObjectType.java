@@ -40,7 +40,7 @@ public class ObjectType {
 	 public String label = null; //(Optional - defaults to name)
 	 public String description = null; //(optional)
 //	 public boolean isPrimaryObject = true; //(optional)
-	 public String acl = null; //(optional)
+//	 public String acl = null; //(optional)
 	 public String rowLevelSecurityFilter = null; //(Required)
 	 //public boolean supportsIncrementalExtract = false; //(optional)
 	 public List<FieldType> fields = null;
@@ -54,7 +54,6 @@ public class ObjectType {
 		super();
 		if(old!=null)
 		{
-			this.acl = old.acl;
 			this.connector = old.connector;
 			this.description = old.description;
 			this.fields = new LinkedList<FieldType>();
@@ -77,12 +76,10 @@ public class ObjectType {
 		}
 	}
 
-	 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((acl == null) ? 0 : acl.hashCode());
 		result = prime * result
 				+ ((connector == null) ? 0 : connector.hashCode());
 		result = prime * result
@@ -100,6 +97,7 @@ public class ObjectType {
 						: rowLevelSecurityFilter.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -112,13 +110,6 @@ public class ObjectType {
 			return false;
 		}
 		ObjectType other = (ObjectType) obj;
-		if (acl == null) {
-			if (other.acl != null) {
-				return false;
-			}
-		} else if (!acl.equals(other.acl)) {
-			return false;
-		}
 		if (connector == null) {
 			if (other.connector != null) {
 				return false;
@@ -170,6 +161,8 @@ public class ObjectType {
 		}
 		return true;
 	}
+
+	 
 	 
 	 
 

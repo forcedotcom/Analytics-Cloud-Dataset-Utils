@@ -41,7 +41,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -49,6 +51,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
@@ -103,6 +106,11 @@ public class DatasetLoader {
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 	private static int MAX_NUM_UPLOAD_THREADS = 3;
+	static final SimpleDateFormat logformat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS zzz");
+	static
+	{
+		logformat.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
 	
 //	PrintStream logger = null;
 
@@ -124,7 +132,7 @@ public class DatasetLoader {
 		//we only want a small capacity otherwise the reader thread will runaway
 		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(10);  
 
-
+		
 		if(uploadFormat==null||uploadFormat.trim().isEmpty())
 			uploadFormat = "binary";
 		
@@ -138,13 +146,34 @@ public class DatasetLoader {
 		{
 			Operation = "Overwrite";
 		}
+		
+		if(datasetLabel==null)
+		{
+			datasetLabel = datasetAlias;
+		}
 
+		logger.println("\n*******************************************************************************");					
+		logger.println("Start Timestamp: "+logformat.format(new Date()));
+		logger.println("inputFileString: "+inputFileString);
+		logger.println("inputFileCharset: "+inputFileCharset);
+		logger.println("datasetAlias: "+datasetAlias);
+		logger.println("datasetLabel: "+datasetLabel);
+		logger.println("datasetFolder: "+datasetFolder);
+		logger.println("Operation: "+Operation);
+		logger.println("*******************************************************************************\n");					
+		
 		try {
 			
 			inputFile = new File(inputFileString);
 			if(!inputFile.exists())
 			{
 				logger.println("Error: File {"+inputFile.getAbsolutePath()+"} not found");
+				return false;
+			}
+
+			if(inputFile.length()==0)
+			{
+				logger.println("Error: File {"+inputFile.getAbsolutePath()+"} is empty");
 				return false;
 			}
 			
@@ -169,7 +198,14 @@ public class DatasetLoader {
 			}
 			logger.println("*******************************************************************************\n");					
 
-
+			if(schema != null)
+			{
+				if((Operation.equalsIgnoreCase("Upsert") || Operation.equalsIgnoreCase("Delete")) && !ExternalFileSchema.hasUniqueID(schema))
+				{
+					throw new IllegalArgumentException("Schema File {"+ExternalFileSchema.getSchemaFile(inputFile, logger) +"} must have uniqueId set for atleast one field");
+				}
+			}
+			
 			if(datasetAlias==null||datasetAlias.trim().isEmpty())
 			{
 				//We only need to generate schema
@@ -189,6 +225,7 @@ public class DatasetLoader {
 				logger.println("Error: you do not have access to Analytics Cloud API. Please contact salesforce support");
 				return false;
 			}
+
 
 			archiveDir = new File(inputFile.getParent(),"archive");
 			try
@@ -521,7 +558,12 @@ public class DatasetLoader {
 			logger.println("Successfully uploaded {"+inputFile+"} to Dataset {"+datasetAlias+"} uploadTime {"+nf.format(uploadTime)+"} msecs" );
 		else
 			logger.println("Failed to load {"+inputFile+"} to Dataset {"+datasetAlias+"}");
-		logger.println("*****************************************************************************************************************\n");					
+		logger.println("*****************************************************************************************************************\n");
+		
+		logger.println("\n*******************************************************************************");					
+		logger.println("End Timestamp: "+logformat.format(new Date()));
+		logger.println("*******************************************************************************\n");					
+
 		return status;
 	}
 

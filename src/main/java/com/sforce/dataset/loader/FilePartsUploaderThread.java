@@ -30,6 +30,7 @@ import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 
@@ -44,7 +45,8 @@ public class FilePartsUploaderThread implements Runnable {
   private final PartnerConnection partnerConnection;
   private final String insightsExternalDataId;
 
-  private volatile boolean done = false;
+  private volatile AtomicBoolean done = new AtomicBoolean(false);
+
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
   private final PrintStream logger;
@@ -67,7 +69,7 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
     try {
        Map<Integer, File> row = queue.take();
    		logger.println("Start: " + Thread.currentThread().getName());
-   		done = false;
+   		done.set(false);
        while (!row.isEmpty()) {
 			try
 			{
@@ -84,12 +86,12 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
     }catch (Throwable t) {
        logger.println (Thread.currentThread().getName() + " " + t);
     }
-    done = true;
+    done.set(true);
 	logger.println("END: " + Thread.currentThread().getName());
   }
 
 public boolean isDone() {
-	return done;
+	return done.get();
 }
 
 public int getErrorRowCount() {

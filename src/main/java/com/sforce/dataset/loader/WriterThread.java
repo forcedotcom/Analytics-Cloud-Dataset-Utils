@@ -28,6 +28,7 @@ package com.sforce.dataset.loader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
  
 public class WriterThread implements Runnable {
 	
@@ -39,7 +40,7 @@ private final EbinFormatWriter ebinWriter;
   private final ErrorWriter errorwriter;
   private final PrintStream logger;
 
-  private volatile boolean isDone = false;
+  private volatile AtomicBoolean done = new AtomicBoolean(false);
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
 
@@ -102,11 +103,11 @@ public void run() {
 		e.printStackTrace();
 	}
 	logger.println("END: " + Thread.currentThread().getName());
-    isDone = true;
+    done.set(true);
   }
 
 public boolean isDone() {
-	return isDone;
+	return done.get();
 }
 
 public int getErrorRowCount() {
