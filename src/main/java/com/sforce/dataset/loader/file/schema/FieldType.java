@@ -659,7 +659,10 @@ public class FieldType {
 	}
 
 	public void setDecimalSeparator(String decimalSeparator) {
-		this.decimalSeparator = decimalSeparator;
+		if(decimalSeparator == null || decimalSeparator.isEmpty())
+			this.decimalSeparator = ".";
+		else
+			this.decimalSeparator = decimalSeparator;
 	}
 
 	public int getSortIndex() {

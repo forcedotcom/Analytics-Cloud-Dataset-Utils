@@ -319,9 +319,15 @@ public class ExternalFileSchema {
 						if(user_object.name==null||user_object.name.trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].name] in schema cannot be null or empty\n");
-						}else if(user_object.name.length()>255)
+						}else
 						{
-							message.append("object name ["+user_object.name+"] in schema cannot be greater than 255 characters in length\n");
+							if(user_object.name.length()>255)
+							{
+								message.append("object name ["+user_object.name+"] in schema cannot be greater than 255 characters in length\n");
+							}else if(!createDevName(user_object.name, "Dataset", (objectCount-1)).equals(user_object.name))
+							{
+								message.append("Object name {"+user_object.name+"} contains invalid characters \n");
+							}
 						}
 
 						if(user_object.label==null||user_object.label.trim().isEmpty())
@@ -340,10 +346,6 @@ public class ExternalFileSchema {
 							message.append("object fullyQualifiedName ["+user_object.fullyQualifiedName+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 						
-						if(!createDevName(user_object.name, "Dataset", (objectCount-1)).equals(user_object.name))
-						{
-							message.append("Object name {"+user_object.name+"} contains invalid characters \n");
-						}
 
 						if(user_fields!=null && !user_fields.isEmpty())
 						{
@@ -353,7 +355,7 @@ public class ExternalFileSchema {
 							for(FieldType user_field:user_fields)
 							{
 								fieldCount++;
-								if(user_field != null && user_field.getName()!=null || !user_field.getName().isEmpty())
+								if(user_field != null && user_field.getName()!=null && !user_field.getName().isEmpty())
 								{
 									if(user_field.getName().length()>255)
 									{
@@ -380,94 +382,110 @@ public class ExternalFileSchema {
 											}
 										}
 									}
-									
-									if(user_field.getLabel()!=null || user_field.getLabel().trim().isEmpty())
-									{
-										if(user_field.getLabel().length()>255)
-										{
-											message.append("field label {"+user_field.getLabel()+"} is greater than 255 characters\n");
-										}
-									}else
-									{
-										message.append("[objects["+objectCount+"].fields["+fieldCount+"].label] in schema cannot be null or empty\n");
-									}
-
-									if(user_field.getFullyQualifiedName()!=null || user_field.getFullyQualifiedName().trim().isEmpty())
-									{
-										if(user_field.getFullyQualifiedName().length()>255)
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
-										}
-									}else
-									{
-										message.append("[objects["+objectCount+"].fields["+fieldCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
-									}
-									
-									if(user_field.getfType()==FieldType.MEASURE)
-									{
-										if(user_field.getDefaultValue()==null|| !isLatinNumber(user_field.getDefaultValue()))
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
-										}
-										
-										if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <19)\n");
-										}
-										
-										if(user_field.getScale()>=user_field.getPrecision())
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have scale less than the precision\n");
-										}
-										
-									}else if(user_field.getfType()==FieldType.STRING)
-									{
-										if(user_field.getPrecision()>32000)
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <32,000)\n");
-										}
-										
-										if(user_field.getPrecision()==0)
-										{
-											user_field.setPrecision(255);
-										}
-									}else if(user_field.getfType()==FieldType.DATE)
-									{
-										if(user_field.getCompiledDateFormat()==null)
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid date format {"+user_field.getFormat()+"}\n");
-										}
-									}else
-									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
-									}
-										
-
-									if(user_field.isMultiValue())
-									{
-										if(user_field.getMultiValueSeparator()==null)
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have 'multiValueSeparator' value when 'isMultiValue' is 'true'\n");
-										}
-									}
-									
-									if(user_field.isComputedField)
-									{
-										if(user_field.getCompiledScript()==null)
-										{
-											message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid 'computedFieldExpression' value {"+user_field.getComputedFieldExpression()+"}\n");
-										}
-									}
-									
-									if(user_field.isUniqueId)
-									{
-										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
-									}
-									
 								}else
 								{
 									message.append("[objects["+objectCount+"].fields["+fieldCount+"].name] in schema cannot be null or empty\n");
 								}
+								
+								if(user_field.getLabel()!=null && !user_field.getLabel().trim().isEmpty())
+								{
+									if(user_field.getLabel().length()>255)
+									{
+										message.append("field label {"+user_field.getLabel()+"} is greater than 255 characters\n");
+									}
+								}else
+								{
+									message.append("[objects["+objectCount+"].fields["+fieldCount+"].label] in schema cannot be null or empty\n");
+								}
+
+								if(user_field.getFullyQualifiedName()!=null && !user_field.getFullyQualifiedName().trim().isEmpty())
+								{
+									if(user_field.getFullyQualifiedName().length()>255)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
+									}
+								}else
+								{
+									message.append("[objects["+objectCount+"].fields["+fieldCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
+								}
+								
+								if(user_field.getfType()==FieldType.MEASURE)
+								{
+									if(user_field.getDefaultValue()==null || !isLatinNumber(user_field.getDefaultValue()))
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
+									}
+									
+									if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <19)\n");
+									}
+									
+									if(user_field.getPrecision()>0 && user_field.getScale()>=user_field.getPrecision())
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have scale less than the precision\n");
+									}
+									
+								}else if(user_field.getfType()==FieldType.STRING)
+								{
+									if(user_field.getPrecision()>32000)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <32,000)\n");
+									}
+									
+									if(user_field.getPrecision()==0)
+									{
+										user_field.setPrecision(255);
+									}
+								}else if(user_field.getfType()==FieldType.DATE)
+								{
+									if(user_field.getCompiledDateFormat()==null)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid date format {"+user_field.getFormat()+"}\n");
+									}
+									
+									if(user_field.getFiscalMonthOffset() <0 || user_field.getFiscalMonthOffset() > 11)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have FiscalMonthOffset between (0 && 11)\n");
+									}
+
+									if(user_field.getFirstDayOfWeek() <-1 || user_field.getFirstDayOfWeek() > 6)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have FirstDayOfWeek between (-1 && 6)\n");
+									}
+								}else
+								{
+									message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
+								}
+									
+
+								if(user_field.isMultiValue())
+								{
+									if(user_field.getMultiValueSeparator()==null)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have 'multiValueSeparator' value when 'isMultiValue' is 'true'\n");
+									}
+									
+									if(user_field.isUniqueId)
+									{
+										message.append("MultiValue field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
+									}
+									
+								}
+								
+								if(user_field.isComputedField)
+								{
+									if(user_field.getCompiledScript()==null)
+									{
+										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid 'computedFieldExpression' value {"+user_field.getComputedFieldExpression()+"}\n");
+									}
+								}
+								
+								if(user_field.isUniqueId)
+								{
+									uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
+								}
+
 							} //End for
 							if(uniqueIdfieldNames.size()>1)
 							{
@@ -475,12 +493,12 @@ public class ExternalFileSchema {
 							}
 						}else
 						{
-							message.append("[objects["+objectCount+"].fields] field in schema cannot be null or empty\n");
+							message.append("[objects["+objectCount+"].fields] in schema cannot be null or empty\n");
 						}
 				}
 			}else
 			{
-				message.append("[objects] field in schema cannot be null or empty\n");
+				message.append("[objects] in schema cannot be null or empty\n");
 			}
 		}
 		if(message.length()!=0)
@@ -875,7 +893,7 @@ public class ExternalFileSchema {
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		ExternalFileSchema userSchema = mapper.readValue(inputStream, ExternalFileSchema.class);
-		if(userSchema!=null)
+		if(userSchema==null)
 		{
 			throw new IllegalArgumentException("Could not read schema from stream {null}");
 		}
