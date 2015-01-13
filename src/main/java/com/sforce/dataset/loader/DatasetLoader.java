@@ -259,24 +259,30 @@ public class DatasetLoader {
 				altSchema = ExternalFileSchema.getSchemaWithNewDateParts(schema);
 			
 			String hdrId = getLastIncompleteFileHdr(partnerConnection, datasetAlias, logger);
-			if(hdrId==null)
+			if(hdrId!=null)
+			{
+				File lastgzbinFile = new File(datasetArchiveDir, hdrId + "." + FilenameUtils.getBaseName(inputFile.getName()) + ".gz");
+				if(lastgzbinFile.exists())
+				{
+					logger.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
+					updateHdrJson = true;
+				}
+			}
+
+			if(hdrId==null || hdrId.isEmpty())
 			{
 				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, altSchema.toBytes(), uploadFormat, Operation, logger);
-			}else
-			{
-				logger.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
-				updateHdrJson = true;
 			}
+			
 			if(hdrId ==null || hdrId.isEmpty())
 			{
 				logger.println("Error: failed to insert header row into the saleforce SObject");		
 				return false;
 			}
-			
 			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema);
 			
-//Create the Bin file
-//			File binFile = new File(csvFile.getParent(), datasetName + ".bin");
+			//Create the Bin file
+			//File binFile = new File(csvFile.getParent(), datasetName + ".bin");
 			File gzbinFile = inputFile;
 			if(!FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
 			{
@@ -1458,7 +1464,7 @@ public class DatasetLoader {
 	private static String getLastIncompleteFileHdr(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
 	{
 		String rowId = null;
-		String soqlQuery = String.format("SELECT Id FROM InsightsExternalData WHERE EdgemartAlias = '%s' AND Status = 'New' AND Action = 'None' ORDER BY CreatedDate DESC LIMIT 1",datasetAlias);
+		String soqlQuery = String.format("SELECT Id,Status,Action FROM InsightsExternalData WHERE EdgemartAlias = '%s' ORDER BY CreatedDate DESC LIMIT 1",datasetAlias);
 		partnerConnection.setQueryOptions(2000);
 		QueryResult qr = partnerConnection.query(soqlQuery);
 		int rowsSoFar = 0;
@@ -1470,12 +1476,18 @@ public class DatasetLoader {
 				SObject[] records = qr.getRecords();
 				for (int i = 0; i < records.length; ++i) 
 				{
+					if(rowsSoFar==0) //only get the first one
+					{
 						String fieldName = "Id";
 						Object value = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
-						if (value != null) {
-							if(rowsSoFar==0) //only get the first one
+						fieldName = "Status";
+						Object Status = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
+						fieldName = "Action";
+						Object Action = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
+						if (value != null && Status != null && Status.toString().equalsIgnoreCase("new") && Action != null && Action.toString().equalsIgnoreCase("none")) {
 								rowId = value.toString();
 						}
+					}
 					rowsSoFar++;
 				}
 				if (qr.isDone()) {
