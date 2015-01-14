@@ -202,6 +202,7 @@ public class EbinFormatWriter {
 	            	bindings.put("curr", curr);
 	            	bindings.put("prev", prev);
 	            	columnValue = cs.eval(bindings);
+//	            	System.out.println("columnValue:"+columnValue);
 	            }
 	            }catch(Throwable t)
 	            {
@@ -240,7 +241,7 @@ public class EbinFormatWriter {
 							throw new ParseException("Value {"+mv+"} out of range ("+edgeMinValue+"-"+edgeMaxValue+")",0);
 					}
 					measure_values.add((long)mv);
-					curr.put(_dataTypes.get(key_value_count).getName(), (long)v);
+					curr.put(_dataTypes.get(key_value_count).getName(), v);
 					key_value_count++;
 				} catch(Throwable t)
 				{

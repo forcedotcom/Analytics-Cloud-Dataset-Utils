@@ -500,6 +500,10 @@ public class ExternalFileSchema {
 			{
 				message.append("[objects] in schema cannot be null or empty\n");
 			}
+			if(!hasDim(schema))
+			{
+				message.append("At least one field in schema should be of Type 'Text'\n");
+			}
 		}
 		if(message.length()!=0)
 		{
@@ -929,7 +933,21 @@ public class ExternalFileSchema {
 		}
 		return hasUniqueID;
 	}
-	
+
+	public static boolean hasDim(ExternalFileSchema inSchema) 
+	{
+		boolean hasDim = false;
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		{
+			for(FieldType user_field: inSchema.objects.get(0).fields)
+			{
+				if(user_field != null && user_field.getfType()==FieldType.STRING)
+					hasDim = true;
+			}
+		}
+		return hasDim;
+	}
+
 
 	public static void setUniqueId(ExternalFileSchema inSchema, HashSet<String> uniqueIdfieldNames) 
 	{
