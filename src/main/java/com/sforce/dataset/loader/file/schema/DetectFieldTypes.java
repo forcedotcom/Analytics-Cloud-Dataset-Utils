@@ -46,6 +46,7 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
+import java.util.Calendar;
 import com.sforce.dataset.util.DatasetUtils;
 
 
@@ -55,7 +56,7 @@ public class DetectFieldTypes {
 //	public static final Pattern dates = Pattern.compile("(.*)([0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2})(.*)");
 //	public static final Pattern numbers = Pattern.compile("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$");	
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
-	public static final String[] additionalDatePatterns ={"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss", "M/d/yy", "d/M/yy","M-d-yy", "d-M-yy"}; //
+	public static final String[] additionalDatePatterns  = {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss", "M/d/yy", "d/M/yy","M-d-yy", "d-M-yy", "M/dd/yyyy HH:mm:ss","M/dd/yy HH:mm:ss","M-dd-yyyy HH:mm:ss","M-dd-yy HH:mm:ss","dd/M/yyyy HH:mm:ss","dd/M/yy HH:mm:ss","dd-M-yyyy HH:mm:ss","dd-M-yy HH:mm:ss", "M/dd/yy", "dd/M/yy","M-dd-yy", "dd-M-yy", "M/dd/yyyy", "dd/M/yyyy","M-dd-yyyy", "dd-M-yyyy","MM/d/yyyy HH:mm:ss","MM/d/yy HH:mm:ss","MM-d-yyyy HH:mm:ss","MM-d-yy HH:mm:ss","d/MM/yyyy HH:mm:ss","d/MM/yy HH:mm:ss","d-MM-yyyy HH:mm:ss","d-MM-yy HH:mm:ss", "MM/d/yy", "d/MM/yy","MM-d-yy", "d-MM-yy", "MM/d/yyyy", "d/MM/yyyy","MM-d-yyyy", "d-MM-yyyy"};
 	
 	
 	public LinkedList<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
@@ -259,6 +260,8 @@ public class DetectFieldTypes {
 	    int success = 0;
 	    
 		LinkedHashSet<SimpleDateFormat> dateFormats = getSuportedDateFormats();
+		Calendar cal = Calendar.getInstance();
+		cal.setLenient(false);
 
 	    for(int j=0;j<columnValues.size();j++)
 	    {
@@ -274,7 +277,8 @@ public class DetectFieldTypes {
 		      {
 		         try
 		         {
-		        	 dt = sdf.parse(columnValue);
+		        	 dt = sdf.parse(columnValue);		        	 
+		        	 cal.setTime(dt);
 		        	 String tmpDate = sdf.format(dt);
 		        	 if(tmpDate.length() == columnValue.length())
 		        	 {
@@ -372,7 +376,7 @@ public class DetectFieldTypes {
 	      	  continue; // Skip language-only locales
 	        }	    	  
 	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
-	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));	    
 	    }
 	    return dateFormats;
     }

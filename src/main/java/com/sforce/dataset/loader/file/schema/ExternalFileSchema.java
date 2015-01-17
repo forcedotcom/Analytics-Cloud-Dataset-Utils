@@ -229,7 +229,8 @@ public class ExternalFileSchema {
 		if(schemaFile.exists())
 		{
 			logger.println("Loading existing schema from file {"+ schemaFile +"}");
-			userSchema  =  mapper.readValue(schemaFile, ExternalFileSchema.class);			
+			InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(schemaFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+			userSchema  =  mapper.readValue(reader, ExternalFileSchema.class);			
 		}
 
 		if(userSchema==null)
@@ -896,7 +897,8 @@ public class ExternalFileSchema {
 	{
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		ExternalFileSchema userSchema = mapper.readValue(inputStream, ExternalFileSchema.class);
+		InputStreamReader reader = new InputStreamReader(new BOMInputStream(inputStream, false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+		ExternalFileSchema userSchema = mapper.readValue(reader, ExternalFileSchema.class);
 		if(userSchema==null)
 		{
 			throw new IllegalArgumentException("Could not read schema from stream {null}");

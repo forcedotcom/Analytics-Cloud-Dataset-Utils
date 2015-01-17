@@ -245,7 +245,7 @@ public class EbinFormatWriter {
 					key_value_count++;
 				} catch(Throwable t)
 				{
-					throw new NumberFormatException(_dataTypes.get(key_value_count).getName() +" is not a valid number: " + columnValue +" - " +t.getMessage());
+					throw new NumberFormatException(_dataTypes.get(key_value_count).getName() +" is not a valid number, value {" + columnValue +"} : " +t.getMessage());
 				}
 			}else if (_dataTypes.get(key_value_count).getfType() == FieldType.DATE) 
 			{
