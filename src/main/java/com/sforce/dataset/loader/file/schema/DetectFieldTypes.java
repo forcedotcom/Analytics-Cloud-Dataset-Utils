@@ -56,8 +56,7 @@ public class DetectFieldTypes {
 //	public static final Pattern dates = Pattern.compile("(.*)([0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2})(.*)");
 //	public static final Pattern numbers = Pattern.compile("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$");	
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
-	public static final String[] additionalDatePatterns  = {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss", "M/d/yy", "d/M/yy","M-d-yy", "d-M-yy", "M/dd/yyyy HH:mm:ss","M/dd/yy HH:mm:ss","M-dd-yyyy HH:mm:ss","M-dd-yy HH:mm:ss","dd/M/yyyy HH:mm:ss","dd/M/yy HH:mm:ss","dd-M-yyyy HH:mm:ss","dd-M-yy HH:mm:ss", "M/dd/yy", "dd/M/yy","M-dd-yy", "dd-M-yy", "M/dd/yyyy", "dd/M/yyyy","M-dd-yyyy", "dd-M-yyyy","MM/d/yyyy HH:mm:ss","MM/d/yy HH:mm:ss","MM-d-yyyy HH:mm:ss","MM-d-yy HH:mm:ss","d/MM/yyyy HH:mm:ss","d/MM/yy HH:mm:ss","d-MM-yyyy HH:mm:ss","d-MM-yy HH:mm:ss", "MM/d/yy", "d/MM/yy","MM-d-yy", "d-MM-yy", "MM/d/yyyy", "d/MM/yyyy","MM-d-yyyy", "d-MM-yyyy"};
-	
+	public static final String[] additionalDatePatterns  = {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","MM/dd/yyyy HH:mm:ss","MM/dd/yy HH:mm:ss","MM-dd-yyyy HH:mm:ss","MM-dd-yy HH:mm:ss","dd/MM/yyyy HH:mm:ss","dd/MM/yy HH:mm:ss","dd-MM-yyyy HH:mm:ss","dd-MM-yy HH:mm:ss","MM/dd/yyyy","MM/dd/yy","dd/MM/yy","dd/MM/yyyy","MM-dd-yyyy","MM-dd-yy","dd-MM-yyyy","dd-MM-yy","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss","M/d/yy","M/d/yyyy","d/M/yy","d/M/yyyy","M-d-yy","M-d-yyyy","d-M-yy","d-M-yyyy","M/dd/yyyy HH:mm:ss","M/dd/yy HH:mm:ss","M-dd-yyyy HH:mm:ss","M-dd-yy HH:mm:ss","dd/M/yyyy HH:mm:ss","dd/M/yy HH:mm:ss","dd-M-yyyy HH:mm:ss","dd-M-yy HH:mm:ss","M/dd/yy","dd/M/yy","M-dd-yy","dd-M-yy","M/dd/yyyy","dd/M/yyyy","M-dd-yyyy","dd-M-yyyy","MM/d/yyyy HH:mm:ss","MM/d/yy HH:mm:ss","MM-d-yyyy HH:mm:ss","MM-d-yy HH:mm:ss","d/MM/yyyy HH:mm:ss","d/MM/yy HH:mm:ss","d-MM-yyyy HH:mm:ss","d-MM-yy HH:mm:ss","MM/d/yy","d/MM/yy","MM-d-yy","d-MM-yy","MM/d/yyyy","d/MM/yyyy","MM-d-yyyy","d-MM-yyyy"};
 	
 	public LinkedList<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
 	{
@@ -255,30 +254,22 @@ public class DetectFieldTypes {
 	
 	public SimpleDateFormat detectDate(LinkedList<String> columnValues) 
 	{
-	    @SuppressWarnings("unused")
-		int failures = 0;
-	    int success = 0;
 	    
 		LinkedHashSet<SimpleDateFormat> dateFormats = getSuportedDateFormats();
-		Calendar cal = Calendar.getInstance();
-		cal.setLenient(false);
 
 	    for(int j=0;j<columnValues.size();j++)
 	    {
 	        String columnValue = columnValues.get(j);
 	         Date dt = null;
 	         SimpleDateFormat dtf = null;
-	    	if(columnValue == null || columnValue.trim().isEmpty())
+	    	if(columnValue == null || columnValue.isEmpty())
 	    		continue;
-	    	else
-	    		columnValue = columnValue.trim();
 
 		      for (SimpleDateFormat sdf:dateFormats) 
 		      {
 		         try
 		         {
 		        	 dt = sdf.parse(columnValue);		        	 
-		        	 cal.setTime(dt);
 		        	 String tmpDate = sdf.format(dt);
 		        	 if(tmpDate.length() == columnValue.length())
 		        	 {
@@ -294,18 +285,21 @@ public class DetectFieldTypes {
 //							 logger.println(columnValue.trim());
 //							 t.printStackTrace();
 //				        }
+		        	 dtf = null;
+		        	 dt = null;
 		         }
 		      }
 
 	    	 if(dt!=null)
 	    	 {
+	    		    @SuppressWarnings("unused")
+	    			int failures = 0;
+	    		    int success = 0;
 	    		    for(int k=0;k<columnValues.size();k++)
 	    		    {
 	    		        columnValue = columnValues.get(k);
-	    		    	if(columnValue == null || columnValue.trim().isEmpty())
+	    		    	if(columnValue == null || columnValue.isEmpty())
 	    		    		continue;
-	    		    	else
-	    		    		columnValue = columnValue.trim();
 	    		    	
 			        	 try {
 							Date dt1 = dtf.parse(columnValue);
@@ -324,6 +318,8 @@ public class DetectFieldTypes {
 	    		    }else
 	    		    {
 	    		    	dateFormats.remove(dtf); //lets not try this format again
+			        	 dtf = null;
+			        	 dt = null;
 	    		    }
 	    	 }
 	    }
@@ -355,7 +351,9 @@ public class DetectFieldTypes {
 	      	  continue; // Skip language-only locales
 	        }	    	  
 	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM,SimpleDateFormat.MEDIUM, locales[i]);
-	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+	      SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+	      tempSdf.setLenient(false);
+	      dateFormats.add(tempSdf);
 	    }
 
 	    for (int i = 0; i < additionalDatePatterns.length; i++) 
@@ -363,7 +361,9 @@ public class DetectFieldTypes {
 	         try
 	         {
 	        	 SimpleDateFormat sdf = new SimpleDateFormat(additionalDatePatterns[i]);
-	   	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));
+		   	     SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+			     tempSdf.setLenient(false);
+			     dateFormats.add(tempSdf);
 	         }catch(Throwable t1)
 	         {
 	        	 t1.printStackTrace();
@@ -375,8 +375,10 @@ public class DetectFieldTypes {
 	        if (locales[i].getCountry().length() == 0) {
 	      	  continue; // Skip language-only locales
 	        }	    	  
-	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
-	      dateFormats.add(new SimpleDateFormat(sdf.toPattern()));	    
+	        SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
+	   	    SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+		    tempSdf.setLenient(false);
+		    dateFormats.add(tempSdf);
 	    }
 	    return dateFormats;
     }

@@ -318,6 +318,7 @@ public class FieldType {
 		{
 			compiledDateFormat = new SimpleDateFormat(format);
 			compiledDateFormat.setTimeZone(TimeZone.getTimeZone("GMT")); //All dates must be in GMT
+			compiledDateFormat.setLenient(false);
 			if(this.defaultValue!=null && !this.defaultValue.isEmpty())
 			{
 				try {
