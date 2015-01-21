@@ -117,6 +117,7 @@ public class DatasetUtilMain {
 				else if(args[i-1].equalsIgnoreCase("--debug"))
 				{
 					params.debug = true;
+					DatasetUtilConstants.debug = true;
 				}
 				else if(args[i-1].equalsIgnoreCase("--inputFile"))
 				{

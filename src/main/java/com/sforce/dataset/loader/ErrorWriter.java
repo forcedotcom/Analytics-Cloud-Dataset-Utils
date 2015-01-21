@@ -127,8 +127,9 @@ public class ErrorWriter {
 			fWriter.write(getCSVFriendlyString(error));
 			for(String val:values)
 			{
-				fWriter.write(this.delimiter);			
-				fWriter.write(csvEncoder.encode(val, context, preference));
+				fWriter.write(this.delimiter);	
+				if(val!=null)
+					fWriter.write(csvEncoder.encode(val, context, preference));
 			}
 			fWriter.write("\n");
 		} catch (Throwable t) {
