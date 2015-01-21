@@ -658,7 +658,7 @@ public class DatasetLoader {
 			boolean allPartsUploaded = false;
 			int retryCount=0; 
 			int totalErrorCount = 0;
-			if(fileParts.size()<MAX_NUM_UPLOAD_THREADS)
+			if(fileParts.size()<=MAX_NUM_UPLOAD_THREADS)
 				MAX_NUM_UPLOAD_THREADS = 1; 
 			while(retryCount<3)
 			{
@@ -1018,7 +1018,7 @@ public class DatasetLoader {
 		}
 //		logger.println("\n*******************************************************************************");					
 //		logger.println("Chunking file {"+inputFile+"} into {"+nf.format(DEFAULT_BUFFER_SIZE)+"} size chunks\n");
-//		long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		InputStream input = null;
 		FileOutputStream tmpOut = null;
         LinkedHashMap<Integer,File> fileParts = new LinkedHashMap<Integer,File>();
@@ -1064,9 +1064,13 @@ public class DatasetLoader {
 					tmpOut.close();
 				} catch (IOException e) {e.printStackTrace();}
 		}
-//		long endTime = System.currentTimeMillis();
-//		logger.println("\nChunked file {"+inputFile+"} into {"+fileParts.size()+"} chunks in {"+nf.format(endTime-startTime)+"} msecs");
-//		logger.println("*******************************************************************************\n");					
+		long endTime = System.currentTimeMillis();
+		if(fileParts.size()>1)
+		{
+			logger.println("\n*******************************************************************************");					
+			logger.println("\nChunked file into {"+fileParts.size()+"} chunks in {"+nf.format(endTime-startTime)+"} msecs");
+			logger.println("*******************************************************************************\n");
+		}
 		return fileParts;
 	} 
 	
