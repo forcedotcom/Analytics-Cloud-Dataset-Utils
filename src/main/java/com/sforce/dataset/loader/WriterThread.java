@@ -30,6 +30,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.sforce.dataset.DatasetUtilConstants;
  
 public class WriterThread implements Runnable {
 	
@@ -97,6 +99,8 @@ public void run() {
 				logger.println("Row {"+totalRowCount+"} has error {"+t+"}");
 				if(row!=null)
 				{
+					if(DatasetUtilConstants.debug)
+						t.printStackTrace();
 					errorwriter.addError(row, t.getMessage()!=null?t.getMessage():t.toString());
 					errorRowCount++;
 					if(errorRowCount>=max_error_threshhold)

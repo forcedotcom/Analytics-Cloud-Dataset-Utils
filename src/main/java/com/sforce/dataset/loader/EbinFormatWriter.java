@@ -103,6 +103,9 @@ public class EbinFormatWriter {
 		for (FieldType dataType: dataTypes)
 		{
 			_dataTypes.add(dataType);
+			if(dataType.isSkipped)
+				continue;
+			
 			if (dataType.getfType() == FieldType.DATE)
 			{
 				_dataTypes.add(FieldType.GetMeasureKeyDataType(dataType.getName() + "_sec_epoch", 0 , 0, 0L));
@@ -251,7 +254,11 @@ public class EbinFormatWriter {
 			{
 				try
 				{
-				
+				int fiscalMonthOffset = _dataTypes.get(key_value_count).getFiscalMonthOffset();
+				SimpleDateFormat sdt = _dataTypes.get(key_value_count).getCompiledDateFormat();
+				boolean isYearEndFiscalYear = _dataTypes.get(key_value_count).isYearEndFiscalYear;
+				int firstDayOfWeek = _dataTypes.get(key_value_count).getFirstDayOfWeek();
+
 				if(columnValue==null)
 				{
 					//The date is null or blank so add default
@@ -313,7 +320,7 @@ public class EbinFormatWriter {
 						curr.put(_dataTypes.get(key_value_count).getName(), null);
 						key_value_count++;	
 						
-						if(_dataTypes.get(key_value_count).getFiscalMonthOffset()>0)
+						if(fiscalMonthOffset>0)
 						{
 							//dim_values.add(Integer.toString(month_Fiscal));
 							//dim_keys.add(_dataTypes.get(key_value_count).getName()+"_Month_Fiscal");
@@ -339,10 +346,10 @@ public class EbinFormatWriter {
 				}else
 				{	
 					Date dt = null;
-					SimpleDateFormat sdt = _dataTypes.get(key_value_count).getCompiledDateFormat();
-					int fiscalMonthOffset = _dataTypes.get(key_value_count).getFiscalMonthOffset();
-					boolean isYearEndFiscalYear = _dataTypes.get(key_value_count).isYearEndFiscalYear;
-					int firstDayOfWeek = _dataTypes.get(key_value_count).getFirstDayOfWeek();
+//					SimpleDateFormat sdt = _dataTypes.get(key_value_count).getCompiledDateFormat();
+//					int fiscalMonthOffset = _dataTypes.get(key_value_count).getFiscalMonthOffset();
+//					boolean isYearEndFiscalYear = _dataTypes.get(key_value_count).isYearEndFiscalYear;
+//					int firstDayOfWeek = _dataTypes.get(key_value_count).getFirstDayOfWeek();
 
 					cal.setFirstDayOfWeek(firstDayOfWeek);
 

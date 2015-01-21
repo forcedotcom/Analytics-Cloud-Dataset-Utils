@@ -31,4 +31,5 @@ import java.io.File;
 public class DatasetUtilConstants {
 	public static boolean createNewDateParts = false;
 	public static File currentDir =  new File("").getAbsoluteFile();
+	public static boolean debug = false;
 }

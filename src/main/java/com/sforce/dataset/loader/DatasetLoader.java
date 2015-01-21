@@ -28,7 +28,6 @@ package com.sforce.dataset.loader;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -160,6 +159,7 @@ public class DatasetLoader {
 		logger.println("datasetLabel: "+datasetLabel);
 		logger.println("datasetFolder: "+datasetFolder);
 		logger.println("Operation: "+Operation);
+		logger.println("uploadFormat: "+uploadFormat);
 		logger.println("*******************************************************************************\n");					
 		
 		try {
@@ -266,6 +266,9 @@ public class DatasetLoader {
 				{
 					logger.println("Record {"+hdrId+"} is being reused from InsightsExternalData");
 					updateHdrJson = true;
+				}else
+				{
+					hdrId = null;
 				}
 			}
 
@@ -486,9 +489,10 @@ public class DatasetLoader {
 				try
 				{
 					gzbinFile = new File(inputFile.getParent(), FilenameUtils.getBaseName(hdrId + "." + inputFile.getName()) + ".gz");
+					logger.println("Input File, will be compressed to gz file {"+gzbinFile+"}");			
 					GzipParameters gzipParams = new GzipParameters();
 					gzipParams.setFilename(inputFile.getName());
-					gzOut = new GzipCompressorOutputStream(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(gzbinFile))),gzipParams);
+					gzOut = new GzipCompressorOutputStream(new BufferedOutputStream(new FileOutputStream(gzbinFile),DEFAULT_BUFFER_SIZE),gzipParams);
 					fis = new BufferedInputStream(new FileInputStream(inputFile));  
 					IOUtils.copy(fis, gzOut);
 					long endTime = System.currentTimeMillis();
@@ -654,7 +658,7 @@ public class DatasetLoader {
 			boolean allPartsUploaded = false;
 			int retryCount=0; 
 			int totalErrorCount = 0;
-			if(fileParts.size()<MAX_NUM_UPLOAD_THREADS)
+			if(fileParts.size()<=MAX_NUM_UPLOAD_THREADS)
 				MAX_NUM_UPLOAD_THREADS = 1; 
 			while(retryCount<3)
 			{
@@ -778,7 +782,13 @@ public class DatasetLoader {
 	        //sobj.setField("IsDependentOnLastUpload",Boolean.FALSE); //Optional Defaults to false
     		
     		if(metadataJson != null && metadataJson.length != 0)
+    		{
     			sobj.setField("MetadataJson",metadataJson);
+    			if(DatasetUtilConstants.debug)
+    			{
+					logger.println("MetadataJson {"+ new String(metadataJson) + "}");
+    			}
+    		}
     		
     		if(Operation!=null)
     			sobj.setField("operation",Operation);
@@ -1008,7 +1018,7 @@ public class DatasetLoader {
 		}
 //		logger.println("\n*******************************************************************************");					
 //		logger.println("Chunking file {"+inputFile+"} into {"+nf.format(DEFAULT_BUFFER_SIZE)+"} size chunks\n");
-//		long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		InputStream input = null;
 		FileOutputStream tmpOut = null;
         LinkedHashMap<Integer,File> fileParts = new LinkedHashMap<Integer,File>();
@@ -1054,9 +1064,13 @@ public class DatasetLoader {
 					tmpOut.close();
 				} catch (IOException e) {e.printStackTrace();}
 		}
-//		long endTime = System.currentTimeMillis();
-//		logger.println("\nChunked file {"+inputFile+"} into {"+fileParts.size()+"} chunks in {"+nf.format(endTime-startTime)+"} msecs");
-//		logger.println("*******************************************************************************\n");					
+		long endTime = System.currentTimeMillis();
+		if(fileParts.size()>1)
+		{
+			logger.println("\n*******************************************************************************");					
+			logger.println("\nChunked file into {"+fileParts.size()+"} chunks in {"+nf.format(endTime-startTime)+"} msecs");
+			logger.println("*******************************************************************************\n");
+		}
 		return fileParts;
 	} 
 	

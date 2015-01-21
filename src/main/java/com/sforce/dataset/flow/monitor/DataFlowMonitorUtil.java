@@ -126,19 +126,53 @@ public class DataFlowMonitorUtil {
 							if(workflowName != null && (datasetName == null || datasetName.isEmpty() || workflowName.startsWith(datasetName)))
 							{
 								JobEntry jobEntry = new JobEntry();
-								jobEntry._createdDateTime = (Integer) job.get("_createdDateTime");
+								
+								Object temp = job.get("_createdDateTime");
+								if(temp != null && temp instanceof Number)
+								{
+									jobEntry._createdDateTime = ((Number)temp).longValue();
+								}
+								
 								jobEntry._type  = (String) job.get("_type");
+								
 								jobEntry._uid  = (String) job.get("_uid");
-								jobEntry.duration = (Integer) job.get("duration");
+								
+								temp = job.get("duration");
+								if(temp != null && temp instanceof Number)
+								{
+									jobEntry.duration = ((Number)temp).longValue();
+								}
+								
 								jobEntry.endTime = (String) job.get("endTime");
-								jobEntry.endTimeEpoch = (Long) job.get("endTimeEpoch");
+								
+								temp = job.get("endTimeEpoch");
+								if(temp != null && temp instanceof Number)
+								{
+									jobEntry.endTimeEpoch = ((Number)temp).longValue();
+								}
+								
 								jobEntry.errorMessage = (String) job.get("errorMessage");
+								
 								jobEntry.nodeUrl = (String) job.get("nodeUrl");
+								
 								jobEntry.startTime = (String) job.get("startTime");
-								jobEntry.startTimeEpoch = (Long) job.get("startTimeEpoch");
-								jobEntry.status = (Integer) job.get("status");
+								
+								temp = job.get("startTimeEpoch");
+								if(temp != null && temp instanceof Number)
+								{
+									jobEntry.startTimeEpoch = ((Number)temp).longValue();
+								}
+								
+								temp = job.get("status");
+								if(temp != null && temp instanceof Number)
+								{
+									jobEntry.status = ((Number)temp).intValue();
+								}
+								
 								jobEntry.type = (String) job.get("type");
+								
 								jobEntry.workflowName = (String) job.get("workflowName");
+								
 								jobsList.add(jobEntry);
 							}
 						}else
