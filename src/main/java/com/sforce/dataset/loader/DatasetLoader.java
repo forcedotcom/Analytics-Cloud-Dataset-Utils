@@ -274,7 +274,7 @@ public class DatasetLoader {
 
 			if(hdrId==null || hdrId.isEmpty())
 			{
-				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, altSchema.toBytes(), uploadFormat, Operation, logger);
+				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, altSchema.toBytes(), uploadFormat, Operation, logger);
 			}
 			
 			if(hdrId ==null || hdrId.isEmpty())
@@ -545,7 +545,7 @@ public class DatasetLoader {
 			}
 
 			long startTime = System.currentTimeMillis();
-			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
+			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 
@@ -592,7 +592,7 @@ public class DatasetLoader {
 	 * @return boolean status of the upload
 	 * @throws Exception
 	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, File metadataJson, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) throws Exception 
+	public static boolean uploadEM(File dataFile, String dataFormat, File metadataJson, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) throws Exception 
 	{
 		byte[] metadataJsonBytes = null;
 		if(metadataJson != null && metadataJson.canRead())
@@ -600,7 +600,7 @@ public class DatasetLoader {
 		else
 			logger.println("warning: metadata Json file {"+metadataJson+"} not found");			
 
-		return uploadEM(dataFile, dataFormat, metadataJsonBytes, datasetAlias, datasetFolder, useBulk, partnerConnection, hdrId, datasetArchiveDir, Operation, updateHdrJson, logger);
+		return uploadEM(dataFile, dataFormat, metadataJsonBytes, datasetAlias, datasetFolder, datasetLabel, useBulk, partnerConnection, hdrId, datasetArchiveDir, Operation, updateHdrJson, logger);
 	}
 
 	/**
@@ -617,7 +617,7 @@ public class DatasetLoader {
 	 * @return boolean status of the upload
 	 * @throws Exception
 	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) throws Exception 
+	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) throws Exception 
 	{
 		BlockingQueue<Map<Integer, File>> q = new LinkedBlockingQueue<Map<Integer, File>>(); 
 		LinkedList<Integer> existingFileParts = new LinkedList<Integer>();
@@ -642,7 +642,7 @@ public class DatasetLoader {
 
 		if(hdrId==null || hdrId.trim().isEmpty())
 		{
-			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, metadataJsonBytes, dataFormat, Operation, logger);
+			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, metadataJsonBytes, dataFormat, Operation, logger);
 		}else
 		{
 			existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
@@ -756,7 +756,7 @@ public class DatasetLoader {
 	}
 
 	
-	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, byte[] metadataJson, String dataFormat, String Operation, PrintStream logger) throws Exception 
+	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, String datasetLabel,  byte[] metadataJson, String dataFormat, String Operation, PrintStream logger) throws Exception 
 	{
 		String rowId = null;
 		long startTime = System.currentTimeMillis(); 
@@ -772,10 +772,14 @@ public class DatasetLoader {
     		
 	        sobj.setField("EdgemartAlias", datasetAlias);
 	        
+	        //EdgemartLabel
+	        sobj.setField("EdgemartLabel", datasetLabel);
+	        
 	        if(datasetContainer!=null && !datasetContainer.trim().isEmpty())
 	        {
 	        	sobj.setField("EdgemartContainer", datasetContainer); //Optional dataset folder name
 	        }
+	        
 
 	        //sobj.setField("IsIndependentParts",Boolean.FALSE); //Optional Defaults to false
     		

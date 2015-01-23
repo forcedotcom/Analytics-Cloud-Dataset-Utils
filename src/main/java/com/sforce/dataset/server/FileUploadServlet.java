@@ -71,7 +71,7 @@ public class FileUploadServlet extends HttpServlet {
 				    	{
 				    		if(!worker.isUploadStatus())
 				    		{
-				    			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File upload failed check {"+worker.getLogFile()+"} for details");
+				    			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File upload failed check <a href=\"file:///"+worker.getLogFile()+"\">"+worker.getLogFile()+"</a> for details");
 				    			return;
 				    		}
 				    		break;

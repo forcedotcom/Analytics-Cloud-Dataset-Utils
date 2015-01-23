@@ -24,7 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 package com.sforce.dataset.util;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
@@ -43,6 +45,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectorConfig;
 
@@ -136,8 +139,14 @@ public class DatasetDownloader {
 								FileUtils.forceMkdir(edgemartDir);
 								for(Object filename:_files.keySet())
 								{
-									if(filename==null||!filename.toString().endsWith("json"))
+									if(filename==null)
 										continue;
+											
+									if(!DatasetUtilConstants.debug)
+									{
+										if(!filename.toString().endsWith("json"))
+											continue;
+									}
 									
 									CloseableHttpClient httpClient1 = HttpClients.createDefault();
 									String url = (String) _files.get(filename);
@@ -162,21 +171,26 @@ public class DatasetDownloader {
 
 									HttpEntity emresponseEntity1 = emresponse1.getEntity();
 									InputStream emis1 = emresponseEntity1.getContent();
-									String xmd = IOUtils.toString(emis1, "UTF-8");
-									emis1.close();
-									httpClient1.close();
-
-									Map xmdObject =  mapper.readValue(xmd, Map.class);
 									File outfile = new File(edgemartDir,(String) filename);
-									mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, xmdObject);
-//									System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
-//									BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
-//									IOUtils.copy(emis1, out);
-//									out.close();
+									if(!filename.toString().endsWith("json"))
+									{
+										System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
+										BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
+										IOUtils.copy(emis1, out);
+										out.close();
+									}else
+									{
+										String xmd = IOUtils.toString(emis1, "UTF-8");
+										emis1.close();
+										httpClient1.close();
+	
+										Map xmdObject =  mapper.readValue(xmd, Map.class);
+										mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, xmdObject);
+									}
 									System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}\n");
 								}
 							}
-							System.out.println("Completed downloading XMD Files..");							
+							System.out.println("Completed downloading Files..");							
 							return true;
 						}else
 						{

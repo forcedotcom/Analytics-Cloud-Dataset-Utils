@@ -1,0 +1,8 @@
+Loading existing schema from file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Id} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {ShortUrl} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Time} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Referer} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Browser} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Platform} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}
+Field {Location} not found in schema file {C:\Users\pgupta\Documents\GitHub\Analytics-Cloud-Dataset-Utils\Data\blah\Tricore_schema.json}

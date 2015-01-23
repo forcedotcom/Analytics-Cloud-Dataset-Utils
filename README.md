@@ -28,6 +28,8 @@ Input Parameter
 
 --dataset : (Optional) the dataset alias. required if action=load
 
+--dataset : (Optional) the dataset label.
+
 --app     : (Optional) the app name for the dataset
 
 --inputFile : (Optional) the input csv file. required if action=load

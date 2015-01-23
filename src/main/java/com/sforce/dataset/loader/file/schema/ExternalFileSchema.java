@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -275,10 +276,12 @@ public class ExternalFileSchema {
 							if(fields!= null && !fields.isEmpty())
 							{
 								List<FieldType> fieldsCopy = new LinkedList<FieldType>(fields);
+								List<String> fieldNames = new LinkedList<String>();
 								for(FieldType field:fieldsCopy)
 								{
 									if(field.isComputedField)
 										continue;
+									fieldNames.add(field.getName());
 									boolean found = false;
 									for (int i=0; i< devNames.length; i++) 
 									{
@@ -294,6 +297,10 @@ public class ExternalFileSchema {
 										fields.remove(field);
 									}
 										
+								}
+								if(fields.isEmpty())
+								{
+									throw new IllegalArgumentException("No CSV header Fields "+Arrays.toString(devNames)+" match JSON Fields ["+fieldNames.toString()+"]");
 								}
 							}
 						}

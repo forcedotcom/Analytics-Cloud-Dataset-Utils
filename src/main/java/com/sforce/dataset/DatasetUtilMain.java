@@ -139,6 +139,10 @@ public class DatasetUtilMain {
 				{
 					params.dataset = args[i];
 				}
+				else if(args[i-1].equalsIgnoreCase("--datasetLabel"))
+				{
+					params.datasetLabel = args[i];
+				}
 				else if(args[i-1].equalsIgnoreCase("--app"))
 				{
 					params.app = args[i];
@@ -548,7 +552,8 @@ public class DatasetUtilMain {
 
 		if(params.dataset!=null && !params.dataset.isEmpty())
 		{
-			params.datasetLabel = params.dataset;
+			if(params.datasetLabel==null)
+				params.datasetLabel = params.dataset;
 			params.dataset = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1);
 			if(!params.dataset.equals(params.datasetLabel))
 			{
