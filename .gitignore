@@ -28,4 +28,6 @@ release.properties
 /Logs/
 /Success/
 /Error/
+/Data/
 *.csv
+*.log
