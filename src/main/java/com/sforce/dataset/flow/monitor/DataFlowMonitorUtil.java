@@ -48,6 +48,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
@@ -227,7 +228,7 @@ public class DataFlowMonitorUtil {
 		InputStream emis = emresponseEntity.getContent();			
 		File outfile = new File(datasetName+"_"+jobTrackerid+"_error.csv");
 		System.out.println("fetching file {"+outfile+"}. Content-length {"+emresponseEntity.getContentLength()+"}");
-		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
+		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile),DatasetUtilConstants.DEFAULT_BUFFER_SIZE);
 		IOUtils.copy(emis, out);
 		out.close();
 		emis.close();

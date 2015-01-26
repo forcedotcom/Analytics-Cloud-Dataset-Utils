@@ -29,6 +29,7 @@ import java.io.File;
 
 
 public class DatasetUtilConstants {
+	public static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
 	public static boolean createNewDateParts = false;
 	public static File currentDir =  new File("").getAbsoluteFile();
 	public static boolean debug = false;

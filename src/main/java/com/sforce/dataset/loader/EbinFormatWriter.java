@@ -205,7 +205,10 @@ public class EbinFormatWriter {
 	            	bindings.put("curr", curr);
 	            	bindings.put("prev", prev);
 	            	columnValue = cs.eval(bindings);
-//	            	System.out.println("columnValue:"+columnValue);
+	            	if(DatasetUtilConstants.debug)
+	            	{
+	            		logger.println(_dataTypes.get(key_value_count).getName()+ " Computed columnValue: "+columnValue);
+	            	}
 	            }
 	            }catch(Throwable t)
 	            {

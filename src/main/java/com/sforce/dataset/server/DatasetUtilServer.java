@@ -78,7 +78,7 @@ public class DatasetUtilServer {
     	DatasetUtilServer.partnerConnection = partnerConnection;
         final String WEBAPPDIR = "index.html";
         final String contextPath = "/";
-        final int maxFormContentSize = 1048576;
+        final int maxFormContentSize = 40 * 1000 * 1024 * 1024;
 
         final Server server = new Server(port);
         

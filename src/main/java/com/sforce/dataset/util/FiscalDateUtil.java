@@ -209,17 +209,20 @@ public class FiscalDateUtil {
 
 	    		minimalDaysInFirstWeek = getminimalDaysInFirstWeek(cal.get(Calendar.DAY_OF_WEEK), firstDayOfWeek);
 
-	    		System.out.println("\nfirstDayOfWeek: "+firstDayOfWeek+" minimalDaysInFirstWeek: "+minimalDaysInFirstWeek);
-	    		
-	    		System.out.println("Date\t\t\t\tFiscal Year\tFiscal Quarter\tCal Quarter\tFiscal Month\tFiscal Week\tCal Week");
+	    		System.out.println("\nfirstDayOfWeek: "+firstDayOfWeek+"\t\tminimalDaysInFirstWeek: "+minimalDaysInFirstWeek+"\t\tfiscalMonthOffset: "+fiscalMonthOffset);
+	    		System.out.println("");
+	    		System.out.println("Date\t\t                Cal Year\tFiscal Year\tCal Quarter\tFiscal Quarter\tCal Month\tFiscal Month\tCal Week\tFiscal Week");
 		    	for(int i=0;i<365;i++)
 		    	{
-		    		System.out.print(sdf.format(cal.getTime())+"\t");
+		    		System.out.print(sdf.format(cal.getTime())+"\t\t");
+			        System.out.print(getCalendarYear(cal)+"\t\t");
 			        System.out.print(getFiscalYear(getCalendarYear(cal),getCalendarMonth(cal), fiscalMonthOffset, isYearEndFiscalYear)+"\t\t");
-			        System.out.print(getFiscalQuarter(getCalendarMonth(cal),fiscalMonthOffset)+"\t\t"+getCalendarQuarter(getCalendarMonth(cal))+"\t\t");
+			        System.out.print(getCalendarQuarter(getCalendarMonth(cal))+"\t\t");
+			        System.out.print(getFiscalQuarter(getCalendarMonth(cal),fiscalMonthOffset)+"\t\t");
+			        System.out.print((getCalendarMonth(cal)+1)+"\t\t"); 
 			        System.out.print((getFiscalMonth(getCalendarMonth(cal), fiscalMonthOffset)+1)+"\t\t"); 
-			        System.out.print(getFiscalWeek(cal, fiscalMonthOffset, firstDayOfWeek)+"\t\t");
-			        System.out.println(getCalendarWeek(cal.get(Calendar.DAY_OF_YEAR), minimalDaysInFirstWeek));
+			        System.out.print(getCalendarWeek(cal.get(Calendar.DAY_OF_YEAR), minimalDaysInFirstWeek)+"\t\t");
+			        System.out.println(getFiscalWeek(cal, fiscalMonthOffset, firstDayOfWeek));
 		    		cal.add(Calendar.DAY_OF_YEAR, 1);
 		    		cal.getTime();
 		    	}

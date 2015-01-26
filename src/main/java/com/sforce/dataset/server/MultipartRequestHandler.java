@@ -25,6 +25,7 @@
  */
 package com.sforce.dataset.server;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -120,9 +121,20 @@ public class MultipartRequestHandler {
 						ExternalFileSchema.save(outFile, schema, System.out);
 					}else
 					{
-						FileOutputStream out = new FileOutputStream(outFile);
-						IOUtils.copy(fm.inputFileStream, out);
-						out.close();
+						FileOutputStream fos = null;
+						BufferedOutputStream bos = null;
+						try
+						{
+							fos = new FileOutputStream(outFile);
+							bos = new BufferedOutputStream(fos,DatasetUtilConstants.DEFAULT_BUFFER_SIZE);
+							IOUtils.copy(fm.inputFileStream, bos);
+						}finally
+						{
+							if(bos!=null)
+								IOUtils.closeQuietly(bos);
+							if(fos!=null)
+								IOUtils.closeQuietly(fos);
+						}
 					}
 					fm.savedFile = outFile;
 					fm.setInputFileSize(outFile.length()+"");
