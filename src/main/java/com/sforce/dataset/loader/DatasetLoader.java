@@ -662,6 +662,7 @@ public class DatasetLoader {
 				MAX_NUM_UPLOAD_THREADS = 1; 
 			while(retryCount<3)
 			{
+				q.clear(); //clear the queue otherwise thread will die before it starts because of previous empty messages
 				LinkedList<FilePartsUploaderThread> upThreads = new LinkedList<FilePartsUploaderThread>();
 				for(int i = 1;i<=MAX_NUM_UPLOAD_THREADS;i++)
 				{
@@ -734,7 +735,7 @@ public class DatasetLoader {
 				if(allPartsUploaded)
 					break;
 				else
-					logger.println("Not all file parts uplaoded trying again");
+					logger.println("Not all file parts uploaded trying again");
 				retryCount++;
 			}
 
