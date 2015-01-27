@@ -101,7 +101,7 @@ public class DataFlowMonitorUtil {
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
 	       if (statusCode != HttpStatus.SC_OK) {
-		       throw new IOException(String.format("getDataFlowJobs  failed: %d %s", datasetName,statusCode,reasonPhrase));
+		       throw new IOException(String.format("getDataFlowJobs failed: %d %s", statusCode,reasonPhrase));
 	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
@@ -222,7 +222,7 @@ public class DataFlowMonitorUtil {
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
 	       if (statusCode != HttpStatus.SC_OK) {
-		       throw new IOException(String.format("getDataFlowJobs  failed: %d %s", datasetName,statusCode,reasonPhrase));
+		       throw new IOException(String.format("getDataFlowJob node error log failed: %d %s", statusCode,reasonPhrase));
 	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			

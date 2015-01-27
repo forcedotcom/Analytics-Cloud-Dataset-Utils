@@ -351,7 +351,7 @@ public class ExternalFileSchema {
 							message.append("[objects["+objectCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
 						}else if(user_object.fullyQualifiedName.length()>255)
 						{
-							message.append("object fullyQualifiedName ["+user_object.fullyQualifiedName+"] in schema cannot be greater than 255 characters in  length\n");
+							message.append("object ["+user_object.fullyQualifiedName+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 						
 
@@ -410,7 +410,7 @@ public class ExternalFileSchema {
 								{
 									if(user_field.getFullyQualifiedName().length()>255)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
 									}
 								}else
 								{
@@ -421,24 +421,24 @@ public class ExternalFileSchema {
 								{
 									if(user_field.getDefaultValue()==null || !isLatinNumber(user_field.getDefaultValue()))
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
 									}
 									
 									if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <19)\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <19)\n");
 									}
 									
 									if(user_field.getPrecision()>0 && user_field.getScale()>=user_field.getPrecision())
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have scale less than the precision\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have scale less than the precision\n");
 									}
 									
 								}else if(user_field.getfType()==FieldType.STRING)
 								{
 									if(user_field.getPrecision()>32000)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <32,000)\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have precision between (>0 && <32,000)\n");
 									}
 									
 									if(user_field.getPrecision()==0)
@@ -449,21 +449,21 @@ public class ExternalFileSchema {
 								{
 									if(user_field.getCompiledDateFormat()==null)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid date format {"+user_field.getFormat()+"}\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema has invalid date format {"+user_field.getFormat()+"}\n");
 									}
 									
 									if(user_field.getFiscalMonthOffset() <0 || user_field.getFiscalMonthOffset() > 11)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have FiscalMonthOffset between (0 && 11)\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have FiscalMonthOffset between (0 && 11)\n");
 									}
 
 									if(user_field.getFirstDayOfWeek() <-1 || user_field.getFirstDayOfWeek() > 6)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have FirstDayOfWeek between (-1 && 6)\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have FirstDayOfWeek between (-1 && 6)\n");
 									}
 								}else
 								{
-									message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
+									message.append("field {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
 								}
 									
 
@@ -471,12 +471,17 @@ public class ExternalFileSchema {
 								{
 									if(user_field.getMultiValueSeparator()==null)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema must have 'multiValueSeparator' value when 'isMultiValue' is 'true'\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have 'multiValueSeparator' value when 'isMultiValue' is 'true'\n");
 									}
 									
 									if(user_field.isUniqueId)
 									{
-										message.append("MultiValue field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
+										message.append("MultiValue field {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
+									}
+									
+									if(user_field.getfType()!=FieldType.STRING)
+									{
+										message.append("MultiValue field {"+user_field.getFullyQualifiedName()+"}  in schema can only be of Type Text\n");
 									}
 									
 								}
@@ -485,7 +490,7 @@ public class ExternalFileSchema {
 								{
 									if(user_field.getCompiledScript()==null)
 									{
-										message.append("field fullyQualifiedName {"+user_field.getFullyQualifiedName()+"}  in schema has invalid 'computedFieldExpression' value {"+user_field.getComputedFieldExpression()+"}\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema has invalid 'computedFieldExpression' value {"+user_field.getComputedFieldExpression()+"}\n");
 									}
 								}
 								
