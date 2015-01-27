@@ -657,7 +657,6 @@ public class DatasetLoader {
 			Map<Integer, File> fileParts = chunkBinary(dataFile, datasetArchiveDir, logger);
 			boolean allPartsUploaded = false;
 			int retryCount=0; 
-			int totalErrorCount = 0;
 			if(fileParts.size()<=MAX_NUM_UPLOAD_THREADS)
 				MAX_NUM_UPLOAD_THREADS = 1; 
 			while(retryCount<3)
@@ -717,7 +716,6 @@ public class DatasetLoader {
 						}
 					}
 					logger.println("FilePartsUploaderThread-"+(i+1)+" is done");
-					totalErrorCount = totalErrorCount + uploader.getErrorRowCount();
 				}
 
 				allPartsUploaded = true;
@@ -739,7 +737,7 @@ public class DatasetLoader {
 				retryCount++;
 			}
 
-				if(totalErrorCount==0 && allPartsUploaded)
+				if(allPartsUploaded)
 				{
 					return updateFileHdr(partnerConnection, hdrId, null, null, null, null, "Process", null, logger);
 				}else
