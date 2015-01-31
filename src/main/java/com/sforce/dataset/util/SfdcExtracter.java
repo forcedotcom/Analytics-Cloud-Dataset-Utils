@@ -319,7 +319,10 @@ public class SfdcExtracter {
 				}
 //				SfdcUtils.read(partnerConnection, selectedObjectList.get(alias), fields, 1000,dataDir);
 				wfdef.put(selectedObjectList.get(alias), SfdcDigestNode.getNode(selectedObjectList.get(alias), flds));
-				wfdef.put("Register"+selectedObjectList.get(alias),RegisterNode.getNode(selectedObjectList.get(alias), "SF_"+selectedObjectList.get(alias), "SF_"+selectedObjectList.get(alias), null));
+				String datasetAlias = "SF_"+selectedObjectList.get(alias);
+				if(datasetAlias.endsWith("__c"))
+					datasetAlias = datasetAlias.replace("__c", "_c");
+				wfdef.put("Register"+selectedObjectList.get(alias),RegisterNode.getNode(selectedObjectList.get(alias), datasetAlias, datasetAlias, null));
 			}
 		}
 		return wfdef;

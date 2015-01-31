@@ -46,13 +46,12 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
-import java.util.Calendar;
 import com.sforce.dataset.util.DatasetUtils;
 
 
 public class DetectFieldTypes {
 
-	public static final int sampleSize = 1000;
+	public static final int sampleSize = 3000;
 //	public static final Pattern dates = Pattern.compile("(.*)([0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2})(.*)");
 //	public static final Pattern numbers = Pattern.compile("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$");	
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
@@ -150,23 +149,30 @@ public class DetectFieldTypes {
 							reader.close();
 					reader = null;
 				}
+				logger.print(", ");
 				FieldType newField = null;
+				int prec = detectTextPrecision(uniqueColumnValues);
 				BigDecimal bd = detectNumeric(columnValues);
+				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0)
+				{	
+					bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
+				}
+				
 				if(bd!=null)
 				{
 						newField = FieldType.GetMeasureKeyDataType(devNames[i], 0, bd.scale(), 0L);
-						logger.println(", Type: Numeric, Scale: "+ bd.scale());
+						logger.println("Type: Numeric, Scale: "+ bd.scale());
 				}else
 				{
-					SimpleDateFormat sdf = detectDate(columnValues);
+					SimpleDateFormat sdf = null;
+						sdf = detectDate(columnValues);
 					if(sdf!= null)
 					{
 						newField =  FieldType.GetDateKeyDataType(devNames[i], sdf.toPattern(), null);
-						logger.println(", Type: Date, Format: "+ sdf.toPattern());
+						logger.println("Type: Date, Format: "+ sdf.toPattern());
 					}else
 					{
 						newField =  FieldType.GetStringKeyDataType(devNames[i], null, null);
-						int prec = detectTextPrecision(columnValues);
 						if(!uniqueColumnFound && uniqueColumnValues.size() == (rowCount-1) && prec<32)
 						{
 							newField.isUniqueId = true;
@@ -174,11 +180,11 @@ public class DetectFieldTypes {
 						}
 						if(prec>255)
 						{
-							logger.println(", Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)" + (newField.isUniqueId? ", isUniqueId=true":""));
+							logger.println("Type: Text, Precison: "+255+" (Column will be truncated to 255 characters)" + (newField.isUniqueId? ", isUniqueId=true":""));
 						}
 						else
 						{
-							logger.println(", Type: Text, Precison: "+prec + (newField.isUniqueId? ", isUniqueId=true":""));
+							logger.println("Type: Text, Precison: "+prec + (newField.isUniqueId? ", isUniqueId=true":""));
 						}
 						newField.setPrecision(255); //Assume upper limit for precision of text fields even if the values may be smaller
 					}
@@ -210,26 +216,34 @@ public class DetectFieldTypes {
 	public BigDecimal detectNumeric(LinkedList<String> columnValues) 
 	{
         BigDecimal maxScale  = null;
+        BigDecimal maxPrecision  = null;
 	    @SuppressWarnings("unused")
 		int failures = 0;
 	    int success = 0;
+	    int absoluteMaxScale = 9;
+	    int absoluteMaxPrecision = 18;
 
 	    //Date dt = new Date(System.currentTimeMillis());
 	    for(int j=0;j<columnValues.size();j++)
 	    {
 	        String columnValue = columnValues.get(j);
-	        BigDecimal bd = null;
-	    	if(columnValue == null || columnValue.trim().isEmpty())
+	    	if(columnValue == null || columnValue.isEmpty())
 	    		continue;
-	    	else
-	    		columnValue = columnValue.trim();
+	    	
+	    	if(columnValue.length()>absoluteMaxPrecision)
+	    		continue;
 
-	         try
+	        BigDecimal bd = null;
+	    	try
 	         {
 	    		 bd = new BigDecimal(columnValue);
+	 	    	 if(bd.precision()>absoluteMaxPrecision || bd.scale()>absoluteMaxPrecision)
+		    		continue;
 	    		 //logger.println("Value: {"+columnValue+"} Scale: {"+bd.scale()+"}");
 	    		 if(maxScale == null || bd.scale() > maxScale.scale())
 	    			 maxScale = bd;
+	    		 if(maxPrecision == null || bd.precision() > maxPrecision.precision())
+	    			 maxPrecision = bd;
 				success++;
 	         }catch(Throwable t)
 	         {
@@ -237,16 +251,25 @@ public class DetectFieldTypes {
 	         }
 	    }
 	    
-	    if(maxScale!=null && maxScale.scale()>9)
+	    if(maxPrecision!=null)
 	    {
-	    	maxScale = maxScale.setScale(9, RoundingMode.HALF_EVEN);
+	    	absoluteMaxScale = absoluteMaxPrecision - (maxPrecision.precision()-maxPrecision.scale());
 	    }
 
-	    if((1.0*success/columnValues.size()) > 0.85)
+    	if(absoluteMaxScale>9)
+	    	absoluteMaxScale=9;
+    	else if(absoluteMaxScale<=2)
+	    	absoluteMaxScale=2;
+	    
+	    if(maxScale!=null && maxScale.scale()>absoluteMaxScale)
+	    {
+	    	maxScale = maxScale.setScale(absoluteMaxScale, RoundingMode.HALF_EVEN);
+	    }
+
+	    if((1.0*success/columnValues.size()) > 0.95)
 	    {
 	    	return maxScale;
-	    }
-	    else
+	    }else
 	    {
 	    	return null;
 	    }
@@ -263,6 +286,9 @@ public class DetectFieldTypes {
 	         Date dt = null;
 	         SimpleDateFormat dtf = null;
 	    	if(columnValue == null || columnValue.isEmpty())
+	    		continue;
+	    	
+	    	if(columnValue.length()<6 || columnValue.length()>30)
 	    		continue;
 
 		      for (SimpleDateFormat sdf:dateFormats) 
@@ -312,7 +338,7 @@ public class DetectFieldTypes {
 							failures++;
 						}	    		    	
 	    		    }
-	    		    if((1.0*success/columnValues.size()) > 0.85)
+	    		    if((1.0*success/columnValues.size()) > 0.95)
 	    		    {
 	    		    	return dtf;
 	    		    }else
@@ -327,11 +353,10 @@ public class DetectFieldTypes {
 	    
 	}
 	
-	public int detectTextPrecision(LinkedList<String> columnValues) {
+	public int detectTextPrecision(HashSet<String> uniqueColumnValues) {
 		int length = 0;
-	    for(int j=0;j<columnValues.size();j++)
+	    for(String columnValue:uniqueColumnValues)
 	    {
-	        String columnValue = columnValues.get(j);
 	        if(columnValue!=null)
 	        {
 	        	if(columnValue.length()>length)
