@@ -278,11 +278,11 @@ public class SfdcUtils {
 	 * @return List of Fields in the object
 	 * @throws ConnectionException 
 	 */
-	public static List<com.sforce.dataset.loader.file.schema.FieldType> getFieldList(String sObjectType,
+	public static List<com.sforce.dataset.loader.file.schema.ext.FieldType> getFieldList(String sObjectType,
 			PartnerConnection partnerConnection, boolean isWrite) throws ConnectionException
 	{
 
-			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList = new ArrayList<com.sforce.dataset.loader.file.schema.FieldType>();
+			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList = new ArrayList<com.sforce.dataset.loader.file.schema.ext.FieldType>();
 			
 			
 			DescribeSObjectResult dsr = partnerConnection.describeSObject(sObjectType);			
@@ -334,21 +334,21 @@ public class SfdcUtils {
 					// Determine the field Scale
 					int scale = getScale(field, clazz);
 
-					com.sforce.dataset.loader.file.schema.FieldType bField = null;
+					com.sforce.dataset.loader.file.schema.ext.FieldType bField = null;
 					if(clazz.getCanonicalName().equals(BigDecimal.class.getCanonicalName()) || clazz.getCanonicalName().equals(Integer.class.getCanonicalName()))
 					{
-						bField = com.sforce.dataset.loader.file.schema.FieldType.GetMeasureKeyDataType(field.getName(), precision, scale, 0L);
+						bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetMeasureKeyDataType(field.getName(), precision, scale, 0L);
 					}else if(clazz.getCanonicalName().equals(java.sql.Timestamp.class.getCanonicalName()))
 					{
-						bField = com.sforce.dataset.loader.file.schema.FieldType.GetDateKeyDataType(field.getName(), "MM/dd/yyyy hh:mm:ss a", null);						
+						bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetDateKeyDataType(field.getName(), "MM/dd/yyyy hh:mm:ss a", null);						
 					}else
 					{
 						if(field.getType().equals(FieldType.multipicklist))
 						{
-							bField = com.sforce.dataset.loader.file.schema.FieldType.GetStringKeyDataType(field.getName(), null, null);
+							bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetStringKeyDataType(field.getName(), null, null);
 						}else
 						{
-							bField = com.sforce.dataset.loader.file.schema.FieldType.GetStringKeyDataType(field.getName(), ";", null);
+							bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetStringKeyDataType(field.getName(), ";", null);
 						}
 					}
 
@@ -397,7 +397,7 @@ public class SfdcUtils {
 	 * @throws UnsupportedEncodingException
 	 */
 	public static boolean read(PartnerConnection partnerConnection,String recordInfo,
-			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList,
+			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList,
 			long pagesize, File dataDir) throws 
 		ConnectionException, UnsupportedEncodingException, IOException
 			 {
@@ -438,7 +438,7 @@ public class SfdcUtils {
 				
 				writer = new CsvListWriter(new FileWriter(csvFile),CsvPreference.STANDARD_PREFERENCE);
 				List<String> hdr = new LinkedList<String>();
-				for(com.sforce.dataset.loader.file.schema.FieldType field:fieldList)
+				for(com.sforce.dataset.loader.file.schema.ext.FieldType field:fieldList)
 				{
 					hdr.add(field.getName());
 				}
@@ -649,14 +649,14 @@ public class SfdcUtils {
 	 * @return
 	 */
 	private static String generateSOQL(String recordInfo,
-			List<com.sforce.dataset.loader.file.schema.FieldType> fieldList, long pagesize)
+			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList, long pagesize)
 	{
 //		HashMap<String, JavaDataType> fieldNameJDTMap = new HashMap<String, JavaDataType>();
 		String topLevelSObjectName = getTopLevelSObjectName(recordInfo);
 		int varLen =  topLevelSObjectName.length() + " FROM ".length() + (" LIMIT " + pagesize).length();
 		StringBuilder soql = new StringBuilder("SELECT ");
 		int i = 0;
-		for (com.sforce.dataset.loader.file.schema.FieldType field : fieldList) {
+		for (com.sforce.dataset.loader.file.schema.ext.FieldType field : fieldList) {
 			
 			if((soql.length()+(", " + field.getName()).length())>(20000-varLen))
 			{

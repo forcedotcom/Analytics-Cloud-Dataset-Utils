@@ -26,93 +26,9 @@
 package com.sforce.dataset.loader.file.schema;
 
 public class FileFormat {
-	
 	public String charsetName = "UTF-8";
 	public String fieldsDelimitedBy = ",";
 	public char fieldsEnclosedBy = '"';
 	public String linesTerminatedBy = "\n";
-	//public String RECORD_TYPE_IDENTIFIER_POSITION; //COLUMN NUMBER or the "PREFIX"
-	//public String LINES_STARTING_BY;
-	//public char FIELDS_ESCAPED_BY = '\\';
-    public int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS HEADER LINE IN CSV
-	
-    public FileFormat()
-    {
-    	super();
-    }
-    
-    public FileFormat(FileFormat old)
-    {
-    	super();
-    	if(old!=null)
-    	{
-	    	this.charsetName = old.charsetName;
-	    	this.fieldsDelimitedBy = old.fieldsDelimitedBy;
-	    	this.fieldsEnclosedBy = old.fieldsEnclosedBy;
-	    	this.linesTerminatedBy = old.linesTerminatedBy;
-	    	this.numberOfLinesToIgnore = old.numberOfLinesToIgnore;
-    	}
-    }
-
-    @Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((charsetName == null) ? 0 : charsetName.hashCode());
-		result = prime
-				* result
-				+ ((fieldsDelimitedBy == null) ? 0 : fieldsDelimitedBy
-						.hashCode());
-		result = prime * result + fieldsEnclosedBy;
-		result = prime
-				* result
-				+ ((linesTerminatedBy == null) ? 0 : linesTerminatedBy
-						.hashCode());
-		result = prime * result + numberOfLinesToIgnore;
-		return result;
-	}
-	
-    @Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		FileFormat other = (FileFormat) obj;
-		if (charsetName == null) {
-			if (other.charsetName != null) {
-				return false;
-			}
-		} else if (!charsetName.equals(other.charsetName)) {
-			return false;
-		}
-		if (fieldsDelimitedBy == null) {
-			if (other.fieldsDelimitedBy != null) {
-				return false;
-			}
-		} else if (!fieldsDelimitedBy.equals(other.fieldsDelimitedBy)) {
-			return false;
-		}
-		if (fieldsEnclosedBy != other.fieldsEnclosedBy) {
-			return false;
-		}
-		if (linesTerminatedBy == null) {
-			if (other.linesTerminatedBy != null) {
-				return false;
-			}
-		} else if (!linesTerminatedBy.equals(other.linesTerminatedBy)) {
-			return false;
-		}
-		if (numberOfLinesToIgnore != other.numberOfLinesToIgnore) {
-			return false;
-		}
-		return true;
-	}
-
+    public int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS A HEADER LINE IN CSV
 }

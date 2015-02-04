@@ -48,7 +48,7 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
 import com.google.code.externalsorting.ExternalSort;
-import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.util.DatasetUtils;
 
 public class CsvExternalSort extends ExternalSort {

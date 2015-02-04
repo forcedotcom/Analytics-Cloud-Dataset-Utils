@@ -52,7 +52,7 @@ import com.sforce.dataset.loader.EbinFormatWriter;
 import com.sforce.dataset.loader.file.listener.FileListener;
 import com.sforce.dataset.loader.file.listener.FileListenerThread;
 import com.sforce.dataset.loader.file.listener.FileListenerUtil;
-import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.server.DatasetUtilServer;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetAugmenter;
@@ -118,6 +118,10 @@ public class DatasetUtilMain {
 				{
 					params.debug = true;
 					DatasetUtilConstants.debug = true;
+				}
+				else if(args[i-1].equalsIgnoreCase("--ext"))
+				{
+					DatasetUtilConstants.ext = true;
 				}
 				else if(args[i-1].equalsIgnoreCase("--inputFile"))
 				{

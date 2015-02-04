@@ -45,7 +45,7 @@ import javax.script.CompiledScript;
 import javax.script.SimpleBindings;
 
 import com.sforce.dataset.DatasetUtilConstants;
-import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.util.FiscalDateUtil;
 
 /**

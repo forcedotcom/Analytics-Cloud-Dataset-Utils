@@ -44,7 +44,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 
 import com.sforce.dataset.DatasetUtilConstants;
-import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 
 public class MultipartRequestHandler {
 

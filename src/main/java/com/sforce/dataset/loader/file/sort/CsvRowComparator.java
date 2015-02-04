@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.foundations.comparator.column.IColumnComparator;
-import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.loader.file.schema.ext.FieldType;
 
 public class CsvRowComparator implements Comparator<List<String>> {
 

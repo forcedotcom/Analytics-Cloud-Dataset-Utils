@@ -51,7 +51,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.node.RegisterNode;
 import com.sforce.dataset.flow.node.SfdcDigestNode;
-import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.soap.partner.PartnerConnection;
 
 public class SfdcExtracter {

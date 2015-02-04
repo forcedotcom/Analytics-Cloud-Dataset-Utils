@@ -37,8 +37,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import com.sforce.dataset.loader.DatasetLoader;
-import com.sforce.dataset.loader.file.schema.ExternalFileSchema;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.soap.partner.PartnerConnection;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 

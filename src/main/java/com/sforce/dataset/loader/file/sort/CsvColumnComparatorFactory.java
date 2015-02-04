@@ -34,7 +34,7 @@ import com.foundations.comparator.column.DecimalComparator;
 import com.foundations.comparator.column.IColumnComparator;
 import com.foundations.comparator.column.IntegerComparator;
 import com.foundations.comparator.column.StringComparator;
-import com.sforce.dataset.loader.file.schema.FieldType;
+import com.sforce.dataset.loader.file.schema.ext.FieldType;
 
 public class CsvColumnComparatorFactory {
 	
