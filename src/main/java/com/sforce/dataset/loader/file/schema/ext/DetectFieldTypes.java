@@ -220,7 +220,7 @@ public class DetectFieldTypes {
 	    @SuppressWarnings("unused")
 		int failures = 0;
 	    int success = 0;
-	    int absoluteMaxScale = 9;
+	    int absoluteMaxScale = 6;
 	    int absoluteMaxPrecision = 18;
 
 	    //Date dt = new Date(System.currentTimeMillis());
@@ -251,24 +251,30 @@ public class DetectFieldTypes {
 	         }
 	    }
 	    
-	    if(maxPrecision!=null)
+	    if(maxScale==null || maxPrecision==null)
+	    	return null;
+	    
+	    int maxScaleCalculated = absoluteMaxScale;
+	    if(maxPrecision!=null && maxPrecision.precision()>maxPrecision.scale())
 	    {
-	    	absoluteMaxScale = absoluteMaxPrecision - (maxPrecision.precision()-maxPrecision.scale());
+	        maxScaleCalculated = absoluteMaxPrecision - (maxPrecision.precision()-maxPrecision.scale());
+	    	if(maxScaleCalculated>absoluteMaxScale)
+	    		maxScaleCalculated = absoluteMaxScale;
+	    	else if(maxScaleCalculated<2)
+	    		maxScaleCalculated=2;
 	    }
 
-    	if(absoluteMaxScale>9)
-	    	absoluteMaxScale=9;
-    	else if(absoluteMaxScale<=2)
-	    	absoluteMaxScale=2;
 	    
-	    if(maxScale!=null && maxScale.scale()>absoluteMaxScale)
+	    if(maxScale!=null && maxScale.scale()>maxScaleCalculated)
 	    {
-	    	maxScale = maxScale.setScale(absoluteMaxScale, RoundingMode.HALF_EVEN);
+	    	maxScale = maxScale.setScale(maxScaleCalculated, RoundingMode.HALF_EVEN);
 	    }
+	    
+	    maxPrecision.setScale(maxScale.scale());
 
 	    if((1.0*success/columnValues.size()) > 0.95)
 	    {
-	    	return maxScale;
+	    	return maxPrecision;
 	    }else
 	    {
 	    	return null;
