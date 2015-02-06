@@ -27,6 +27,7 @@ package com.sforce.dataset.loader;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -60,11 +61,30 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintS
 	  this.logger = logger;
   }
  
+/**
+ * Converts nulls to empty strings inside a string array so 
+ * the csv encoder doesn't freak out when we run into a null
+ * 
+ * @param input A String array
+ * @return a String array with no nulls 
+ */
+private String[] convertNullToEmptyString(String[] input) {
+	ArrayList<String> returnValue = new ArrayList<String>();
+	
+	for(String s : input) {
+		returnValue.add(s == null ? "" : s);
+	}
+	
+	return returnValue.toArray(new String[returnValue.size()]);
+}
+
   @SuppressWarnings("deprecation")
 public void run() {
  		logger.println("Start: " + Thread.currentThread().getName());
     try {
-       String[] row = queue.take();
+    	// The CSV encoder doesn't handle null values well so
+    	// we need to swap them out with empty strings
+       String[] row = convertNullToEmptyString(queue.take());
        while (row != null && row.length!=0) {
 			try
 			{
@@ -91,7 +111,7 @@ public void run() {
 				}
 				//t.printStackTrace();
 			}
-         row = queue.take();
+         row = convertNullToEmptyString(queue.take());
        }
     }catch (Throwable t) {
        logger.println (Thread.currentThread().getName() + " " + t.getMessage());
