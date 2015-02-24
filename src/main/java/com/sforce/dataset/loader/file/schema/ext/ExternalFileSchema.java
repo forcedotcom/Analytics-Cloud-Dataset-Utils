@@ -504,7 +504,13 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 								
 								if(user_field.isUniqueId)
 								{
-									uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
+									if(user_field.getfType()!=FieldType.STRING)
+									{
+										message.append("Numeric field {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
+									}else
+									{
+										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
+									}
 								}
 
 							} //End for

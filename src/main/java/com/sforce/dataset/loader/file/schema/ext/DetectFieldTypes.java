@@ -221,6 +221,7 @@ public class DetectFieldTypes {
 		int failures = 0;
 	    int success = 0;
 	    int absoluteMaxScale = 6;
+	    int absoluteMaxScaleExceededCount = 0;
 	    int absoluteMaxPrecision = 18;
 
 	    //Date dt = new Date(System.currentTimeMillis());
@@ -237,13 +238,20 @@ public class DetectFieldTypes {
 	    	try
 	         {
 	    		 bd = new BigDecimal(columnValue);
+	    		 
+	    		 if(bd.scale()>absoluteMaxScale)
+	    			 absoluteMaxScaleExceededCount++;
+	    		 
 	 	    	 if(bd.precision()>absoluteMaxPrecision || bd.scale()>absoluteMaxPrecision)
 		    		continue;
+	 	    	 
 	    		 //logger.println("Value: {"+columnValue+"} Scale: {"+bd.scale()+"}");
 	    		 if(maxScale == null || bd.scale() > maxScale.scale())
 	    			 maxScale = bd;
+	    		 
 	    		 if(maxPrecision == null || bd.precision() > maxPrecision.precision())
 	    			 maxPrecision = bd;
+	    		 
 				success++;
 	         }catch(Throwable t)
 	         {
@@ -253,6 +261,12 @@ public class DetectFieldTypes {
 	    
 	    if(maxScale==null || maxPrecision==null)
 	    	return null;
+
+	    //if more than 10% values are going to be over the max scale then we are better of treating this as Text
+	    if((1.0*absoluteMaxScaleExceededCount/columnValues.size()) > 0.1)
+	    {
+	    	return null;
+	    }
 	    
 	    int maxScaleCalculated = absoluteMaxScale;
 	    if(maxPrecision!=null && maxPrecision.precision()>maxPrecision.scale())
@@ -270,7 +284,7 @@ public class DetectFieldTypes {
 	    	maxScale = maxScale.setScale(maxScaleCalculated, RoundingMode.HALF_EVEN);
 	    }
 	    
-	    maxPrecision.setScale(maxScale.scale());
+	    maxPrecision.setScale(maxScale.scale(), RoundingMode.HALF_EVEN);
 
 	    if((1.0*success/columnValues.size()) > 0.95)
 	    {
