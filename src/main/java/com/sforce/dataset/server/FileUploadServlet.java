@@ -163,6 +163,14 @@ public class FileUploadServlet extends HttpServlet {
 					{
 						contentType = "text/plain";
 						file = session.getSessionLog();
+					}else if(type.equalsIgnoreCase("terminateSession"))
+					{
+						session.terminate(null);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+						ResponseStatus status = new ResponseStatus("success",null);
+				    	mapper.writeValue(response.getOutputStream(), status);
+				    	return;
 					}else
 					{
 						throw new IllegalArgumentException("Invalid 'type' {"+type+"}");

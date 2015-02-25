@@ -212,6 +212,11 @@ public class DatasetLoader {
 				session = Session.getCurrentSession(partnerConnection.getUserInfo().getOrganizationId(), datasetAlias);
 			}
 			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+			
 			schemaFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
 			ExternalFileSchema schema = null;
 			logger.println("\n*******************************************************************************");					
@@ -251,6 +256,10 @@ public class DatasetLoader {
 				}
 			}
 			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
 
 
 			archiveDir = new File(inputFile.getParent(),"archive");
@@ -311,8 +320,18 @@ public class DatasetLoader {
 			
 			session.setParam(DatasetUtilConstants.hdrIdParam,hdrId);
 			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+
 			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema);
 			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+
 			//Create the Bin file
 			//File binFile = new File(csvFile.getParent(), datasetName + ".bin");
 			File gzbinFile = inputFile;
@@ -370,6 +389,10 @@ public class DatasetLoader {
 						List<String> row = null;
 						while (hasmore) 
 						{
+							if(session.isDone())
+							{
+								throw new DatasetLoaderException("Operation terminated on user request");
+							}
 							try
 							{
 								row = reader.read();
@@ -533,6 +556,10 @@ public class DatasetLoader {
 				}
 			}else if(!FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("zip") && !FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("gz"))
 			{
+				if(session.isDone())
+				{
+					throw new DatasetLoaderException("Operation terminated on user request");
+				}
 				BufferedInputStream fis = null;
 				GzipCompressorOutputStream gzOut = null;
 				long startTime = System.currentTimeMillis();
@@ -596,6 +623,11 @@ public class DatasetLoader {
 				gzbinFile = lastgzbinFile;
 			}
 
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+
 			long startTime = System.currentTimeMillis();
 			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
 			long endTime = System.currentTimeMillis();
@@ -612,6 +644,11 @@ public class DatasetLoader {
 						status = false;
 					}
 				}
+			}
+			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
 		} catch(MalformedInputException mie)
@@ -735,6 +772,11 @@ public class DatasetLoader {
 		ThreadContext tx = ThreadContext.get();
 		Session session = tx.getSession();
 
+		if(session.isDone())
+		{
+			throw new DatasetLoaderException("Operation terminated on user request");
+		}
+
 		if(session!=null)
 			session.setStatus("UPLOADING");
 
@@ -763,11 +805,15 @@ public class DatasetLoader {
 		MAX_NUM_UPLOAD_THREADS = 1; 
 		while(retryCount<3)
 		{
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
 				q.clear(); //clear the queue otherwise thread will die before it starts because of previous empty messages
 				LinkedList<FilePartsUploaderThread> upThreads = new LinkedList<FilePartsUploaderThread>();
 				for(int i = 1;i<=MAX_NUM_UPLOAD_THREADS;i++)
 				{
-					FilePartsUploaderThread writer = new FilePartsUploaderThread(q, partnerConnection, hdrId, logger);
+					FilePartsUploaderThread writer = new FilePartsUploaderThread(q, partnerConnection, hdrId, logger, session);
 					Thread th = new Thread(writer,"FilePartsUploaderThread-"+i);
 					th.setDaemon(true);
 					th.start();
@@ -784,6 +830,10 @@ public class DatasetLoader {
 				{
 					for(int i:fileParts.keySet())
 					{
+						if(session.isDone())
+						{
+							throw new DatasetLoaderException("Operation terminated on user request");
+						}
 						if(!existingFileParts.contains(i))						
 						{	
 							HashMap<Integer, File> tmp = new HashMap<Integer, File>();
@@ -793,6 +843,10 @@ public class DatasetLoader {
 					}
 					while(!q.isEmpty())
 					{
+						if(session.isDone())
+						{
+							throw new DatasetLoaderException("Operation terminated on user request");
+						}
 						try
 						{
 							Thread.sleep(1000);
@@ -808,6 +862,10 @@ public class DatasetLoader {
 					FilePartsUploaderThread uploader = upThreads.get(i);
 					while(!uploader.isDone())
 					{
+						if(session.isDone())
+						{
+							throw new DatasetLoaderException("Operation terminated on user request");
+						}
 						q.put(new HashMap<Integer, File>());
 						try
 						{
@@ -837,6 +895,11 @@ public class DatasetLoader {
 				else
 					logger.println("Not all file parts uploaded trying again");
 				retryCount++;
+			}
+
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
 				if(allPartsUploaded)

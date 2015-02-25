@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sforce.dataset.DatasetUtilConstants;
@@ -54,6 +55,8 @@ long targetTotalRowCount=0;
 long targetErrorCount=0;
 String status;
 String message = "";
+volatile AtomicBoolean isDone = new AtomicBoolean(false);
+
 Map<String,String> params = new LinkedHashMap<String,String>();
 private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
 
@@ -196,6 +199,7 @@ public void start() {
 
 public void end() {
 	this.status = "COMPLETED";
+	isDone.set(true);
 	updateLastModifiedTime();
 	this.endTime = this.lastModifiedTime;
 }
@@ -203,9 +207,27 @@ public void end() {
 public void fail(String message) {
 	this.status = "FAILED";
 	this.message = message;
+	isDone.set(true);
 	updateLastModifiedTime();
 	this.endTime = this.lastModifiedTime;
 }
+
+public void terminate(String message) {
+	this.status = "TERMINATED";
+	if(message!=null)
+		this.message = message;
+	else
+		this.message = "TERMINATED ON USER REQUEST";
+
+	isDone.set(true);	
+	updateLastModifiedTime();
+	this.endTime = this.lastModifiedTime;
+}
+
+public boolean isDone() {
+	return isDone.get();
+}
+
 
 void updateLastModifiedTime()
 {
@@ -252,6 +274,8 @@ public static final Session getCurrentSession(String orgId,String name)
     }
     return session;	
 }
+
+
 
 
 

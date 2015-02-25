@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 
+import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -50,10 +51,12 @@ public class FilePartsUploaderThread implements Runnable {
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
   private final PrintStream logger;
+  Session session = null;
+
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 
-FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection partnerConnection, String insightsExternalDataId, PrintStream logger) 
+FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection partnerConnection, String insightsExternalDataId, PrintStream logger, Session session) 
   { 
 	  if(partnerConnection==null || insightsExternalDataId == null || q == null)
 	  {
@@ -63,6 +66,7 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
 	  this.partnerConnection = partnerConnection;
 	  this.insightsExternalDataId = insightsExternalDataId;
 	  this.logger = logger;
+	  this.session = session;
   }
  
   public void run() {
@@ -70,7 +74,12 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
        Map<Integer, File> row = queue.take();
    		logger.println("Start: " + Thread.currentThread().getName());
    		done.set(false);
+
        while (!row.isEmpty()) {
+     	   if(session.isDone())
+	   		{
+	   			throw new DatasetLoaderException("Operation terminated on user request");
+	   		}
 			try
 			{
 					totalRowCount++;

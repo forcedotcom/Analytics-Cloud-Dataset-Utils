@@ -69,7 +69,13 @@ public void run() {
  		logger.println("Start: " + Thread.currentThread().getName());
     try {
        String[] row = queue.take();
-       while (row != null && row.length!=0) {
+       while (row != null && row.length!=0) 
+       {
+    	   if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+
 			try
 			{
 					totalRowCount++;
