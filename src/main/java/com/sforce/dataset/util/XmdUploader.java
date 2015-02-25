@@ -64,7 +64,7 @@ public class XmdUploader {
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean uploadXmd(String userXmdFile, String datasetAlias, PartnerConnection connection) throws URISyntaxException, ClientProtocolException, IOException, ConnectionException
+	public static boolean uploadXmd(String userXmdFile, String datasetAlias, PartnerConnection partnerConnection) throws URISyntaxException, ClientProtocolException, IOException, ConnectionException
 	{
 		if(datasetAlias==null||datasetAlias.trim().isEmpty())
 		{
@@ -95,9 +95,9 @@ public class XmdUploader {
 		}
 
 
-		System.out.println();
-			
-			ConnectorConfig config = connection.getConfig();			
+			System.out.println();
+			partnerConnection.getServerTimestamp();			
+			ConnectorConfig config = partnerConnection.getConfig();			
 			String sessionID = config.getSessionId();
 			String _alias = null;
 			String edgemartId = null;

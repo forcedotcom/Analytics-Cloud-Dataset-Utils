@@ -33,7 +33,6 @@ import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.compress.utils.IOUtils;
@@ -44,33 +43,48 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 
 public class MultipartRequestHandler {
-
-	public static File datadir = new File(DatasetUtilConstants.currentDir,"Data");
 	
-	public static List<FileUploadRequest> uploadByApacheFileUpload(HttpServletRequest request) throws IOException, ServletException, FileUploadException{
-				
-		List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
-		
-		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-		FileUploadRequest temp = null;
-		
-		if(isMultipart){
 
+	public static List<FileItem> getUploadRequestFileItems(HttpServletRequest request) throws FileUploadException {
+		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+		if (isMultipart) {
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 			ServletFileUpload upload = new ServletFileUpload(factory);
-			
-				List<FileItem> items = upload.parseRequest(request);
-				String datasetName = null;
-				String datasetLabel = null;
-				String datasetApp = null;
-				String operation = null;
-				String inputCsv = null;
-				String inputJson = null;
+			List<FileItem> items = upload.parseRequest(request);
+			return items;
+		}
+		throw new IllegalArgumentException("Request is not multipart");
+	}
+	
+	public static String getDatasetName(List<FileItem> items) 
+	{	
+		for (FileItem item : items) {
+			if (item.isFormField()) {
+				if (item.getFieldName().equals("DatasetName")) {
+					return item.getString();
+				}
+			}
+		}
+		throw new IllegalArgumentException("Parameter 'DatasetName' not found in FileUpload Request");
+	}
+
+	
+	public static List<FileUploadRequest> uploadByApacheFileUpload(List<FileItem> items,File datadir, Session session) throws IOException
+	{
+		List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
+		FileUploadRequest temp = null;
+		String datasetName = null;
+		String datasetLabel = null;
+		String datasetApp = null;
+		String operation = null;
+		String inputCsv = null;
+		String inputJson = null;
 				
-				for(FileItem item:items){
+		for (FileItem item : items) {
 				    if (item.isFormField()) {
 				        if(item.getFieldName().equals("DatasetName"))
 				        {
@@ -112,11 +126,14 @@ public class MultipartRequestHandler {
 					fm.setOperation(operation);
 					fm.setInputCsv(inputCsv);
 					fm.setInputJson(inputJson);
-					File outFile = new File(parent,fm.getInputFileName());
+//					File outFile = new File(parent,fm.getInputFileName());
+					File outFile = new File(parent,session.getId()+".csv");
 					if(fm.getInputFileName().equalsIgnoreCase(inputJson))
 					{
 						ExternalFileSchema schema = ExternalFileSchema.load(fm.inputFileStream, Charset.forName("UTF-8"), System.out);
-						fm.setInputFileName(ExternalFileSchema.getSchemaFile(new File(inputCsv), System.out).getName());
+//						fm.setInputFileName(ExternalFileSchema.getSchemaFile(new File(inputCsv), System.out).getName());
+						fm.setInputFileName(ExternalFileSchema.getSchemaFile(outFile, System.out).getName());
+						fm.setInputJson(fm.getInputFileName());
 						outFile = new File(parent,fm.getInputFileName());
 						ExternalFileSchema.save(outFile, schema, System.out);
 					}else
@@ -135,6 +152,8 @@ public class MultipartRequestHandler {
 							if(fos!=null)
 								IOUtils.closeQuietly(fos);
 						}
+						fm.setInputFileName(outFile.getName());
+						fm.setInputCsv(outFile.getName());
 					}
 					fm.savedFile = outFile;
 					fm.setInputFileSize(outFile.length()+"");
@@ -143,7 +162,6 @@ public class MultipartRequestHandler {
 						throw new IllegalArgumentException("Input File {"+outFile.getName()+"} is of zero length");
 					}
 				}
-		}
 		return files;
 	}
 }

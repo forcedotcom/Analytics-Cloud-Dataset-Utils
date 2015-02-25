@@ -53,22 +53,158 @@ public class DatasetDownloader {
 	
 
 	/**
-	 * @param binFile
 	 * @param EM_NAME
-	 * @param username
-	 * @param password
-	 * @param endpoint
-	 * @param token
+	 * @param partnerConnection
+	 * @return
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean downloadEM(String EM_NAME, PartnerConnection connection) throws Exception {
+	public static String getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
+	{
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();
+		String _alias = null;
+		Date createdDateTime = null;
+		String versionID = null;
+		
+		String serviceEndPoint = config.getServiceEndpoint();
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		
+		String mainXmd = null;
 
-			ConnectorConfig config = connection.getConfig();			
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   
+		URI u = new URI(serviceEndPoint);
+
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
+		HttpGet listEMPost = new HttpGet(listEMURI);
+
+		listEMPost.setConfig(requestConfig);
+		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
+		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
+		HttpEntity emresponseEntity = emresponse.getEntity();
+		InputStream emis = emresponseEntity.getContent();			
+		String emList = IOUtils.toString(emis, "UTF-8");
+		emis.close();
+		httpClient.close();
+		
+		if(emList!=null && !emList.isEmpty())
+		{
+			try 
+			{
+				ObjectMapper mapper = new ObjectMapper();	
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				Map res =  mapper.readValue(emList, Map.class);
+//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
+				List result = (List) res.get("result");
+				if(result != null && !result.isEmpty())
+				{
+					Map resp = getAlias(result, EM_NAME);
+					if(resp!=null)
+					{
+						_alias = (String) resp.get("_alias");
+						Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
+						//System.out.println("_createdDateTime: "+ _createdDateTime);
+						if(_createdDateTime != null)
+						{
+							createdDateTime = new Date(1000L*_createdDateTime);
+						}
+//						Map folder = (Map) resp.get("folder");
+//						if(folder != null)
+//						{
+//							folderID = (String) folder.get("_uid");
+//						}
+						Map edgemartData = (Map) resp.get("edgemartData");
+						if(edgemartData != null)
+						{
+							versionID = (String) edgemartData.get("_uid");
+						}
+						System.out.println("Found EM {"+_alias+"}, Version {"+versionID+"}, Created: {"+createdDateTime+"}");
+						System.out.println("Downloading EM File.. \n");
+						Map _files = (Map) resp.get("_files");
+						if(_files != null)
+						{
+							for(Object filename:_files.keySet())
+							{
+								if(filename==null)
+									continue;
+										
+								if(!filename.toString().equalsIgnoreCase("main.xmd.json"))
+									continue;
+								
+								CloseableHttpClient httpClient1 = HttpClients.createDefault();
+								String url = (String) _files.get(filename);
+								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
+								HttpGet listEMPost1 = new HttpGet(listEMURI1);
+
+								System.out.println("Downloading file {"+filename+"}");
+								listEMPost1.setConfig(requestConfig);
+								listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
+
+								CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
+
+							   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
+						       int statusCode = emresponse1.getStatusLine().getStatusCode();
+						       if (statusCode != HttpStatus.SC_OK) {
+						           System.out.println("Method failed: " + reasonPhrase);
+							       throw new IllegalArgumentException(String.format("%s download failed: %d %s", filename,statusCode,reasonPhrase));
+						       }
+
+								HttpEntity emresponseEntity1 = emresponse1.getEntity();
+								InputStream emis1 = emresponseEntity1.getContent();
+								String xmd = IOUtils.toString(emis1, "UTF-8");
+								emis1.close();
+								httpClient1.close();
+
+								Map xmdObject =  mapper.readValue(xmd, Map.class);
+								mainXmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(xmdObject);
+								return mainXmd;
+							}
+						}else
+						{
+							throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+						}
+					}else
+					{
+						throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+					}
+				}else
+				{
+					throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+				}
+			} catch (Throwable t) {
+				throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found: "+t.toString());
+			}
+		}else
+		{
+			throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+		}
+		
+		throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+	}
+	
+	/**
+	 * @param EM_NAME
+	 * @param partnerConnection
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static boolean downloadEM(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
+	{
+			partnerConnection.getServerTimestamp();
+			ConnectorConfig config = partnerConnection.getConfig();			
 			String sessionID = config.getSessionId();
+			String orgId = partnerConnection.getUserInfo().getOrganizationId();
 			String _alias = null;
 			Date createdDateTime = null;
 			String versionID = null;
+			
 			String serviceEndPoint = config.getServiceEndpoint();
 			CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -83,13 +219,6 @@ public class DatasetDownloader {
 			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
 			HttpGet listEMPost = new HttpGet(listEMURI);
 
-//			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-//			builder.addTextBody("jsonMetadata", "{\"_alias\":\""+EM_NAME+"\",\"_type\":\"ebin\"}", ContentType.TEXT_PLAIN);
-//			builder.addBinaryBody(binFile.getName(), binFile,
-//					ContentType.APPLICATION_OCTET_STREAM, binFile.getName());
-//			HttpEntity multipart = builder.build();
-//
-//			uploadFile.setEntity(multipart);
 			listEMPost.setConfig(requestConfig);
 			listEMPost.addHeader("Authorization","OAuth "+sessionID);			
 			CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
@@ -135,7 +264,7 @@ public class DatasetDownloader {
 							Map _files = (Map) resp.get("_files");
 							if(_files != null)
 							{
-								File edgemartDir = new File(EM_NAME);
+								File edgemartDir = new File(DatasetUtilConstants.getDataDir(orgId),EM_NAME);
 								FileUtils.forceMkdir(edgemartDir);
 								for(Object filename:_files.keySet())
 								{

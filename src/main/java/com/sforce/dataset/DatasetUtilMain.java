@@ -47,7 +47,10 @@ import org.apache.commons.io.IOUtils;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
+import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.DatasetLoader;
+import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.loader.EbinFormatWriter;
 import com.sforce.dataset.loader.file.listener.FileListener;
 import com.sforce.dataset.loader.file.listener.FileListenerThread;
@@ -67,8 +70,6 @@ import com.sforce.ws.ConnectionException;
 @SuppressWarnings("deprecation")
 public class DatasetUtilMain {
 	
-	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/32.0";
-	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/32.0";
 	
 	public static final String[][] validActions = {{"load","Load CSV"}, {"defineExtractFlow","Define SFDC Extract Data Flow"}, {"defineAugmentFlow","Define Dataset Augment Data Flow"},{"downloadXMD","Download All XMD Json Files"}, {"uploadXMD","Upload User XMD Json File"}, {"detectEncoding","Detect file encoding"}, {"downloadErrorFile","Fetch CSV Upload Error Report"}};
 
@@ -209,7 +210,7 @@ public class DatasetUtilMain {
 			}//end for
 				if(params.endpoint == null || params.endpoint.isEmpty())
 				{
-						params.endpoint = defaultEndpoint;
+						params.endpoint = DatasetUtilConstants.defaultEndpoint;
 				}
 		}
 		
@@ -259,7 +260,7 @@ public class DatasetUtilMain {
 				params.endpoint = getInputFromUser("Enter salesforce instance url (default=prod): ", false, false);
 				if(params.endpoint == null || params.endpoint.trim().isEmpty())
 				{
-					params.endpoint = defaultEndpoint;
+					params.endpoint = DatasetUtilConstants.defaultEndpoint;
 				}
 			}
 		}
@@ -268,10 +269,10 @@ public class DatasetUtilMain {
 			{
 				if(params.endpoint.equalsIgnoreCase("PROD") || params.endpoint.equalsIgnoreCase("PRODUCTION"))
 				{
-					params.endpoint = defaultEndpoint;
+					params.endpoint = DatasetUtilConstants.defaultEndpoint;
 				}else if(params.endpoint.equalsIgnoreCase("TEST") || params.endpoint.equalsIgnoreCase("SANDBOX"))
 				{
-					params.endpoint = defaultEndpoint.replace("login", "test");
+					params.endpoint = DatasetUtilConstants.defaultEndpoint.replace("login", "test");
 				}
 				
 				URL uri = new URL(params.endpoint);
@@ -286,9 +287,9 @@ public class DatasetUtilMain {
 					}
 				}
 				
-				if(uri.getPath() == null || uri.getPath().isEmpty())
+				if(uri.getPath() == null || uri.getPath().isEmpty() || uri.getPath().equals("/"))
 				{
-					uri = new URL(uri.getProtocol(), uri.getHost(), uri.getPort(), "/services/Soap/u/32.0"); 
+					uri = new URL(uri.getProtocol(), uri.getHost(), uri.getPort(), DatasetUtilConstants.defaultSoapEndPointPath); 
 				}
 				params.endpoint = uri.toString();
 			} catch (MalformedURLException e) {
@@ -304,6 +305,9 @@ public class DatasetUtilMain {
 			try {
 				partnerConnection  = DatasetUtils.login(0, params.username, params.password, params.token, params.endpoint, params.sessionId, params.debug);
 			} catch (ConnectionException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			} catch (MalformedURLException e) {
 				e.printStackTrace();
 				System.exit(-1);
 			}
@@ -558,11 +562,12 @@ public class DatasetUtilMain {
 		{
 			if(params.datasetLabel==null)
 				params.datasetLabel = params.dataset;
-			params.dataset = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1);
-			if(!params.dataset.equals(params.datasetLabel))
+			String santizedDatasetName = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1);
+			if(!params.dataset.equals(santizedDatasetName))
 			{
 				System.out.println("\n Warning: dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");
-				System.out.println("\n changing dataset name to: {"+params.dataset+"}");
+				System.out.println("\n changing dataset name to: {"+santizedDatasetName+"}");
+				params.dataset = santizedDatasetName;
 			}
 		}
 		
@@ -595,11 +600,32 @@ public class DatasetUtilMain {
 					return false;
 				}
 				
+				Session session = null;
 				try {
-					return DatasetLoader.uploadDataset(params.inputFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, System.out);
+					String orgId = null;
+					orgId = partnerConnection.getUserInfo().getOrganizationId();
+					session = Session.getCurrentSession(orgId, params.dataset);
+//					session = new Session(orgId,params.dataset);
+//			        ThreadContext threadContext = ThreadContext.get();
+//			        threadContext.setSession(session);
+			        session.start();
+					try
+					{
+						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, System.out);
+						if(status)
+							session.end();
+						else
+							session.fail("Check sessionLog for details");
+						return status;
+					} catch (DatasetLoaderException e) {
+						session.fail(e.getMessage());
+						return false;
+					}
 				} catch (Exception e) {
 						System.out.println();
-						e.printStackTrace();
+						e.printStackTrace(System.out);
+						if(session!=null)
+							session.fail(e.getLocalizedMessage());
 						return false;
 				}
 			} else if(action.equalsIgnoreCase("detectEncoding"))
@@ -613,7 +639,7 @@ public class DatasetUtilMain {
 				try {
 					CharsetChecker.detectCharset(new File(params.inputFile));
 				} catch (Exception e) {
-						e.printStackTrace();
+						e.printStackTrace(System.out);
 						return false;
 				}
 			}else if(action.equalsIgnoreCase("uploadxmd"))
@@ -634,7 +660,7 @@ public class DatasetUtilMain {
 					try {
 						XmdUploader.uploadXmd(params.inputFile, params.dataset, partnerConnection);
 					} catch (Exception e) {
-							e.printStackTrace();
+							e.printStackTrace(System.out);
 							return false;
 					}
 			} else if(action.equalsIgnoreCase("downloadxmd"))
@@ -648,7 +674,7 @@ public class DatasetUtilMain {
 				try {
 					DatasetDownloader.downloadEM(params.dataset, partnerConnection);
 				} catch (Exception e) {
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 					return false;
 				}
 			}else if(action.equalsIgnoreCase("defineAugmentFlow"))
@@ -657,7 +683,7 @@ public class DatasetUtilMain {
 				try {
 					DatasetAugmenter.augmentEM(partnerConnection);
 				} catch (Exception e) {
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 					return false;
 				}
 			}else if(action.equalsIgnoreCase("defineExtractFlow"))
@@ -671,7 +697,7 @@ public class DatasetUtilMain {
 				try{
 					SfdcExtracter.extract(params.rootObject,params.dataset, partnerConnection, params.rowLimit);
 				} catch (Exception e) {
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 					return false;
 				}
 			}else if(action.equalsIgnoreCase("downloadErrorFile"))
@@ -686,7 +712,7 @@ public class DatasetUtilMain {
 					DataFlowMonitorUtil.getJobsAndErrorFiles(partnerConnection, params.dataset);
 				} catch (Exception e) {
 						System.out.println();
-						e.printStackTrace();
+						e.printStackTrace(System.out);
 						return false;
 				}
 				
@@ -964,7 +990,11 @@ public class DatasetUtilMain {
 				fileListener.setUseBulkAPI(params.useBulkAPI);
 //				fileListener.setFileAge(fileAge);
 //				fileListener.setPollingInterval();
-				FileListenerThread.moveInputFile(new File(params.inputFile), System.currentTimeMillis(), true);
+				
+				ThreadContext tx = ThreadContext.get();
+				Session session = tx.getSession();
+
+				FileListenerThread.moveInputFile(new File(params.inputFile), true, session);
 				FileListenerUtil.addAndStartListener(fileListener, partnerConnection);
 			} catch (Throwable e) {
 				e.printStackTrace();

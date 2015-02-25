@@ -56,6 +56,7 @@ import com.sforce.dataset.flow.node.EdgemartNode;
 import com.sforce.dataset.flow.node.RegisterNode;
 import com.sforce.dataset.metadata.DatasetSchema;
 import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 
 public class DatasetAugmenter {
@@ -349,10 +350,11 @@ public class DatasetAugmenter {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	public static void downloadEMJson(Map resp, PartnerConnection connection) throws URISyntaxException, IOException
+	public static void downloadEMJson(Map resp, PartnerConnection partnerConnection) throws URISyntaxException, IOException, ConnectionException
 	{
 		String _alias = null;
-		ConnectorConfig config = connection.getConfig();			
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 
 		String serviceEndPoint = config.getServiceEndpoint();

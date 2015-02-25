@@ -24,19 +24,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 package com.sforce.dataset.util;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -54,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -66,6 +64,8 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.soap.partner.GetUserInfoResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.fault.LoginFault;
@@ -115,9 +115,10 @@ public class DatasetUtils {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String,Map> listDataset(PartnerConnection connection) throws Exception {
+	public static Map<String,Map> listDataset(PartnerConnection partnerConnection) throws Exception {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
-		ConnectorConfig config = connection.getConfig();			
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 //		String _alias = null;
 //		Date createdDateTime = null;
@@ -176,147 +177,212 @@ public class DatasetUtils {
 	return dataSetMap;
 }
 
-	
-	/**
-	 * @param binFile
-	 * @param EM_NAME
-	 * @param username
-	 * @param password
-	 * @param endpoint
-	 * @param token
-	 * @throws Exception
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean downloadEM(String EM_NAME, PartnerConnection connection) throws Exception {
 
-			ConnectorConfig config = connection.getConfig();			
-			String sessionID = config.getSessionId();
-			String _alias = null;
-			Date createdDateTime = null;
-			String versionID = null;
-			String serviceEndPoint = config.getServiceEndpoint();
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-
-			RequestConfig requestConfig = RequestConfig.custom()
-				       .setSocketTimeout(60000)
-				       .setConnectTimeout(60000)
-				       .setConnectionRequestTimeout(60000)
-				       .build();
-			   
-			URI u = new URI(serviceEndPoint);
-
-			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
-			HttpGet listEMPost = new HttpGet(listEMURI);
-
-//			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-//			builder.addTextBody("jsonMetadata", "{\"_alias\":\""+EM_NAME+"\",\"_type\":\"ebin\"}", ContentType.TEXT_PLAIN);
-//			builder.addBinaryBody(binFile.getName(), binFile,
-//					ContentType.APPLICATION_OCTET_STREAM, binFile.getName());
-//			HttpEntity multipart = builder.build();
-//
-//			uploadFile.setEntity(multipart);
-			listEMPost.setConfig(requestConfig);
-			listEMPost.addHeader("Authorization","OAuth "+sessionID);			
-			CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
-			HttpEntity emresponseEntity = emresponse.getEntity();
-			InputStream emis = emresponseEntity.getContent();			
-			String emList = IOUtils.toString(emis, "UTF-8");
-			emis.close();
-			httpClient.close();
-			
-			if(emList!=null && !emList.isEmpty())
+	@SuppressWarnings("rawtypes")
+	public static List<DatasetType> listDatasets(PartnerConnection connection) throws Exception 
+	{
+		List<DatasetType> datasetList = new LinkedList<DatasetType>();
+		Map<String, Map> dataSetMap = listDataset(connection);
+		if(dataSetMap != null && !dataSetMap.isEmpty())
+		{
+			for(String alias:dataSetMap.keySet())
 			{
-				try 
+				Map dataset = dataSetMap.get(alias);
+				String _type = (String) dataset.get("_type");
+				if(_type != null && _type.equals("edgemart"))
 				{
-					ObjectMapper mapper = new ObjectMapper();	
-					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-					Map res =  mapper.readValue(emList, Map.class);
-//					mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
-					List result = (List) res.get("result");
-					if(result != null && !result.isEmpty())
-					{
-						Map resp = getAlias(result, EM_NAME);
-						if(resp!=null)
+						DatasetType datasetTemp = new DatasetType();
+						
+						Object temp = dataset.get("_createdDateTime");
+						if(temp != null && temp instanceof Number)
 						{
-							_alias = (String) resp.get("_alias");
-							Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-							//System.out.println("_createdDateTime: "+ _createdDateTime);
-							if(_createdDateTime != null)
+							datasetTemp._createdDateTime = ((Number)temp).longValue();
+						}
+
+						temp = dataset.get("_lastAccessed");
+						if(temp != null && temp instanceof Number)
+						{
+							datasetTemp._lastAccessed = ((Number)temp).longValue();
+						}
+
+						datasetTemp._type  = (String) dataset.get("_type");
+						
+						datasetTemp._uid  = (String) dataset.get("_uid");
+						
+						datasetTemp.assetIcon = (String) dataset.get("_type");
+						
+						datasetTemp.assetIconUrl = (String) dataset.get("assetIconUrl");
+						
+						datasetTemp.assetSharingUrl = (String) dataset.get("assetSharingUrl");
+						
+						datasetTemp._alias = (String) dataset.get("_alias");
+
+						datasetTemp.name = (String) dataset.get("name");
+						
+						datasetTemp._url = (String) dataset.get("_url");
+
+						temp =  dataset.get("_permissions");
+						if(temp != null && temp instanceof Map)
+						{
+							datasetTemp._permissions = datasetTemp.new PermissionType();
+							Object var = ((Map)temp).get("modify");
+							if(var != null && var instanceof Boolean)
 							{
-								createdDateTime = new Date(1000L*_createdDateTime);
+								datasetTemp._permissions.modify = ((Boolean)var).booleanValue();
 							}
-//							Map folder = (Map) resp.get("folder");
-//							if(folder != null)
-//							{
-//								folderID = (String) folder.get("_uid");
-//							}
-							Map edgemartData = (Map) resp.get("edgemartData");
-							if(edgemartData != null)
+
+							var = ((Map)temp).get("manage");
+							if(var != null && var instanceof Boolean)
 							{
-								versionID = (String) edgemartData.get("_uid");
+								datasetTemp._permissions.manage = ((Boolean)var).booleanValue();
 							}
-							System.out.println("Found EM {"+_alias+"}, Version {"+versionID+"}, Created: {"+createdDateTime+"}");
-							System.out.println("Downloading EM File.. \n");
-							Map _files = (Map) resp.get("_files");
-							if(_files != null)
+
+							var = ((Map)temp).get("view");
+							if(var != null && var instanceof Boolean)
 							{
-								File edgemartDir = new File(EM_NAME);
-								FileUtils.forceMkdir(edgemartDir);
-								for(Object filename:_files.keySet())
+								datasetTemp._permissions.view = ((Boolean)var).booleanValue();
+							}
+						}
+						
+						datasetList.add(datasetTemp);
+						
+
+				}else
+				{
+			       throw new IOException(String.format("Dataset  list download failed, invalid server response %s",dataset));
+				}
+			} //end for
+		}else
+		{
+	       throw new IOException(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
+		}
+		return datasetList;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List<FolderType> listFolders(PartnerConnection partnerConnection) throws Exception {
+		List<FolderType> folderList = new LinkedList<FolderType>();
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();
+		String serviceEndPoint = config.getServiceEndpoint();
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   		
+		URI u = new URI(serviceEndPoint);
+
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/folder", null,null);			
+		HttpGet listEMPost = new HttpGet(listEMURI);
+
+		listEMPost.setConfig(requestConfig);
+		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
+//		System.out.println("Fetching Folder list from server, this may take a minute...");
+		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
+		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
+	       int statusCode = emresponse.getStatusLine().getStatusCode();
+	       if (statusCode != HttpStatus.SC_OK) {
+		       throw new IOException(String.format("listFolders failed: %d %s", statusCode,reasonPhrase));
+	       }
+		HttpEntity emresponseEntity = emresponse.getEntity();
+		InputStream emis = emresponseEntity.getContent();			
+		String emList = IOUtils.toString(emis, "UTF-8");
+		emis.close();
+		httpClient.close();
+		
+		if(emList!=null && !emList.isEmpty())
+		{
+				ObjectMapper mapper = new ObjectMapper();	
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				Map res =  mapper.readValue(emList, Map.class);
+//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
+				List<Map> folders = (List<Map>) res.get("result");
+				if(folders != null && !folders.isEmpty())
+				{
+					for(Map job:folders)
+					{
+						String _type = (String) job.get("_type");
+						if(_type != null && _type.equals("folder"))
+						{
+								FolderType folder = new FolderType();
+								
+								Object temp = job.get("_createdDateTime");
+								if(temp != null && temp instanceof Number)
 								{
-									CloseableHttpClient httpClient1 = HttpClients.createDefault();
-									String url = (String) _files.get(filename);
-									URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
-									HttpGet listEMPost1 = new HttpGet(listEMURI1);
-
-									System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
-									listEMPost1.setConfig(requestConfig);
-									listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
-
-									CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
-
-								   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
-							       int statusCode = emresponse1.getStatusLine().getStatusCode();
-							       if (statusCode != HttpStatus.SC_OK) {
-							           System.out.println("Method failed: " + reasonPhrase);
-							           continue;
-							       }
-							       System.out.println(String.format("statusCode: %d", statusCode));
-							       System.out.println(String.format("reasonPhrase: %s", reasonPhrase));
-
-									HttpEntity emresponseEntity1 = emresponse1.getEntity();
-									InputStream emis1 = emresponseEntity1.getContent();
-									File outfile = new File(edgemartDir,(String) filename);
-									System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
-									BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
-									IOUtils.copy(emis1, out);
-									out.close();
-									emis1.close();
-									httpClient1.close();
-									System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}");
+									folder._createdDateTime = ((Number)temp).longValue();
 								}
-							}
-							System.out.println("\n Completed downloading EM Files..");							
-							return true;
+
+								temp = job.get("lastModified");
+								if(temp != null && temp instanceof Number)
+								{
+									folder.lastModified = ((Number)temp).longValue();
+								}
+
+								folder._type  = (String) job.get("_type");
+								
+								folder._uid  = (String) job.get("_uid");
+								
+								folder.assetIcon = (String) job.get("_type");
+								
+								folder.assetIconUrl = (String) job.get("assetIconUrl");
+								
+								folder.assetSharingUrl = (String) job.get("assetSharingUrl");
+								
+								folder.developerName = (String) job.get("developerName");
+
+								folder.name = (String) job.get("name");
+								
+								folder._url = (String) job.get("_url");
+
+								temp =  job.get("_permissions");
+								if(temp != null && temp instanceof Map)
+								{
+									folder._permissions = folder.new PermissionType();
+									Object var = ((Map)temp).get("modify");
+									if(var != null && var instanceof Boolean)
+									{
+										folder._permissions.modify = ((Boolean)var).booleanValue();
+									}
+
+									var = ((Map)temp).get("manage");
+									if(var != null && var instanceof Boolean)
+									{
+										folder._permissions.manage = ((Boolean)var).booleanValue();
+									}
+
+									var = ((Map)temp).get("view");
+									if(var != null && var instanceof Boolean)
+									{
+										folder._permissions.view = ((Boolean)var).booleanValue();
+									}
+								}
+								
+								folderList.add(folder);
+								
+
 						}else
 						{
-							System.out.println("\n EM {"+EM_NAME+"} not found");							
-							return false;
+					       throw new IOException(String.format("Dataflow Folder list download failed, invalid server response %s",emList));
 						}
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
+					} //end for
+				}else
+				{
+			       throw new IOException(String.format("Dataflow Folder list download failed, invalid server response %s",emList));
 				}
+		}
+		return folderList;
+}
 
-				//System.out.println(emList);
-			}
-
-			
-		return false;
+	public static List<Session> listSessions(PartnerConnection connection) throws Exception 
+	{
+		return Session.listSessions(connection.getUserInfo().getOrganizationId());
 	}
-
 	
-	public static PartnerConnection login(int retryCount,String username,String password, String token, String endpoint, String sessionId, boolean debug) throws ConnectionException  {
+	public static PartnerConnection login(int retryCount,String username,String password, String token, String endpoint, String sessionId, boolean debug) throws ConnectionException, MalformedURLException  {
 
 		if(sessionId==null)
 		{
@@ -333,9 +399,28 @@ public class DatasetUtils {
 		}
 
 		if (endpoint == null || endpoint.isEmpty()) {
-			throw new IllegalArgumentException("endpoint is required");
+			endpoint = DatasetUtilConstants.defaultEndpoint;
 		}
 
+		
+		URL uri = new URL(endpoint);
+		String protocol = uri.getProtocol();
+		String host = uri.getHost();
+		if(protocol == null || !protocol.equalsIgnoreCase("https"))
+		{
+			if(host == null || !(host.toLowerCase().endsWith("internal.salesforce.com") || host.toLowerCase().endsWith("localhost")))
+			{
+				System.out.println("\nERROR: Invalid endpoint. UNSUPPORTED_CLIENT: HTTPS Required in endpoint");
+				System.exit(-1);
+			}
+		}
+		
+		if(uri.getPath() == null || uri.getPath().isEmpty() || uri.getPath().equals("/"))
+		{
+			uri = new URL(uri.getProtocol(), uri.getHost(), uri.getPort(), DatasetUtilConstants.defaultSoapEndPointPath); 
+		}
+		endpoint = uri.toString();
+		
 
 		try {
 			ConnectorConfig config = new ConnectorConfig();
@@ -351,15 +436,15 @@ public class DatasetUtils {
 				config.setSessionRenewer(new SessionRenewerImpl(username, password, null, endpoint));
 			}
 			PartnerConnection connection = new PartnerConnection(config);
+			@SuppressWarnings("unused")
+			GetUserInfoResult userInfo = connection.getUserInfo();
 			if(!hasLoggedIn)
 			{
 				System.out.println("\nLogging in ...");
-				@SuppressWarnings("unused")
-				GetUserInfoResult userInfo = connection.getUserInfo();
 				System.out.println("Service Endpoint: " + config.getServiceEndpoint());
 				if(debug)
 					System.out.println("SessionId: " + config.getSessionId());
-//				System.out.println("User Id: " + userInfo.getUserName());
+//				System.out.println("User id: " + userInfo.getUserName());
 //				System.out.println("User Email: " + userInfo.getUserEmail());
 				System.out.println();
 				hasLoggedIn = true;

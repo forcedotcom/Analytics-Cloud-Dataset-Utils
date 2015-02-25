@@ -33,15 +33,20 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.ws.ConnectionException;
 
 public class FileListenerUtil {
 	
-	public static final File listenerSettingsFile = new File(".sfdc_file_listeners.json");
+	public static final String listenerSettingsFileName = "sfdc_file_listeners.json";
 //	static LinkedHashMap<String,FileListener> listeners = null;
 
-	public static FileListenerSettings getFileListeners() throws JsonParseException, JsonMappingException, IOException
+	public static FileListenerSettings getFileListeners(PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
 	{
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File configDir = DatasetUtilConstants.getConfigDir(orgId);
+		File listenerSettingsFile = new File(configDir,listenerSettingsFileName);
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		if(listenerSettingsFile.exists() && listenerSettingsFile.length()>0)
@@ -53,15 +58,18 @@ public class FileListenerUtil {
 		
 	}
 	
-	public static void saveFileListeners(FileListenerSettings listeners) throws JsonParseException, JsonMappingException, IOException
+	public static void saveFileListeners(FileListenerSettings listeners,PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
 	{
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File configDir = DatasetUtilConstants.getConfigDir(orgId);
+		File listenerSettingsFile = new File(configDir,listenerSettingsFileName);
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.writerWithDefaultPrettyPrinter().writeValue(listenerSettingsFile, listeners);
 	}
 	
-	public static boolean addListener(FileListener listener) throws JsonParseException, JsonMappingException, IOException
+	public static boolean addListener(FileListener listener, PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
 	{
-		FileListenerSettings listeners = getFileListeners();
+		FileListenerSettings listeners = getFileListeners(partnerConnection);
 		if(listeners==null)
 		{
 			listeners = new FileListenerSettings();
@@ -73,7 +81,7 @@ public class FileListenerUtil {
 		if(!listeners.fileListeners.containsKey(listener.getDataset()))
 		{
 			listeners.fileListeners.put(listener.getDataset(), listener);
-			saveFileListeners(listeners);
+			saveFileListeners(listeners, partnerConnection);
 			return true;
 		}else
 		{
@@ -82,7 +90,7 @@ public class FileListenerUtil {
 		return false;
 	}
 	
-	public static boolean startListener(FileListener listener, PartnerConnection partnerConnection) throws IOException
+	public static boolean startListener(FileListener listener, PartnerConnection partnerConnection) throws IOException, ConnectionException
 	{
 		FileListenerThread fileListenerThread = new FileListenerThread(listener, partnerConnection);
 		Thread th = new Thread(fileListenerThread,"FileListener-"+listener.getDataset());
@@ -91,9 +99,9 @@ public class FileListenerUtil {
 		return true;
 	}
 
-	public static boolean addAndStartListener(FileListener listener, PartnerConnection partnerConnection) throws IOException
+	public static boolean addAndStartListener(FileListener listener, PartnerConnection partnerConnection) throws IOException, ConnectionException
 	{
-		if(addListener(listener))
+		if(addListener(listener, partnerConnection))
 			return startListener(listener, partnerConnection);
 		else
 			return false;
@@ -103,7 +111,7 @@ public class FileListenerUtil {
 	{
 		try 
 		{
-			FileListenerSettings listeners = getFileListeners();
+			FileListenerSettings listeners = getFileListeners(partnerConnection);
 			if(listeners!=null && listeners.fileListeners != null && !listeners.fileListeners.isEmpty())
 			{
 				for(String dataset:listeners.fileListeners.keySet())

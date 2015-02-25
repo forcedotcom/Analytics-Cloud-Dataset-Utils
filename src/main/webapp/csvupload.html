@@ -17,6 +17,9 @@
 <link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
 <script src="js/validatefunction.js"></script>
 
+ <link href="css/selectize.bootstrap3.css" rel="stylesheet"/>
+ <script src="js/selectize.min.js"></script>
+
 </head>
 
 <body>
@@ -47,14 +50,19 @@
 				<div class="form-group">
         			<label for="DatasetName">Dataset Name</label>
 					<div class="input-group">
-						<input type="text" class="form-control" name="DatasetName" id="DatasetName" placeholder="Dataset Name" required>
+                        <select class="demo-default" name="DatasetName" id="DatasetName" required placeholder="Enter a Dataset Name...">
+                            <option value="">Enter a Dataset Name...</option>
+                        </select>
 						<span class="input-group-addon danger"><span class="glyphicon glyphicon-remove"></span></span>
 					</div>
 				</div>
+				
 				<div class="form-group">
         			<label for="DatasetApp">Dataset App</label>
 					<div class="input-group">
-						<input type="text" class="form-control" name="DatasetApp" id="DatasetApp" placeholder="Dataset App">
+                        <select class="form-control" name="DatasetApp" id="DatasetApp">
+                            <option value=""></option>
+                        </select>
 						<span class="input-group-addon info"><span class="glyphicon glyphicon-asterisk"></span></span>
 					</div>
 				</div>

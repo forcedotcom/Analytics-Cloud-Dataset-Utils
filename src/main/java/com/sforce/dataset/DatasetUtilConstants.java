@@ -26,12 +26,117 @@
 package com.sforce.dataset;
 
 import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 
 
 public class DatasetUtilConstants {
+	
 	public static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
+	
 	public static boolean createNewDateParts = false;
-	public static File currentDir =  new File("").getAbsoluteFile();
+
+	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/32.0";
+	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/32.0";
+	public static final String defaultSoapEndPointPath = "/services/Soap/u/32.0";
+	
 	public static boolean debug = false;
 	public static boolean ext = false;
+	
+	public static final String defaultAppName = "My Private App";
+
+	public static File currentDir =  new File("").getAbsoluteFile();
+	public static final String logsDirName = "logs";
+	public static final String successDirName = "sucess";
+	public static final String errorDirName = "error";
+	public static final String dataDirName = "data";
+	public static final String configDirName = "config";
+	
+	public static final String errorCsvParam = "ERROR_CSV";
+	public static final String metadataJsonParam = "METADATA_JSON";
+	public static final String hdrIdParam = "HEADER_ID";
+	public static final String serverStatusParam = "SERVER_STATUS";
+	
+	
+	
+	public static final File getOrgDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File orgDir = new File(DatasetUtilConstants.currentDir,"Org-"+orgId);
+		try {
+			FileUtils.forceMkdir(orgDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return orgDir;
+	}
+	
+	public static final File getLogsDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File logsDir = new File(getOrgDir(orgId),logsDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return logsDir;
+	}
+	
+
+	public static final File getSuccessDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File logsDir = new File(getOrgDir(orgId),successDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return logsDir;
+	}
+
+	public static final File getErrorDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File logsDir = new File(getOrgDir(orgId),errorDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return logsDir;
+	}
+
+	public static final File getDataDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File logsDir = new File(getOrgDir(orgId),dataDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return logsDir;
+	}
+
+	public static final File getConfigDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File logsDir = new File(getOrgDir(orgId),configDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return logsDir;
+	}
+
 }

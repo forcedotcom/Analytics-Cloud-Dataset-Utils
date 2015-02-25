@@ -53,24 +53,8 @@ public class DatasetUtilServer {
 
         
     public static void main(String[] args) throws Exception {
-        
-// tell jetty to use SLF4J for logging instead of its own stuff
-//        System.setProperty("VERBOSE","false");
-//        System.setProperty("org.mortbay.log.class","org.mortbay.log.Slf4jLog");
-        
-        // tell macosx to keep the menu associated with the screen and what the app title is
-//        System.setProperty("apple.laf.useScreenMenuBar", "true");  
-//        System.setProperty("com.apple.eawt.CocoaComponent.CompatibilityMode", "false"); 
-//        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "DatasetUtil");
-        
-        // tell the signpost library to log
-        //System.setProperty("debug","true");
-        
-        // set the log verbosity level
-
-        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-        
-        datasetUtilServer.init(args, true, null);
+	    DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
+	    datasetUtilServer.init(args, true, null);
     }
 
     public void init(String[] args, boolean join, PartnerConnection partnerConnection) throws Exception {
@@ -82,16 +66,15 @@ public class DatasetUtilServer {
 
         final Server server = new Server(port);
         
-        // for localhost:port/admin/index.html and whatever else is in the webapp directory
         final URL warUrl = this.getClass().getClassLoader().getResource(WEBAPPDIR);
         String warUrlString = "src/main/webapp";
         if(warUrl!=null)
         {
         	warUrlString = warUrl.toExternalForm();
-            System.out.println("warUrlString:"+warUrlString);
+//            System.out.println("warUrlString:"+warUrlString);
         	warUrlString = warUrlString.replace(WEBAPPDIR, "");
         }
-        System.out.println("warUrlString:"+warUrlString);
+//        System.out.println("warUrlString:"+warUrlString);
         WebAppContext context = new WebAppContext(warUrlString, contextPath);
         context.setMaxFormContentSize(maxFormContentSize);
         server.setHandler(context);

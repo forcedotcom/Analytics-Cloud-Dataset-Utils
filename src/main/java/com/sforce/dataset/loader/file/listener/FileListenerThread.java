@@ -39,25 +39,30 @@ import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 
+import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.ws.ConnectionException;
  
 public class FileListenerThread implements Runnable {
 	
-private static final String success = "Success";
-private static final String error = "Error";
-private static final String log = "Logs";
+//private static final String success = "Success";
+//private static final String error = "Error";
+//private static final String sessionLog = "Logs";
 
 
   private volatile boolean isDone = false;
 
   private final  FileListener fileListener;
   private final PartnerConnection partnerConnection;
-  private final File errorDir;
-  private final File successDir;
-  private final File logsDir;
+//  private final File errorDir;
+//  private final File successDir;
+//  private final File logsDir;
+//  private final Session session;
   
-  FileListenerThread(FileListener fileListener, PartnerConnection partnerConnection) throws IOException 
+  FileListenerThread(FileListener fileListener, PartnerConnection partnerConnection) throws IOException, ConnectionException 
   { 
 	  if(fileListener==null)
 	  {
@@ -65,19 +70,20 @@ private static final String log = "Logs";
 	  }
 	  this.fileListener = fileListener;
 	  this.partnerConnection = partnerConnection;
-	  errorDir = new File(this.fileListener.fileDir,success); 
-	  successDir = new File(this.fileListener.fileDir,error); 
-	  logsDir = new File(this.fileListener.fileDir, log);
-	  FileUtils.forceMkdir(errorDir);
-	  FileUtils.forceMkdir(successDir);
-	  FileUtils.forceMkdir(logsDir);
+//	  errorDir = new File(this.fileListener.fileDir,success); 
+//	  successDir = new File(this.fileListener.fileDir,error); 
+//	  logsDir = new File(this.fileListener.fileDir, sessionLog);
+//	  FileUtils.forceMkdir(errorDir);
+//	  FileUtils.forceMkdir(successDir);
+//	  FileUtils.forceMkdir(logsDir);
   }
  
 public void run() {
  		System.out.println("Starting FileListener for Dataset {"+fileListener.getDataset()+"} ");
  		
     try {
-       while (!isDone) {
+
+    	while (!isDone) {
 			try
 			{
 				long cutOff = System.currentTimeMillis() - (fileListener.getFileAge());
@@ -107,19 +113,35 @@ public void run() {
 				for(File file:files)
 				{
 					PrintStream logger = null;
+					Session session = null;
 					try
 					{
-						long timeStamp = System.currentTimeMillis();
-						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
+						String orgId = null;
+						orgId = partnerConnection.getUserInfo().getOrganizationId();
+						session = Session.getCurrentSession(orgId, fileListener.getDataset());
+//						session = new Session(orgId,fileListener.getDataset());
+//				        ThreadContext threadContext = ThreadContext.get();
+//				        threadContext.setSession(session);
+				        session.start();
+//						long timeStamp = System.currentTimeMillis();
+//						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
+						File logFile = session.getSessionLog();
 						logger = new PrintStream(new FileOutputStream(logFile), true, "UTF-8");
 						boolean status = DatasetLoader.uploadDataset(file.toString(), fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDataset(), fileListener.getApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, logger);
-						moveInputFile(file, timeStamp, status);
+						if(status)
+							session.end();
+						else
+							session.fail("Check sessionLog for details");
+						moveInputFile(file, status, session);
 					}catch(Throwable t)
 					{
 						if(logger!=null)
 							t.printStackTrace(logger);
 						else
 							t.printStackTrace();
+
+						if(session!=null)
+							session.fail("Check sessionLog for details");
 					}finally
 					{
 						if(logger!=null)
@@ -178,7 +200,7 @@ public boolean isDone() {
 	}
 	
 	
-	public static void moveInputFile(File inputFile, long timeStamp, boolean isSuccess) 
+	public static void moveInputFile(File inputFile, boolean isSuccess, Session session) 
 	{
 		if(inputFile == null)
 			return;
@@ -189,13 +211,17 @@ public boolean isDone() {
 		if(inputFile.isDirectory())
 			return;
 
-		File parent = inputFile.getAbsoluteFile().getParentFile();
+//		File parent = inputFile.getAbsoluteFile().getParentFile();
 			
-		File directory = new File(parent,success);
+//		File directory = new File(parent,success);
+//		if(!isSuccess)
+//			directory = new File(parent,error);
+			
+		File directory = DatasetUtilConstants.getSuccessDir(session.getOrgId());
 		if(!isSuccess)
-			directory = new File(parent,error);
+			directory = DatasetUtilConstants.getErrorDir(session.getOrgId());
 			
-		File doneFile = new File(directory,timeStamp+"."+inputFile.getName());
+		File doneFile = new File(directory, FilenameUtils.getBaseName(inputFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(inputFile.getName()));
 		try {
 			FileUtils.moveFile(inputFile, doneFile);
 		} catch (IOException e) {
@@ -204,7 +230,7 @@ public boolean isDone() {
 		File sortedtFile = new File(inputFile.getParent(), FilenameUtils.getBaseName(inputFile.getName())+ "_sorted." + FilenameUtils.getExtension(inputFile.getName()));
 		if(sortedtFile.exists())
 		{
-			File sortedDoneFile = new File(directory,timeStamp+"."+sortedtFile.getName());
+			File sortedDoneFile = new File(directory,FilenameUtils.getBaseName(sortedtFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(sortedtFile.getName()));
 			try {
 				FileUtils.moveFile(sortedtFile, sortedDoneFile);
 			} catch (IOException e) {

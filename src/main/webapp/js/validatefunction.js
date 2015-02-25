@@ -37,7 +37,18 @@ $(document).ready(function() {
     
     $('.input-group input[required], .input-group textarea[required], .input-group select[required]').trigger('change');
     
+    loadlistAndSelectize($('#DatasetName').get(0),/*the 'select' object*/
+     		 'list?type=dataset',/*the url of the server-side script*/
+     		 '_alias',/*The name of the field in the returned list*/
+     		 'name'
+     		 );
 
+    loadlist($('select#DatasetApp').get(0),/*the 'select' object*/
+    		 'list?type=folder',/*the url of the server-side script*/
+    		 'developerName',/*The name of the field in the returned list*/
+    		 'name'
+    		 );
+        
     $("#uploadForm").on('submit',(function(e) {
     	$("#title2").empty();
     	$("#result").empty();
@@ -52,28 +63,30 @@ $(document).ready(function() {
             processData:false,
             dataType:  'json', 
             success: function(data){
-            	$("#title2").append('').html('<h5 style="text-align:center"><i style="color:#0000FF">File is being uploaded check log file below for details</i></h5>');
-            	$("tr:has(td)").remove();
-                $("#result").append(
-                		$('<tr/>')
-                  		.append($('<td/>').text('File'))
-                  		.append($('<td/>').text('File Size'))
-                  		.append($('<td/>').text('File Type'))
-                  		.append($('<td/>').text('File Download Link'))
-                		)//end $("#uploaded-files").append()
-            	for (i = 0; i < data.length; i++) {
-            		var link = "<a href='upload?f="+i+"'>Download</a>";
-            		if(data[i].inputFileType == "Csv")
-            			link = "&nbsp;";
-                    $("#result").append(
-                    		$('<tr/>')
-                      		.append($('<td/>').text(data[i].savedFile))
-                      		.append($('<td/>').text(data[i].inputFileSize))
-                      		.append($('<td/>').text(data[i].inputFileType))
-                      		.append($('<td/>').html(link))
-                    		)//end $("#uploaded-files").append()
-            	}
-            },
+            	self.location.href = 'logs.html';
+            	
+//            	$("#title2").append('').html('<h5 style="text-align:center"><i style="color:#0000FF">File is being uploaded check log file below for details</i></h5>');
+//            	$("tr:has(td)").remove();
+//                $("#result").append(
+//                		$('<tr/>')
+//                  		.append($('<td/>').text('File'))
+//                  		.append($('<td/>').text('File Size'))
+//                  		.append($('<td/>').text('File Type'))
+//                  		.append($('<td/>').text('File Download Link'))
+//                		)//end $("#uploaded-files").append()
+//            	for (i = 0; i < data.length; i++) {
+//            		var link = "<a href='upload?f="+i+"'>Download</a>";
+//            		if(data[i].inputFileType == "Csv")
+//            			link = "&nbsp;";
+//                    $("#result").append(
+//                    		$('<tr/>')
+//                      		.append($('<td/>').text(data[i].savedFile))
+//                      		.append($('<td/>').text(data[i].inputFileSize))
+//                      		.append($('<td/>').text(data[i].inputFileType))
+//                      		.append($('<td/>').html(link))
+//                    		)//end $("#uploaded-files").append()
+//            	}
+           },
             error: function (response) {
             	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+response.responseText+"</i></h5>");
           }
@@ -128,4 +141,55 @@ function deleteRow(tableID) {
     } catch (e) {
         alert(e);
     }
+}
+
+function loadlist(selobj,url,nameattr,displayattr)
+{
+    $(selobj).empty();
+    $.getJSON(url,{},function(data)
+    {
+        $.each(data, function(i,obj)
+        {
+            $(selobj).append(
+                 $('<option></option>')
+                        .val(obj[nameattr])
+                        .html(obj[displayattr]));
+        });
+    });
+}
+
+function loadlistAndSelectize(selobj,url,nameattr,displayattr)
+{
+    $.getJSON(url,{},function(data)
+    {
+        $(selobj).empty();
+        $.each(data, function(i,obj)
+        {
+            $(selobj).append(
+                 $('<option></option>')
+                        .val(obj[nameattr])
+                        .html(obj[displayattr]));
+        });
+
+    	$(selobj).selectize({
+    		create: true
+    	});
+    });
+}
+
+function loadDiv(selobj,url,nameattr,displayattr)
+{
+    $(selobj).empty();
+    $.getJSON(url,{},function(data)
+    {
+        $.each(data, function(i,obj)
+        {
+            $(selobj).append(
+                 $('<div></div>')
+                 		.attr('data-value',obj[nameattr])
+                 		.attr('data-selectable','')
+                 		.attr('class','option')
+            			.html(obj[displayattr]));
+        });
+    });
 }

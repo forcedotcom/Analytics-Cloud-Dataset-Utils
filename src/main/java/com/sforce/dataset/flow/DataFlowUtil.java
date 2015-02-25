@@ -78,6 +78,7 @@ public class DataFlowUtil {
 	public static void uploadDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		System.out.println();
+		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -124,6 +125,7 @@ public class DataFlowUtil {
 	public static DataFlow getDataFlow(PartnerConnection partnerConnection, String workflowName) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		System.out.println();
+		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -262,6 +264,7 @@ public class DataFlowUtil {
 	public static void startDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		System.out.println();
+		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();

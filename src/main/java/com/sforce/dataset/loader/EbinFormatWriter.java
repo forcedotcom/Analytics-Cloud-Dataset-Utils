@@ -165,7 +165,7 @@ public class EbinFormatWriter {
 		totalRowCount++;
 		if (values.length != this.numColumns) {
 			String message = "Row " + totalRowCount + " contains an invalid number of Values, expected " + 
-					this.numColumns + " Value(s), got " + values.length + ".\n";
+					this.numColumns + " Value(s), got " + values.length + ".";
 			throw new IOException(message);
 		}
 				
@@ -512,10 +512,17 @@ public class EbinFormatWriter {
 			}
 			count++;
 		}
-		arr(measure_values);
-		dict(dim_keys, dim_values);
+		if(dim_values.size()>0)
+		{
+			arr(measure_values);
+			dict(dim_keys, dim_values);
+			successRowCount++;
+		}else
+		{
+			String message = "Row " + totalRowCount + " contains no Text Values. Atleast 1 column should have a non empty value or default value";
+			throw new IOException(message);
+		}
 		prev = curr;
-		successRowCount++;
 	}
 	
 	

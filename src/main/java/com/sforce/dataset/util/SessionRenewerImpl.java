@@ -27,13 +27,18 @@ package com.sforce.dataset.util;
 
 import javax.xml.namespace.QName;
 
+import com.sforce.soap.partner.Connector;
 import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.SessionHeader_element;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 
     public class SessionRenewerImpl implements com.sforce.ws.SessionRenewer {
     	
-		String username = null;
+        public static final javax.xml.namespace.QName SESSION_HEADER_QNAME =
+                new javax.xml.namespace.QName("urn:partner.soap.sforce.com", "SessionHeader");
+
+        String username = null;
 		String password = null;
 		String endpoint = null;
 		String token = null; 
@@ -50,16 +55,29 @@ import com.sforce.ws.ConnectorConfig;
         @Override
         public SessionRenewalHeader renewSession(ConnectorConfig config) throws ConnectionException {
 //            PartnerConnection connection = Connector.newConnection(config);
-			ConnectorConfig config1 = new ConnectorConfig();
-			config1.setUsername(username);
-			config1.setPassword(password);
-			config1.setAuthEndpoint(endpoint);
+        	
+        	config.setSessionId(null);
+            
+//			ConnectorConfig config1 = new ConnectorConfig();
+//			config1.setUsername(username);
+//			config1.setPassword(password);
+//			config1.setAuthEndpoint(endpoint);
 //			config1.setSessionRenewer(new SessionRenewerImpl(username, password, token, endpoint));
-			PartnerConnection connection = new PartnerConnection(config1);
+//			PartnerConnection connection = new PartnerConnection(config1);
+			PartnerConnection connection = Connector.newConnection(config);
+			
+			connection.getUserInfo();
+
+//			config.setSessionId(connection.getConfig().getSessionId());
+//			config.setServiceEndpoint(connection.getConfig().getServiceEndpoint());
 
             SessionRenewalHeader header = new SessionRenewalHeader();
-            header.name = new QName("urn:partner.soap.sforce.com", "SessionHeader");
-            header.headerElement = connection.getSessionHeader();
+            header.name = SESSION_HEADER_QNAME;
+//            header.name = new QName("urn:partner.soap.sforce.com", "SessionHeader");
+            SessionHeader_element se = new SessionHeader_element();
+            se.setSessionId(config.getSessionId());
+            header.headerElement = se;
+            
             return header;
         }
 

@@ -48,6 +48,8 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
 import com.google.code.externalsorting.ExternalSort;
+import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.util.DatasetUtils;
 
@@ -79,7 +81,12 @@ public class CsvExternalSort extends ExternalSort {
 //			t.printStackTrace();
 //			return inputCsv;
 //		}
-	
+
+		ThreadContext tx = ThreadContext.get();
+		Session session = tx.getSession();
+		session.setStatus("SORTING");
+			
+			
 		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize);
 //		System.out.println("CsvExternalSort created " + l.size() + " tmp files");
 		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize);

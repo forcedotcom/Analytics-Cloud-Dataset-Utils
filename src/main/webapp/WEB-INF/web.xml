@@ -13,8 +13,24 @@ id="WebApp_ID" version="3.0">
   	<servlet-name>upload</servlet-name>            
   	<servlet-class>com.sforce.dataset.server.FileUploadServlet</servlet-class>
   </servlet>
+  <servlet>
+  	<servlet-name>list</servlet-name>            
+  	<servlet-class>com.sforce.dataset.server.ListServlet</servlet-class>
+  </servlet>
+  <servlet>
+  	<servlet-name>json</servlet-name>            
+  	<servlet-class>com.sforce.dataset.server.JsonServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
   	<servlet-name>upload</servlet-name>
   	<url-pattern>/upload</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>list</servlet-name>
+  	<url-pattern>/list</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>json</servlet-name>
+  	<url-pattern>/json</url-pattern>
   </servlet-mapping>
 </web-app>

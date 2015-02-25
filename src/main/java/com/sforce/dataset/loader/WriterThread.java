@@ -31,6 +31,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.Session;
  
 public class WriterThread implements Runnable {
 	
@@ -43,14 +44,16 @@ private final EbinFormatWriter ebinWriter;
   private final PrintStream logger;
 
   private volatile AtomicBoolean done = new AtomicBoolean(false);
+  private volatile AtomicBoolean aborted = new AtomicBoolean(false);
   private volatile int errorRowCount = 0;
   private volatile int totalRowCount = 0;
+  Session session = null;
 
 
 @SuppressWarnings("deprecation")
-WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintStream logger) 
+WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintStream logger, Session session) 
   { 
-	  if(q==null || w == null || ew == null)
+	  if(q==null || w == null || ew == null || session == null)
 	  {
 		  throw new IllegalArgumentException("Constructor input cannot be null");
 	  }
@@ -58,6 +61,7 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintS
 	  this.ebinWriter = w;
 	  this.errorwriter = ew;
 	  this.logger = logger;
+	  this.session = session;
   }
  
   @SuppressWarnings("deprecation")
@@ -79,39 +83,57 @@ public void run() {
 				logger.println("Row {"+totalRowCount+"} has error {"+t+"}");
 				if(row!=null)
 				{
+					errorRowCount++;
 					if(DatasetUtilConstants.debug)
 						t.printStackTrace();
 					errorwriter.addError(row, t.getMessage()!=null?t.getMessage():t.toString());
-					errorRowCount++;
 					if(errorRowCount>=max_error_threshhold)
 					{
 						logger.println("Max error threshold reached. Aborting processing");
+						aborted.set(true);
+						queue.clear();
 						break;
 					}
 				}
 				//t.printStackTrace();
+			}finally
+			{
+				if(session!=null)
+				{
+					session.setTargetTotalRowCount(totalRowCount);
+					session.setTargetErrorCount(errorRowCount);
+				}
 			}
          row = queue.take();
        }
     }catch (Throwable t) {
-       logger.println (Thread.currentThread().getName() + " " + t.getMessage());
+       logger.println (Thread.currentThread().getName() + " " + t.toString());
+		aborted.set(true);
+		queue.clear();
+    }finally
+    {
+	    try {
+			ebinWriter.finish();
+		} catch (IOException e) {
+			e.printStackTrace(logger);
+		}
+	    try {
+	    	errorwriter.finish();
+		} catch (IOException e) {
+			e.printStackTrace(logger);
+		}
     }
-    try {
-		ebinWriter.finish();
-	} catch (IOException e) {
-		e.printStackTrace();
-	}
-    try {
-    	errorwriter.finish();
-	} catch (IOException e) {
-		e.printStackTrace();
-	}
 	logger.println("END: " + Thread.currentThread().getName());
     done.set(true);
+	queue.clear();
   }
 
 public boolean isDone() {
 	return done.get();
+}
+
+public boolean isAborted() {
+	return aborted.get();
 }
 
 public int getErrorRowCount() {

@@ -363,7 +363,7 @@ public class SfdcUtils {
 					
 					// In case of multiple source Objects the column names could
 					// clash for example account and contact both have columns
-					// named 'Id' Therefore we prefix the column name with the
+					// named 'id' Therefore we prefix the column name with the
 					// catalog name to make it unique For example Account.Id and
 					// Account.Owner.Id
 					bField.setFullyQualifiedName(sObjectType+"."+field.getName());

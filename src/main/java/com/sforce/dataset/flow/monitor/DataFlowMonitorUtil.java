@@ -78,6 +78,7 @@ public class DataFlowMonitorUtil {
 	{
 		List<JobEntry> jobsList = new LinkedList<JobEntry>(); 
 		System.out.println();
+		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -199,6 +200,7 @@ public class DataFlowMonitorUtil {
 		}
 		
 		System.out.println();
+		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -217,12 +219,12 @@ public class DataFlowMonitorUtil {
 
 		listEMPost.setConfig(requestConfig);
 		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
-		System.out.println("Fetching error log for job {"+jobTrackerid+"} from server...");
+		System.out.println("Fetching error sessionLog for job {"+jobTrackerid+"} from server...");
 		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
 	       if (statusCode != HttpStatus.SC_OK) {
-		       throw new IOException(String.format("getDataFlowJob node error log failed: %d %s", statusCode,reasonPhrase));
+		       throw new IOException(String.format("getDataFlowJob node error sessionLog failed: %d %s", statusCode,reasonPhrase));
 	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
@@ -253,7 +255,7 @@ public class DataFlowMonitorUtil {
 //							String workflowName = (String) job.get("workflowName");
 //							if(workflowName != null && (datasetName == null || datasetName.isEmpty() || workflowName.startsWith(datasetName)))
 //							{
-//								JobEntry jobEntry = new JobEntry();
+//								FolderType jobEntry = new FolderType();
 //								jobEntry._createdDateTime = (Integer) job.get("_createdDateTime");
 //								jobEntry._type  = (String) job.get("_type");
 //								jobEntry._uid  = (String) job.get("_uid");
