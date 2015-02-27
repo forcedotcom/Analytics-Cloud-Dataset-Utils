@@ -103,13 +103,8 @@ public class EbinFormatWriter {
 		for (FieldType dataType: dataTypes)
 		{
 			_dataTypes.add(dataType);
-			if(!dataType.isComputedField)
-				numColumns++;	
-
 			if(dataType.isSkipped)
-			{
 				continue;
-			}
 			
 			if (dataType.getfType() == FieldType.DATE)
 			{
@@ -135,7 +130,10 @@ public class EbinFormatWriter {
 						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week_Fiscal", null, null));
 					}
 				}
-			}			
+			}
+			
+			if(!dataType.isComputedField)
+				numColumns++;	
 		}
 
 		this.initmeasures(_dataTypes);
@@ -266,8 +264,8 @@ public class EbinFormatWriter {
 
 				if(columnValue==null)
 				{
-					//The date is null we don't add null dims
-//					dim_values.add("");
+					//The date is null or blank so add default
+					dim_values.add("");
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
@@ -376,11 +374,10 @@ public class EbinFormatWriter {
 						dim_values.add(sdt.format(dt));
 					}
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
-					curr.put(_dataTypes.get(key_value_count).getName(), dt);
 					key_value_count++;
 					
 				    cal.setTime(dt);
-
+				    
 				    int day = cal.get(Calendar.DAY_OF_MONTH);
 				    int month = cal.get(Calendar.MONTH);
 				    int year = cal.get(Calendar.YEAR);

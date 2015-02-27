@@ -41,6 +41,7 @@ import org.apache.commons.io.filefilter.IOFileFilter;
 
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
