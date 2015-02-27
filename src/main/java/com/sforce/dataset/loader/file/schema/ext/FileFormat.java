@@ -37,11 +37,11 @@ public class FileFormat  extends com.sforce.dataset.loader.file.schema.FileForma
     	super();
     	if(old!=null)
     	{
-	    	this.charsetName = old.charsetName;
-	    	this.fieldsDelimitedBy = old.fieldsDelimitedBy;
-	    	this.fieldsEnclosedBy = old.fieldsEnclosedBy;
-	    	this.linesTerminatedBy = old.linesTerminatedBy;
-	    	this.numberOfLinesToIgnore = old.numberOfLinesToIgnore;
+	    	setCharsetName( old.getCharsetName());
+	    	setFieldsDelimitedBy(old.getFieldsDelimitedBy());
+	    	setFieldsEnclosedBy(old.getFieldsEnclosedBy());
+	    	setLinesTerminatedBy(old.getLinesTerminatedBy());
+	    	setNumberOfLinesToIgnore(old.getNumberOfLinesToIgnore());
     	}
     }
 
@@ -50,17 +50,17 @@ public class FileFormat  extends com.sforce.dataset.loader.file.schema.FileForma
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((charsetName == null) ? 0 : charsetName.hashCode());
+				+ ((getCharsetName() == null) ? 0 : getCharsetName().hashCode());
 		result = prime
 				* result
-				+ ((fieldsDelimitedBy == null) ? 0 : fieldsDelimitedBy
+				+ ((getFieldsDelimitedBy() == null) ? 0 : getFieldsDelimitedBy()
 						.hashCode());
-		result = prime * result + fieldsEnclosedBy;
+		result = prime * result + getFieldsEnclosedBy();
 		result = prime
 				* result
-				+ ((linesTerminatedBy == null) ? 0 : linesTerminatedBy
+				+ ((getLinesTerminatedBy() == null) ? 0 : getLinesTerminatedBy()
 						.hashCode());
-		result = prime * result + numberOfLinesToIgnore;
+		result = prime * result + getNumberOfLinesToIgnore();
 		return result;
 	}
 	
@@ -76,31 +76,31 @@ public class FileFormat  extends com.sforce.dataset.loader.file.schema.FileForma
 			return false;
 		}
 		FileFormat other = (FileFormat) obj;
-		if (charsetName == null) {
-			if (other.charsetName != null) {
+		if (getCharsetName() == null) {
+			if (other.getCharsetName() != null) {
 				return false;
 			}
-		} else if (!charsetName.equals(other.charsetName)) {
+		} else if (!getCharsetName().equals(other.getCharsetName())) {
 			return false;
 		}
-		if (fieldsDelimitedBy == null) {
-			if (other.fieldsDelimitedBy != null) {
+		if (getFieldsDelimitedBy() == null) {
+			if (other.getFieldsDelimitedBy() != null) {
 				return false;
 			}
-		} else if (!fieldsDelimitedBy.equals(other.fieldsDelimitedBy)) {
+		} else if (!getFieldsDelimitedBy().equals(other.getFieldsDelimitedBy())) {
 			return false;
 		}
-		if (fieldsEnclosedBy != other.fieldsEnclosedBy) {
+		if (getFieldsEnclosedBy() != other.getFieldsEnclosedBy()) {
 			return false;
 		}
-		if (linesTerminatedBy == null) {
-			if (other.linesTerminatedBy != null) {
+		if (getLinesTerminatedBy() == null) {
+			if (other.getLinesTerminatedBy() != null) {
 				return false;
 			}
-		} else if (!linesTerminatedBy.equals(other.linesTerminatedBy)) {
+		} else if (!getLinesTerminatedBy().equals(other.getLinesTerminatedBy())) {
 			return false;
 		}
-		if (numberOfLinesToIgnore != other.numberOfLinesToIgnore) {
+		if (getNumberOfLinesToIgnore() != other.getNumberOfLinesToIgnore()) {
 			return false;
 		}
 		return true;

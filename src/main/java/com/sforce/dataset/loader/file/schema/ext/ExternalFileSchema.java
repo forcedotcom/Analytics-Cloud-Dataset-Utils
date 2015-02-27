@@ -48,12 +48,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.util.DatasetUtils;
 
-public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.ExternalFileSchema {
+public class ExternalFileSchema  {
 
 	private static final String SCHEMA_FILE_SUFFIX = "_schema.json";
 
-	public FileFormat fileFormat; 
-	public LinkedList<ObjectType> objects;
+	private FileFormat fileFormat; 
+	private LinkedList<ObjectType> objects;
 	
 	public ExternalFileSchema()
 	{
@@ -78,6 +78,22 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 	}
 
 	
+	public FileFormat getFileFormat() {
+		return fileFormat;
+	}
+
+	public void setFileFormat(FileFormat fileFormat) {
+		this.fileFormat = fileFormat;
+	}
+
+	public LinkedList<ObjectType> getObjects() {
+		return objects;
+	}
+
+	public void setObjects(LinkedList<ObjectType> objects) {
+		this.objects = objects;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -166,9 +182,9 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 			{
 				if(userSchema.objects!=null && userSchema.objects.size()==1)
 				{
-					baseName = userSchema.objects.get(0).name;
+					baseName = userSchema.objects.get(0).getName();
 					//because fully qualified name is used to match auto schema we will use user specified 
-					fullyQualifiedName = userSchema.objects.get(0).name; 
+					fullyQualifiedName = userSchema.objects.get(0).getName(); 
 				}
 			}
 		
@@ -177,14 +193,14 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 			FileFormat fileFormat = new FileFormat();
 
 			ObjectType od = new ObjectType();
-			od.name = baseName;
-			od.fullyQualifiedName = fullyQualifiedName;
-			od.label = baseName;
-			od.description = baseName;
-			od.connector = "SalesforceAnalyticsCloudDatasetLoader";
+			od.setName(baseName);
+			od.setFullyQualifiedName(fullyQualifiedName);
+			od.setLabel(baseName);
+			od.setDescription(baseName);
+			od.setConnector("SalesforceAnalyticsCloudDatasetLoader");
 //			od.isPrimaryObject = true;
 //			od.rowLevelSecurityFilter = "";
-			od.fields = fields;
+			od.setFields(fields);
 			
 			LinkedList<ObjectType> objects = new LinkedList<ObjectType>();
 			objects.add(od);			
@@ -280,7 +296,7 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 						LinkedList<ObjectType> obj = userSchema.objects;
 						if(obj!= null && !obj.isEmpty())
 						{
-							List<FieldType> fields = obj.get(0).fields;
+							List<FieldType> fields = obj.get(0).getFields();
 							if(fields!= null && !fields.isEmpty())
 							{
 								List<FieldType> fieldsCopy = new LinkedList<FieldType>(fields);
@@ -331,35 +347,35 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 				for(ObjectType user_object:user_objects)
 				{
 						objectCount++;
-						List<FieldType> user_fields = user_object.fields;
-						if(user_object.name==null||user_object.name.trim().isEmpty())
+						List<FieldType> user_fields = user_object.getFields();
+						if(user_object.getName()==null||user_object.getName().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].name] in schema cannot be null or empty\n");
 						}else
 						{
-							if(user_object.name.length()>255)
+							if(user_object.getName().length()>255)
 							{
-								message.append("object name ["+user_object.name+"] in schema cannot be greater than 255 characters in length\n");
-							}else if(!createDevName(user_object.name, "Dataset", (objectCount-1)).equals(user_object.name))
+								message.append("object name ["+user_object.getName()+"] in schema cannot be greater than 255 characters in length\n");
+							}else if(!createDevName(user_object.getName(), "Dataset", (objectCount-1)).equals(user_object.getName()))
 							{
-								message.append("Object name {"+user_object.name+"} contains invalid characters \n");
+								message.append("Object name {"+user_object.getName()+"} contains invalid characters \n");
 							}
 						}
 
-						if(user_object.label==null||user_object.label.trim().isEmpty())
+						if(user_object.getLabel()==null||user_object.getLabel().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].label] in schema cannot be null or empty\n");
-						}else if(user_object.label.length()>255)
+						}else if(user_object.getLabel().length()>255)
 						{
-							message.append("object label ["+user_object.label+"] in schema cannot be greater than 255 characters in  length\n");
+							message.append("object label ["+user_object.getLabel()+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 
-						if(user_object.fullyQualifiedName==null||user_object.fullyQualifiedName.trim().isEmpty())
+						if(user_object.getFullyQualifiedName()==null||user_object.getFullyQualifiedName().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
-						}else if(user_object.fullyQualifiedName.length()>255)
+						}else if(user_object.getFullyQualifiedName().length()>255)
 						{
-							message.append("object ["+user_object.fullyQualifiedName+"] in schema cannot be greater than 255 characters in  length\n");
+							message.append("object ["+user_object.getFullyQualifiedName()+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 						
 
@@ -506,7 +522,7 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 								{
 									if(user_field.getfType()!=FieldType.STRING)
 									{
-										message.append("Numeric field {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
+										message.append("Non Text field {"+user_field.getFullyQualifiedName()+"}  in schema cannot be used as UniqueID\n");
 									}else
 									{
 										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
@@ -557,11 +573,11 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 				ObjectType merged_object = null;
 				for(ObjectType user_object:user_objects)
 				{
-					if(auto_object.fullyQualifiedName.equals(user_object.fullyQualifiedName))
+					if(auto_object.getFullyQualifiedName().equals(user_object.getFullyQualifiedName()))
 					{
 						merged_object = new ObjectType();
-						List<FieldType> user_fields = user_object.fields;
-						List<FieldType> auto_fields = auto_object.fields;
+						List<FieldType> user_fields = user_object.getFields();
+						List<FieldType> auto_fields = auto_object.getFields();
 						LinkedList<FieldType> merged_fields = new LinkedList<FieldType>();
 						if(user_fields==null || user_fields.isEmpty())
 						{
@@ -618,15 +634,13 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 								merged_fields.add(user_field);
 						}
 						
-						merged_object.connector =  user_object.connector!=null?user_object.connector:auto_object.connector;
-						merged_object.description =  user_object.description!=null?user_object.description:auto_object.description;
-						merged_object.fullyQualifiedName =  user_object.fullyQualifiedName!=null?user_object.fullyQualifiedName:auto_object.fullyQualifiedName;
-						merged_object.label =  user_object.label!=null?user_object.label:auto_object.label;
-						merged_object.name =  user_object.name!=null?user_object.name:auto_object.name;
-//						merged_object.recordTypeIdentifier =  user_object.recordTypeIdentifier!=null?user_object.recordTypeIdentifier:auto_object.recordTypeIdentifier;
-						merged_object.rowLevelSecurityFilter =  user_object.rowLevelSecurityFilter!=null?user_object.rowLevelSecurityFilter:auto_object.rowLevelSecurityFilter;
-//						merged_object.isPrimaryObject =  user_object.isPrimaryObject!=true?user_object.isPrimaryObject:auto_object.isPrimaryObject;
-						merged_object.fields =  merged_fields;						
+						merged_object.setConnector(user_object.getConnector()!=null?user_object.getConnector():auto_object.getConnector());
+						merged_object.setDescription(user_object.getDescription()!=null?user_object.getDescription():auto_object.getDescription());
+						merged_object.setFullyQualifiedName(user_object.getFullyQualifiedName()!=null?user_object.getFullyQualifiedName():auto_object.getFullyQualifiedName());
+						merged_object.setLabel(user_object.getLabel()!=null?user_object.getLabel():auto_object.getLabel());
+						merged_object.setName(user_object.getName()!=null?user_object.getName():auto_object.getName());
+						merged_object.setRowLevelSecurityFilter(user_object.getRowLevelSecurityFilter()!=null?user_object.getRowLevelSecurityFilter():auto_object.getRowLevelSecurityFilter());
+						merged_object.setFields(merged_fields);						
 					}
 				}
 				if(merged_object==null)
@@ -682,7 +696,7 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 			
 			for(ObjectType user_object:user_objects)
 			{
-					List<FieldType> user_fields = user_object.fields;
+					List<FieldType> user_fields = user_object.getFields();
 					LinkedList<FieldType> merged_fields = new LinkedList<FieldType>();
 					if(user_fields==null || user_fields.isEmpty())
 					{
@@ -706,7 +720,7 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 							}
 						}
 					}
-					user_object.fields = merged_fields;
+					user_object.setFields(merged_fields);
 				}
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -966,9 +980,9 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 	public static HashSet<String> getUniqueId(ExternalFileSchema inSchema) 
 	{
 		HashSet<String> uniqueIdfieldNames = new HashSet<String>();
-		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).getFields() != null)
 		{
-			for(FieldType user_field: inSchema.objects.get(0).fields)
+			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
 				if(user_field != null && user_field.isUniqueId)
 					uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
@@ -980,9 +994,9 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 	public static boolean hasUniqueID(ExternalFileSchema inSchema) 
 	{
 		boolean hasUniqueID = false;
-		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).getFields() != null)
 		{
-			for(FieldType user_field: inSchema.objects.get(0).fields)
+			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
 				if(user_field != null && user_field.isUniqueId)
 					hasUniqueID = true;
@@ -994,9 +1008,9 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 	public static boolean hasDim(ExternalFileSchema inSchema) 
 	{
 		boolean hasDim = false;
-		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null)
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).getFields() != null)
 		{
-			for(FieldType user_field: inSchema.objects.get(0).fields)
+			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
 				if(user_field != null && user_field.getfType()==FieldType.STRING)
 					hasDim = true;
@@ -1008,9 +1022,9 @@ public class ExternalFileSchema extends com.sforce.dataset.loader.file.schema.Ex
 
 	public static void setUniqueId(ExternalFileSchema inSchema, HashSet<String> uniqueIdfieldNames) 
 	{
-		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).fields != null && uniqueIdfieldNames != null)
+		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).getFields() != null && uniqueIdfieldNames != null)
 		{
-			for(FieldType user_field: inSchema.objects.get(0).fields)
+			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
 				if(uniqueIdfieldNames.contains(user_field.getFullyQualifiedName()))
 						user_field.isUniqueId = true;

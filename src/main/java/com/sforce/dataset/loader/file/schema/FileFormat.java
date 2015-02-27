@@ -26,9 +26,42 @@
 package com.sforce.dataset.loader.file.schema;
 
 public class FileFormat {
-	public String charsetName = "UTF-8";
-	public String fieldsDelimitedBy = ",";
-	public char fieldsEnclosedBy = '"';
-	public String linesTerminatedBy = "\n";
-    public int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS A HEADER LINE IN CSV
+	private String charsetName = "UTF-8";
+	private String fieldsDelimitedBy = ",";
+	private char fieldsEnclosedBy = '"';
+	private String linesTerminatedBy = "\n";
+    private int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS A HEADER LINE IN CSV
+    
+	public String getCharsetName() {
+		return charsetName;
+	}
+	public void setCharsetName(String charsetName) {
+		this.charsetName = charsetName;
+	}
+	public String getFieldsDelimitedBy() {
+		return fieldsDelimitedBy;
+	}
+	public void setFieldsDelimitedBy(String fieldsDelimitedBy) {
+		this.fieldsDelimitedBy = fieldsDelimitedBy;
+	}
+	public char getFieldsEnclosedBy() {
+		return fieldsEnclosedBy;
+	}
+	public void setFieldsEnclosedBy(char fieldsEnclosedBy) {
+		this.fieldsEnclosedBy = fieldsEnclosedBy;
+	}
+	public String getLinesTerminatedBy() {
+		return linesTerminatedBy;
+	}
+	public void setLinesTerminatedBy(String linesTerminatedBy) {
+		this.linesTerminatedBy = linesTerminatedBy;
+	}
+	public int getNumberOfLinesToIgnore() {
+		return numberOfLinesToIgnore;
+	}
+	public void setNumberOfLinesToIgnore(int numberOfLinesToIgnore) {
+		this.numberOfLinesToIgnore = numberOfLinesToIgnore;
+	}
+    
+    
 }

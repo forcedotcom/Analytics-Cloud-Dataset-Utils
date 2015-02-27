@@ -88,10 +88,10 @@ public class DetectFieldTypes {
 				boolean found = false;
 				if(userSchema != null)
 				{					
-					LinkedList<ObjectType> obj = userSchema.objects;
+					LinkedList<ObjectType> obj = userSchema.getObjects();
 					if(obj!= null && !obj.isEmpty())
 					{
-						List<FieldType> fields = obj.get(0).fields;
+						List<FieldType> fields = obj.get(0).getFields();
 						if(fields!= null && !fields.isEmpty())
 						{
 							for(FieldType field:fields)

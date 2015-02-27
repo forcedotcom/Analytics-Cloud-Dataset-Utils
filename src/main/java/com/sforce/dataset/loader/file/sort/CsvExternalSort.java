@@ -65,7 +65,7 @@ public class CsvExternalSort extends ExternalSort {
 		File outputFile = new File(inputCsv.getParent(), FilenameUtils.getBaseName(inputCsv.getName())+ "_sorted." + FilenameUtils.getExtension(inputCsv.getName()));		
     			
 //		ExternalFileSchema schema = ExternalFileSchema.load(inputCsv, cs);
-		if(schema==null || schema.objects == null || schema.objects.size()==0 || schema.objects.get(0).fields == null)
+		if(schema==null || schema.getObjects() == null || schema.getObjects().size()==0 || schema.getObjects().get(0).getFields() == null)
 		{
 			throw new IOException("File does not have valid metadata json {"+ExternalFileSchema.getSchemaFile(inputCsv, System.out)+"}");
 		}
@@ -73,7 +73,7 @@ public class CsvExternalSort extends ExternalSort {
 		CsvRowComparator cmp = null;
 //		try
 //		{
-			cmp = new CsvRowComparator(schema.objects.get(0).fields);
+			cmp = new CsvRowComparator(schema.getObjects().get(0).getFields());
 			if(cmp.getSortColumnCount()==0)
 				return inputCsv;
 //		}catch(Throwable t)

@@ -25,12 +25,55 @@
  */
 package  com.sforce.dataset.loader.file.schema.ext;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class ObjectType extends com.sforce.dataset.loader.file.schema.ObjectType {	
+public class ObjectType  {	
 
-	 public List<FieldType> fields = null;
+	 private String name = null; //(Required)
+	 private String fullyQualifiedName = null; //(Optional Defaults to name)
+	 private String connector = null; //(optional - CSV, SFDC, Workday, etc)
+	 private String label = null; //(Optional - defaults to name)
+	 private String description = null; //(optional)
+	 private String rowLevelSecurityFilter = null; //(Optional)
+	 private List<FieldType> fields = null; //(Required)
+	 
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getFullyQualifiedName() {
+		return fullyQualifiedName;
+	}
+	public void setFullyQualifiedName(String fullyQualifiedName) {
+		this.fullyQualifiedName = fullyQualifiedName;
+	}
+	public String getConnector() {
+		return connector;
+	}
+	public void setConnector(String connector) {
+		this.connector = connector;
+	}
+	public String getLabel() {
+		return label;
+	}
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getRowLevelSecurityFilter() {
+		return rowLevelSecurityFilter;
+	}
+	public void setRowLevelSecurityFilter(String rowLevelSecurityFilter) {
+		this.rowLevelSecurityFilter = rowLevelSecurityFilter;
+	}
+	
 
 	public ObjectType() {
 		super();
@@ -41,20 +84,21 @@ public class ObjectType extends com.sforce.dataset.loader.file.schema.ObjectType
 		super();
 		if(old!=null)
 		{
-			this.connector = old.connector;
-			this.description = old.description;
-			this.fields = new LinkedList<FieldType>();
-			if(old.fields!=null)
-			{
-				for(FieldType obj:old.fields)
-				{
-					this.fields.add(new FieldType(obj));
-				}
-			}
-			this.fullyQualifiedName = old.fullyQualifiedName;
-			this.label = old.fullyQualifiedName;
-			this.name = old.name;
-			this.rowLevelSecurityFilter = old.rowLevelSecurityFilter;
+			setConnector ( old.getConnector());
+			setDescription ( old.getDescription());
+			setFields(old.getFields());
+//			setFields ( new LinkedList<FieldType>());
+//			if(old.fields!=null)
+//			{
+//				for(FieldType obj:old.fields)
+//				{
+//					setfields.add(new FieldType(obj));
+//				}
+//			}
+			setFullyQualifiedName ( old.getFullyQualifiedName());
+			setLabel ( old.getFullyQualifiedName());
+			setName ( old.getName());
+			setRowLevelSecurityFilter ( old.getRowLevelSecurityFilter());
 		
 			if(!this.equals(old))
 			{
@@ -63,25 +107,33 @@ public class ObjectType extends com.sforce.dataset.loader.file.schema.ObjectType
 		}
 	}
 
+	public List<FieldType> getFields() {
+		return fields;
+	}
+
+	public void setFields(List<FieldType> fields) {
+		this.fields = fields;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((connector == null) ? 0 : connector.hashCode());
+				+ ((getConnector() == null) ? 0 : getConnector().hashCode());
 		result = prime * result
-				+ ((description == null) ? 0 : description.hashCode());
+				+ ((getDescription() == null) ? 0 : getDescription().hashCode());
 		result = prime * result + ((fields == null) ? 0 : fields.hashCode());
 		result = prime
 				* result
-				+ ((fullyQualifiedName == null) ? 0 : fullyQualifiedName
+				+ ((getFullyQualifiedName() == null) ? 0 : getFullyQualifiedName()
 						.hashCode());
-		result = prime * result + ((label == null) ? 0 : label.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((getLabel() == null) ? 0 : getLabel().hashCode());
+		result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
 		result = prime
 				* result
-				+ ((rowLevelSecurityFilter == null) ? 0
-						: rowLevelSecurityFilter.hashCode());
+				+ ((getRowLevelSecurityFilter() == null) ? 0
+						: getRowLevelSecurityFilter().hashCode());
 		return result;
 	}
 
@@ -97,18 +149,18 @@ public class ObjectType extends com.sforce.dataset.loader.file.schema.ObjectType
 			return false;
 		}
 		ObjectType other = (ObjectType) obj;
-		if (connector == null) {
-			if (other.connector != null) {
+		if (getConnector() == null) {
+			if (other.getConnector() != null) {
 				return false;
 			}
-		} else if (!connector.equals(other.connector)) {
+		} else if (!getConnector().equals(other.getConnector())) {
 			return false;
 		}
-		if (description == null) {
-			if (other.description != null) {
+		if (getDescription() == null) {
+			if (other.getDescription() != null) {
 				return false;
 			}
-		} else if (!description.equals(other.description)) {
+		} else if (!getDescription().equals(other.getDescription())) {
 			return false;
 		}
 		if (fields == null) {
@@ -118,32 +170,32 @@ public class ObjectType extends com.sforce.dataset.loader.file.schema.ObjectType
 		} else if (!fields.equals(other.fields)) {
 			return false;
 		}
-		if (fullyQualifiedName == null) {
-			if (other.fullyQualifiedName != null) {
+		if (getFullyQualifiedName() == null) {
+			if (other.getFullyQualifiedName() != null) {
 				return false;
 			}
-		} else if (!fullyQualifiedName.equals(other.fullyQualifiedName)) {
+		} else if (!getFullyQualifiedName().equals(other.getFullyQualifiedName())) {
 			return false;
 		}
-		if (label == null) {
-			if (other.label != null) {
+		if (getLabel() == null) {
+			if (other.getLabel() != null) {
 				return false;
 			}
-		} else if (!label.equals(other.label)) {
+		} else if (!getLabel().equals(other.getLabel())) {
 			return false;
 		}
-		if (name == null) {
-			if (other.name != null) {
+		if (getName() == null) {
+			if (other.getName() != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		} else if (!getName().equals(other.getName())) {
 			return false;
 		}
-		if (rowLevelSecurityFilter == null) {
-			if (other.rowLevelSecurityFilter != null) {
+		if (getRowLevelSecurityFilter() == null) {
+			if (other.getRowLevelSecurityFilter() != null) {
 				return false;
 			}
-		} else if (!rowLevelSecurityFilter.equals(other.rowLevelSecurityFilter)) {
+		} else if (!getRowLevelSecurityFilter().equals(other.getRowLevelSecurityFilter())) {
 			return false;
 		}
 		return true;

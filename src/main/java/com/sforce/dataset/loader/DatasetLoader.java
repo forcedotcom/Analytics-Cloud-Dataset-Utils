@@ -254,6 +254,11 @@ public class DatasetLoader {
 				{
 					throw new DatasetLoaderException("Schema File {"+ExternalFileSchema.getSchemaFile(inputFile, logger) +"} must have uniqueId set for atleast one field");
 				}
+
+				if(Operation.equalsIgnoreCase("Append") && ExternalFileSchema.hasUniqueID(schema))
+				{
+					throw new DatasetLoaderException("Schema File {"+ExternalFileSchema.getSchemaFile(inputFile, logger) +"} has a uniqueId set. Choose 'Upsert' operation instead");
+				}
 			}
 			
 			if(session.isDone())
@@ -367,7 +372,7 @@ public class DatasetLoader {
 				long successRowCount = 0;
 				long errorRowCount = 0;
 				long startTime = System.currentTimeMillis();
-				EbinFormatWriter ebinWriter = new EbinFormatWriter(out, schema.objects.get(0).fields.toArray(new FieldType[0]), logger);
+				EbinFormatWriter ebinWriter = new EbinFormatWriter(out, schema.getObjects().get(0).getFields().toArray(new FieldType[0]), logger);
 				ErrorWriter errorWriter = new ErrorWriter(inputFile,",");
 				
 				session.setParam(DatasetUtilConstants.errorCsvParam, errorWriter.getErrorFile().getAbsolutePath()); 

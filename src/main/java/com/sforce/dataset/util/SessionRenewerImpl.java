@@ -25,8 +25,6 @@
  */
 package com.sforce.dataset.util;
 
-import javax.xml.namespace.QName;
-
 import com.sforce.soap.partner.Connector;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.SessionHeader_element;

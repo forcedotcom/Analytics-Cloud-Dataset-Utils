@@ -33,6 +33,22 @@ public class ExternalFileSchema {
 	@JsonIgnore
 	public static final String SCHEMA_FILE_SUFFIX = "_schema.json";
 
-	public FileFormat fileFormat; 
-	public LinkedList<ObjectType> objects;
+	private FileFormat fileFormat; 
+	private LinkedList<ObjectType> objects;
+	
+	public FileFormat getFileFormat() {
+		return fileFormat;
+	}
+	public void setFileFormat(FileFormat fileFormat) {
+		this.fileFormat = fileFormat;
+	}
+	public LinkedList<ObjectType> getObjects() {
+		return objects;
+	}
+	public void setObjects(LinkedList<ObjectType> objects) {
+		this.objects = objects;
+	}
+	
+	
+	
 }

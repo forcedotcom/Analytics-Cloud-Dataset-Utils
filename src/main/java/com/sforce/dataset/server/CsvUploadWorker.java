@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -41,11 +42,8 @@ import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.dataset.loader.DatasetLoaderException;
-import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 

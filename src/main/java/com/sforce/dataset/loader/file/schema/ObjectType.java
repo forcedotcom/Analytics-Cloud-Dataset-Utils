@@ -29,12 +29,55 @@ import java.util.List;
 
 public class ObjectType {
 	
-	 public String name = null; //(Required)
-	 public String fullyQualifiedName = null; //(Optional Defaults to name)
-	 public String connector = null; //(optional - CSV, SFDC, Workday, etc)
-	 public String label = null; //(Optional - defaults to name)
-	 public String description = null; //(optional)
-	 public String rowLevelSecurityFilter = null; //(Optional)
-	 public List<FieldType> fields = null; //(Required)
+	 private String name = null; //(Required)
+	 private String fullyQualifiedName = null; //(Optional Defaults to name)
+	 private String connector = null; //(optional - CSV, SFDC, Workday, etc)
+	 private String label = null; //(Optional - defaults to name)
+	 private String description = null; //(optional)
+	 private String rowLevelSecurityFilter = null; //(Optional)
+	 private List<FieldType> fields = null; //(Required)
+	 
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getFullyQualifiedName() {
+		return fullyQualifiedName;
+	}
+	public void setFullyQualifiedName(String fullyQualifiedName) {
+		this.fullyQualifiedName = fullyQualifiedName;
+	}
+	public String getConnector() {
+		return connector;
+	}
+	public void setConnector(String connector) {
+		this.connector = connector;
+	}
+	public String getLabel() {
+		return label;
+	}
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getRowLevelSecurityFilter() {
+		return rowLevelSecurityFilter;
+	}
+	public void setRowLevelSecurityFilter(String rowLevelSecurityFilter) {
+		this.rowLevelSecurityFilter = rowLevelSecurityFilter;
+	}
+	public List<FieldType> getFields() {
+		return fields;
+	}
+	public void setFields(List<FieldType> fields) {
+		this.fields = fields;
+	}
 	 
 }
