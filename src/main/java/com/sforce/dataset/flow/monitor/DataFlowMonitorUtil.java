@@ -30,12 +30,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -77,7 +79,7 @@ public class DataFlowMonitorUtil {
 	public static List<JobEntry> getDataFlowJobs(PartnerConnection partnerConnection, String datasetName) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		List<JobEntry> jobsList = new LinkedList<JobEntry>(); 
-		System.out.println();
+//		System.out.println();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
@@ -97,7 +99,7 @@ public class DataFlowMonitorUtil {
 
 		listEMPost.setConfig(requestConfig);
 		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
-		System.out.println("Fetching job list from server, this may take a minute...");
+//		System.out.println("Fetching job list from server, this may take a minute...");
 		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
@@ -187,21 +189,134 @@ public class DataFlowMonitorUtil {
 			       throw new IOException(String.format("Dataflow job list download failed, invalid server response %s",emList));
 				}
 		}
-		System.out.println("Found {"+jobsList.size()+"} jobs for dataset {"+datasetName+"}");
+//		System.out.println("Found {"+jobsList.size()+"} jobs for dataset {"+datasetName+"}");
 		return jobsList;
 	}
 	
-	public static boolean getJobErrorFile(PartnerConnection partnerConnection, String datasetName, String jobTrackerid) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List<NodeEntry> getDataFlowJobNodes(PartnerConnection partnerConnection, String nodeUrl) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	{
+		List<NodeEntry> nodeList = new LinkedList<NodeEntry>(); 
+//		System.out.println();
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();
+		String serviceEndPoint = config.getServiceEndpoint();
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   
+		URI u = new URI(serviceEndPoint);
+
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), nodeUrl, null,null);			
+		HttpGet listEMPost = new HttpGet(listEMURI);
+
+		listEMPost.setConfig(requestConfig);
+		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
+//		System.out.println("Fetching node list from server, this may take a minute...");
+		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
+		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
+	       int statusCode = emresponse.getStatusLine().getStatusCode();
+	       if (statusCode != HttpStatus.SC_OK) {
+		       throw new IOException(String.format("getDataFlowJobs failed: %d %s", statusCode,reasonPhrase));
+	       }
+		HttpEntity emresponseEntity = emresponse.getEntity();
+		InputStream emis = emresponseEntity.getContent();			
+		String emList = IOUtils.toString(emis, "UTF-8");
+		emis.close();
+		httpClient.close();
+		
+		if(emList!=null && !emList.isEmpty())
+		{
+				ObjectMapper mapper = new ObjectMapper();	
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				Map res =  mapper.readValue(emList, Map.class);
+//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
+				List<Map> jobs = (List<Map>) res.get("result");
+				if(jobs != null && !jobs.isEmpty())
+				{
+					for(Map job:jobs)
+					{
+						String _type = (String) job.get("_type");
+						if(_type != null && _type.equals("nodes"))
+						{
+							NodeEntry nodeEntry = new NodeEntry();
+								
+								
+								nodeEntry.startTime  = (String) job.get("startTime");
+								
+								nodeEntry._uid  = (String) job.get("_uid");
+								nodeEntry.duration = (String) job.get("duration");
+								
+								nodeEntry.nodeName = (String) job.get("nodeName");
+								
+								nodeEntry.nodeType = (String) job.get("nodeType");
+								
+								nodeEntry._type = _type;
+								
+								nodeEntry.status = (String) job.get("status");
+								
+								Object temp = job.get("outputRowsFailed");
+								if(temp != null)
+								{
+									if(temp instanceof Number)
+									{
+										nodeEntry.outputRowsFailed = ((Number)temp).longValue();
+									}else
+									{
+										BigDecimal bd = new BigDecimal(temp.toString());
+										nodeEntry.outputRowsFailed = bd.longValue();
+									}
+								}
+								
+								temp = job.get("outputRowsProcessed");
+								if(temp != null)
+								{
+									if(temp != null && temp instanceof Number)
+									{
+										nodeEntry.outputRowsProcessed = ((Number)temp).longValue();
+									}else
+									{
+										BigDecimal bd = new BigDecimal(temp.toString());
+										nodeEntry.outputRowsProcessed = bd.longValue();
+									}
+								}								
+								nodeList.add(nodeEntry);
+							}
+					}
+				}else
+				{
+			       throw new IOException(String.format("Dataflow job list download failed, invalid server response %s",emList));
+				}
+			}else
+			{
+		       throw new IOException(String.format("Dataflow job list download failed, invalid server response %s",emList));
+			}
+//		System.out.println("Found {"+nodeList.size()+"} nodes for dataset {"+nodeUrl+"}");
+		return nodeList;
+	}
+	
+	public static File getJobErrorFile(PartnerConnection partnerConnection, String datasetName, String jobTrackerid) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		if(jobTrackerid == null || jobTrackerid.trim().isEmpty())
 		{
-			System.out.println("Job TrackerId cannot be null");
-			return false;
+			throw new IOException("Job TrackerId cannot be null");
 		}
-		
-		System.out.println();
+
+		if(datasetName == null || datasetName.trim().isEmpty())
+		{
+			throw new IOException("datasetName cannot be null");
+		}
+
+//		System.out.println();
 		partnerConnection.getServerTimestamp();
-		ConnectorConfig config = partnerConnection.getConfig();			
+		ConnectorConfig config = partnerConnection.getConfig();
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
 		CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -219,7 +334,7 @@ public class DataFlowMonitorUtil {
 
 		listEMPost.setConfig(requestConfig);
 		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
-		System.out.println("Fetching error sessionLog for job {"+jobTrackerid+"} from server...");
+//		System.out.println("Fetching error sessionLog for job {"+jobTrackerid+"} from server...");
 		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
@@ -227,16 +342,21 @@ public class DataFlowMonitorUtil {
 		       throw new IOException(String.format("getDataFlowJob node error sessionLog failed: %d %s", statusCode,reasonPhrase));
 	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
-		InputStream emis = emresponseEntity.getContent();			
-		File outfile = new File(datasetName+"_"+jobTrackerid+"_error.csv");
+		InputStream emis = emresponseEntity.getContent();		
+		
+		File dataDir = DatasetUtilConstants.getDataDir(orgId);
+		File parent = new File(dataDir,datasetName);
+		FileUtils.forceMkdir(parent);
+
+		File outfile = new File(parent, datasetName+"_"+jobTrackerid+"_error.csv");
 		System.out.println("fetching file {"+outfile+"}. Content-length {"+emresponseEntity.getContentLength()+"}");
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile),DatasetUtilConstants.DEFAULT_BUFFER_SIZE);
 		IOUtils.copy(emis, out);
 		out.close();
 		emis.close();
 		httpClient.close();
-		System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}\n");
-		return true;
+//		System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}\n");
+		return outfile;
 		
 //		if(emList!=null && !emList.isEmpty())
 //		{

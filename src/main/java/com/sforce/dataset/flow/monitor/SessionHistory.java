@@ -37,11 +37,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sforce.dataset.DatasetUtilConstants;
 
-public class Session implements Comparable<Session> {
+public class SessionHistory implements Comparable<SessionHistory> {
 	
-static final LinkedList<Session> q = new LinkedList<Session>();
+static final LinkedList<SessionHistory> q = new LinkedList<SessionHistory>();
 
 
 long startTime = 0l;
@@ -58,61 +57,65 @@ long targetErrorCount=0;
 String status;
 String message = "";
 String workflowId = null;
-//String jobTrackerid = null;
+String jobTrackerid = null;
 volatile AtomicBoolean isDone = new AtomicBoolean(false);
-volatile AtomicBoolean isDoneDone = new AtomicBoolean(false);
+volatile AtomicBoolean nodeDetailsFetched = new AtomicBoolean(false);
 
 Map<String,String> params = new LinkedHashMap<String,String>();
 private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
 
-public Session(String orgId,String name) {
-	super();
-	if(orgId == null || name == null || orgId.trim().isEmpty() || name.trim().isEmpty())
-	{
-		throw new IllegalArgumentException("Input arguments (orgId, name) cannot be null");
-	}
-	this.name = name;
-	this.id = UUID.randomUUID().toString();
-	this.sessionLog = new File(DatasetUtilConstants.getLogsDir(orgId),name+"_"+id+".log");
-	this.orgId = orgId;
-	this.status = "INIT";
-	updateLastModifiedTime();
+public SessionHistory(Session session) {
+	this.endTime = session.endTime;
+	this.id = session.id;
+	this.isDone = session.isDone;
+	this.lastModifiedTime = session.lastModifiedTime;
+	this.message = session.message;
+	this.name = session.name;
+	this.orgId = session.orgId;
+	this.params.putAll(session.params);
+	this.sessionLog = session.sessionLog;
+	this.sourceErrorRowCount = session.sourceErrorRowCount;
+	this.sourceTotalRowCount = session.sourceTotalRowCount;
+	this.startTime = session.startTime;
+	this.status = session.status;
+	this.targetErrorCount = session.targetErrorCount;
+	this.targetTotalRowCount = session.targetTotalRowCount;
+	this.workflowId = session.workflowId;
 	q.add(this);
 }
 
-
-//public Session(String orgId,JobEntry job) {
-//	super();
-//	if(orgId == null || job == null  || job._uid == null ||  orgId.trim().isEmpty() ||   job._uid.isEmpty())
-//	{
-//		throw new IllegalArgumentException("Input arguments (orgId, job) cannot be null");
-//	}
-//	this.id = UUID.randomUUID().toString();
-//	this.orgId = orgId;
-//	this.jobTrackerid = job._uid;
-//	this.endTime = job.endTimeEpoch;
-//	this.startTime = job.startTimeEpoch;
-//	this.name = job.workflowName;
-//	this.message = job.errorMessage;
-//	if(this.endTime==0)
-//		this.lastModifiedTime = job.startTimeEpoch;
-//	else
-//		this.lastModifiedTime = job.endTimeEpoch;
-//	if(job.status==0)
-//	{
-//		this.status = "RUNNING";
-//	}
-//	else if(job.status==1)
-//	{
-//		this.status = "SUCCESS";
-//		isDone.set(true);
-//	}
-//	else
-//	{
-//		this.status = "FAILED";
-//		isDone.set(true);
-//	}	
-//}
+public SessionHistory(String orgId,JobEntry job) {
+	super();
+	if(orgId == null || job == null  || job._uid == null ||  orgId.trim().isEmpty() ||   job._uid.isEmpty())
+	{
+		throw new IllegalArgumentException("Input arguments (orgId, job) cannot be null");
+	}
+	this.id = UUID.randomUUID().toString();
+	this.orgId = orgId;
+	this.jobTrackerid = job._uid;
+	this.endTime = job.endTimeEpoch;
+	this.startTime = job.startTimeEpoch;
+	this.name = job.workflowName.replace(" upload flow", "");
+	this.message = job.errorMessage;
+	if(job.endTimeEpoch==0)
+		this.lastModifiedTime = job.startTimeEpoch;
+	else
+		this.lastModifiedTime = job.endTimeEpoch;
+	if(job.status==2)
+	{
+		this.status = "RUNNING";
+	}
+	else if(job.status==1)
+	{
+		this.status = "COMPLETED";
+		isDone.set(true);
+	}else
+	{
+		this.status = "FAILED";
+		isDone.set(true);
+	}
+	q.add(this);
+}
 
 
 public Map<String, String> getParams() {
@@ -127,20 +130,7 @@ public void setParams(Map<String, String> params) {
 public void setParam(String key,String value)
 {
 	if(key!=null && !key.isEmpty())
-	{
 		params.put(key, value);
-		if(key.equals(DatasetUtilConstants.serverStatusParam))
-		{
-			if(value!=null)
-			{
-				if(value.equalsIgnoreCase("Completed") || value.equalsIgnoreCase("Failed") || value.equalsIgnoreCase("NotProcessed"))
-				{
-					isDoneDone.set(true);
-				}
-			}
-		}
-	}
-	
 }
 
 @JsonIgnore
@@ -158,7 +148,6 @@ public long getSourceTotalRowCount() {
 
 public void setSourceTotalRowCount(long sourceTotalRowCount) {
 	this.sourceTotalRowCount = sourceTotalRowCount;
-	updateLastModifiedTime();
 }
 
 public long getSourceErrorRowCount() {
@@ -167,7 +156,6 @@ public long getSourceErrorRowCount() {
 
 public void setSourceErrorRowCount(long sourceErrorRowCount) {
 	this.sourceErrorRowCount = sourceErrorRowCount;
-	updateLastModifiedTime();
 }
 
 public long getTargetTotalRowCount() {
@@ -176,7 +164,6 @@ public long getTargetTotalRowCount() {
 
 public void setTargetTotalRowCount(long targetTotalRowCount) {
 	this.targetTotalRowCount = targetTotalRowCount;
-	updateLastModifiedTime();
 }
 
 public long getTargetErrorCount() {
@@ -185,7 +172,6 @@ public long getTargetErrorCount() {
 
 public void setTargetErrorCount(long targetErrorCount) {
 	this.targetErrorCount = targetErrorCount;
-	updateLastModifiedTime();
 }
 
 
@@ -238,8 +224,23 @@ public String getStatus() {
 
 public void setStatus(String status) {
 	this.status = status;
-	updateLastModifiedTime();
 }
+
+public void setStartTime(long startTime) {
+	this.startTime = startTime;
+}
+
+
+public void setEndTime(long endTime) {
+	this.endTime = endTime;
+	updateLastModifiedTime(endTime);
+}
+
+
+public void setMessage(String message) {
+	this.message = message;
+}
+
 
 public String getMessage() {
 	return message;
@@ -253,75 +254,46 @@ public void setWorkflowId(String workflowId) {
 	this.workflowId = workflowId;
 }
 
-//public String getJobTrackerid() {
-//	return jobTrackerid;
-//}
-//
-//public void setJobTrackerid(String jobTrackerid) {
-//	this.jobTrackerid = jobTrackerid;
-//}
-
-public void start() {
-	this.status = "RUNNING";
-	updateLastModifiedTime();
-	this.startTime = this.lastModifiedTime;
+public String getJobTrackerid() {
+	return jobTrackerid;
 }
 
-public void end() {
-	this.status = "COMPLETED";
-	isDone.set(true);
-	updateLastModifiedTime();
-	this.endTime = this.lastModifiedTime;
-}
-
-public void fail(String message) {
-	this.status = "FAILED";
-	this.message = message;
-	isDone.set(true);
-//	isDoneDone.set(true);
-	updateLastModifiedTime();
-	this.endTime = this.lastModifiedTime;
-}
-
-public void terminate(String message) {
-	this.status = "TERMINATED";
-	if(message!=null)
-		this.message = message;
-	else
-		this.message = "TERMINATED ON USER REQUEST";
-
-	isDone.set(true);	
-//	isDoneDone.set(true);
-	updateLastModifiedTime();
-	this.endTime = this.lastModifiedTime;
+public void setJobTrackerid(String jobTrackerid) {
+	this.jobTrackerid = jobTrackerid;
 }
 
 public boolean isDone() {
 	return isDone.get();
 }
 
-public boolean isDoneDone() {
-	return isDoneDone.get();
+public boolean isNodeDetailsFetched() {
+	return nodeDetailsFetched.get();
 }
 
-
-void updateLastModifiedTime()
-{
-	this.lastModifiedTime = System.currentTimeMillis();
+public void setNodeDetailsFetched(boolean newValue) {
+	this.nodeDetailsFetched.set(newValue);
 }
 
-public static final LinkedList<Session> listSessions(String orgId)
+public void updateLastModifiedTime(long updatedTime)
 {
-	LinkedList<Session> sessionList = new LinkedList<Session>();
-	long sevenDaysAgo = System.currentTimeMillis() - 1*24*60*60*1000;
-	List<Session> copy = new LinkedList<Session>(q);
-	for(Session s:copy)
+	if(updatedTime==0)
+		this.lastModifiedTime = System.currentTimeMillis();
+	else
+		this.lastModifiedTime = updatedTime;
+}
+
+public static final LinkedList<SessionHistory> listSessions(String orgId)
+{
+	LinkedList<SessionHistory> sessionList = new LinkedList<SessionHistory>();
+	long sevenDaysAgo = System.currentTimeMillis() - 7*24*60*60*1000;
+	List<SessionHistory> copy = new LinkedList<SessionHistory>(q);
+	for(SessionHistory s:copy)
 	{
 		if(s.lastModifiedTime > sevenDaysAgo)
 		{
 			if(s.orgId.equals(orgId))
 			{
-				sessionList.add(s);
+					sessionList.add(s);
 			}
 		}else
 		{
@@ -332,9 +304,9 @@ public static final LinkedList<Session> listSessions(String orgId)
 	return sessionList;
 }
 
-public static final Session getSession(String orgId,String id)
+public static final SessionHistory getSession(String orgId,String id)
 {
-	for(Session s:q)
+	for(SessionHistory s:q)
 	{
 		if(s.orgId.equals(orgId) && s.id.equals(id))
 		{
@@ -344,24 +316,25 @@ public static final Session getSession(String orgId,String id)
 	return null;
 }
 
-public static final Session getCurrentSession(String orgId,String name)
+public static final SessionHistory getSessionByJobTrackerId(String orgId,String id)
 {
-    ThreadContext threadContext = ThreadContext.get();
-    Session session = threadContext.getSession();
-    if(session == null)
-    {
-    	if(orgId == null || name == null || orgId.trim().isEmpty() || name.trim().isEmpty())
-    	{
-    		throw new IllegalArgumentException("Input arguments (orgId, name) cannot be null");
-    	}
-    	session = new Session(orgId,name);
-    	threadContext.setSession(session);
-    }
-    return session;	
+	if(id==null||id.trim().isEmpty())
+		return null;
+	
+	for(SessionHistory s:q)
+	{
+		if(s.orgId.equals(orgId) && id.equals(s.jobTrackerid))
+		{
+			return s;
+		}
+	}
+	return null;
 }
 
+
+
 @Override
-public int compareTo(Session o) {
+public int compareTo(SessionHistory o) {
 	if (this.lastModifiedTime > o.lastModifiedTime)
 		return 1;
 	else if (this.lastModifiedTime < o.lastModifiedTime)

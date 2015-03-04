@@ -1,47 +1,154 @@
 $(document).ready(function() {
-    	$("#result-header").empty();
-    	$("#result-body").empty();
-        $.getJSON('list?type=session',{},function(data)
-        {
-            	$("tr:has(td)").remove();
-                $("#result-header").append(
-                		$('<tr/>')
-                  		.append($('<th/>').text('Name'))
-                  		.append($('<th/>').text('Start Time'))
-                  		.append($('<th/>').text('End Time'))
-                  		.append($('<th/>').text('Status'))
-                  		.append($('<th/>').text('Total Rows'))
-                  		.append($('<th/>').text('Error Rows'))
-                  		.append($('<th/>').text('Error Message'))
-                  		.append($('<th/>').text('Download'))
-                		)//end $("#uploaded-files").append()
-        	 $.each(data, function(i,obj)
-        	 {
-            		var link = "<a href='upload?id="+data[i].id+"&type=errorCsv'>"+data[i].targetErrorCount+"</a>";
-            		if(data[i].targetErrorCount == 0)
-            			link = ""+data[i].targetErrorCount;
+    var historyData = null;
+    var currentData = null;
+    var gettingHistory = false;
 
-               		var actionString = "<a href='upload?id="+data[i].id+"&type=sessionLog'>"+"Log"+"</a>";               	 
-            		if(data[i].params.METADATA_JSON)
-            			actionString = actionString + "&nbsp;|&nbsp;" + "<a href='upload?id="+data[i].id+"&type=metadataJson'>"+"Json"+"</a>";
-  
-            		var status1 = data[i].status;
-            		if(data[i].params.SERVER_STATUS)
-            			status1 = data[i].status + "&nbsp;|&nbsp;" + data[i].params.SERVER_STATUS;
-            		
-            		$("#result-body").append(
-                    		$('<tr/>')
-                      		.append($('<td/>').text(data[i].name))
-                      		.append($('<td/>').text(data[i].startTimeFormatted))
-                      		.append($('<td/>').text(data[i].endTimeFormatted))
-                      		.append($('<td/>').html(status1))
-                      		.append($('<td/>').text(data[i].targetTotalRowCount))
-                      		.append($('<td/>').html(link))
-                      		.append($('<td/>').text(data[i].message))
-                      		.append($('<td/>').html(actionString))
-                    		)//end $("#uploaded-files").append()
-             });
-        });
+    refreshActive();
+    refreshHistory();
+
+    var showHistory = false;
+
+    $("#hide-history").on("click", function(){
+      $("#show-history").removeClass("active");
+      $("#hide-history").addClass("active");
+      showHistory = false;
+      refreshActive();
+    });
+
+     $("#show-history").on("click", function(){
+      $("#hide-history").removeClass("active");
+      $("#show-history").addClass("active");
+      showHistory = true;
+      refreshActive();
+      refreshHistory();
+    });
+
+    $("#hide-history").click();
+    
+
+    $("#result-header").empty();
+    $("#result-header").append(
+    $('<tr/>')
+      .append($('<th/>').text('Name'))
+      .append($('<th/>').text('Start Time'))
+      .append($('<th/>').text('End Time'))
+      .append($('<th/>').text('Status'))
+      .append($('<th/>').text('Total Rows'))
+      .append($('<th/>').text('Error Rows'))
+      .append($('<th/>').text('Error Message'))
+      .append($('<th/>').text('Download'))
+    )//end $("#uploaded-files").append()
+
+    setInterval(function(){
+    		refreshActive(); // this will run after every 5 seconds
+    }, 5000);	
+
+    setInterval(function(){
+      refreshHistory();
+    }, 45000);
+
+    function selectButton(element){
+      if (element == "hide"){
+          $("hide-history").addClass("active");
+          $("show-history").removeClass("active");
+          gettingHistory = false;
+          showHistory = false;
+        }
+      else{
+          $("hide-history").removeClass("active");
+          $("show-history").addClass("active");
+          showHistory = true;
+      }
+
+    }
+
+    function getTableData(type){
+      $.getJSON('list?type='+type,{},function(data){
+        if (type=="sessionHistory"){
+          historyData = data;
+          gettingHistory = false;
+        }
+        else{
+          currentData = data;
+        }
+        displayOnTable(currentData, historyData);
+      });
+    }
+
+    function displayOnTable(current, history){
+      $("#result-body").empty();
+
+      if (current != null){
+        printTable(current, "session");
+      }
+      if (history != null){
+        printTable(history, "sessionHistory");
+      }
+
+
+      function printTable(data, type){
+         $.each(data, function(i,obj)
+         {
+              var link = ""+data[i].targetErrorCount;
+              
+              if (data[i].status == "COMPLETED" && data[i].targetErrorCount != 0){
+                
+                var href_link = "<a href='upload?id="+data[i].id+"&type=errorCsv";
+                if (type == "sessionHistory"){
+                    href_link += "&history=true";
+                }
+
+                href_link += "'>";
+
+                link = data[i].targetErrorCount+"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-th-list\"></span>"+"</a>";
+              }
+
+              var actionString = "<a href='upload?id="+data[i].id+"&type=sessionLog'>"+"Log"+"</a>";                 
+              if(data[i].params.METADATA_JSON)
+                actionString = actionString + "&nbsp;|&nbsp;" + "<a href='upload?id="+data[i].id+"&type=metadataJson'>"+"Json"+"</a>";
+
+              if (type == "sessionHistory"){
+                actionString = "&nbsp;";
+              }
+
+              var status1 = data[i].status;
+              if(data[i].params.SERVER_STATUS)
+                status1 = data[i].status + "&nbsp;|&nbsp;" + data[i].params.SERVER_STATUS;
+              
+              var tablerow = $('<tr/>');
+              if (data[i].status == "ERROR" || data[i].params.SERVER_STATUS == "ERROR")
+                tablerow.attr({'class': 'danger'});
+              else if (data[i].targetErrorCount != 0 && data[i].status == "COMPLETED" && data[i].params.SERVER_STATUS == "COMPLETED")
+                tablerow.attr({'class': 'warning'});
+              else if (data[i].status == "COMPLETED" && data[i].params.SERVER_STATUS == "COMPLETED")
+                tablerow.attr({'class': 'success'});
+
+              $("#result-body").append(
+                      tablerow
+                        .append($('<td/>').text(data[i].name))
+                        .append($('<td/>').text(data[i].startTimeFormatted))
+                        .append($('<td/>').text(data[i].endTimeFormatted))
+                        .append($('<td/>').html(status1))
+                        .append($('<td/>').text(data[i].targetTotalRowCount))
+                        .append($('<td/>').html(link))
+                        .append($('<td/>').text(data[i].message))
+                        .append($('<td/>').html(actionString))
+                        );
+            })
+        } 
+    }
+    
+    function refreshActive(){
+    	if(!gettingHistory)
+    		getTableData("session");
+    }
+
+    function refreshHistory(){
+      if (showHistory){
+        gettingHistory = true;
+        getTableData("sessionHistory");
+      }
+    }
 });
 
 $(document).ajaxSend(function(event, request, settings) {
@@ -50,7 +157,7 @@ $(document).ajaxSend(function(event, request, settings) {
 
 $(document).ajaxComplete(function(event, request, settings) {
 		  $('#loading-indicator').hide();
-});	
+});
 
 function deleteRow(tableID) {
     try {

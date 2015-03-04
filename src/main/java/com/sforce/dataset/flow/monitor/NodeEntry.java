@@ -25,58 +25,43 @@
  */
 package com.sforce.dataset.flow.monitor;
 
-public class JobEntry {
-    String errorMessage = null;
-    long startTimeEpoch = 0;
-    int status = 0;
-    long endTimeEpoch = 0;
-    String _uid = null;
-    String type = null;
-    String endTime = null;
-    String startTime = null;
-    String _type = null;
-    long duration= 0;
-    long _createdDateTime = 0;
-    String workflowName = null;
-    String nodeUrl = null;
-    
-	public String getErrorMessage() {
-		return errorMessage;
-	}
-	public long getStartTimeEpoch() {
-		return startTimeEpoch;
-	}
-	public int getStatus() {
-		return status;
-	}
-	public long getEndTimeEpoch() {
-		return endTimeEpoch;
-	}
-	public String get_uid() {
-		return _uid;
-	}
-	public String getType() {
-		return type;
-	}
-	public String getEndTime() {
-		return endTime;
-	}
+public class NodeEntry {
+	String startTime = null;//	:	Tue Mar 03 00:41:36 GMT 2015	
+	String _type = null;//	:	nodes
+	String duration = null;//	:	0 hours, 0 minutes
+	String status = null;//	:	success			
+	long outputRowsFailed = 0;//	:	5			
+	long outputRowsProcessed = 0; //	:	17934			
+	String nodeName = null; //	:	digest			
+	String _uid = null; //	:	08JB00000000In9MAE			
+	String nodeType = null;//:	csvDigest
+	
 	public String getStartTime() {
 		return startTime;
 	}
 	public String get_type() {
 		return _type;
 	}
-	public long getDuration() {
+	public String getDuration() {
 		return duration;
 	}
-	public long get_createdDateTime() {
-		return _createdDateTime;
+	public String getStatus() {
+		return status;
 	}
-	public String getWorkflowName() {
-		return workflowName;
+	public long getOutputRowsFailed() {
+		return outputRowsFailed;
 	}
-	public String getNodeUrl() {
-		return nodeUrl;
+	public long getOutputRowsProcessed() {
+		return outputRowsProcessed;
 	}
+	public String getNodeName() {
+		return nodeName;
+	}
+	public String get_uid() {
+		return _uid;
+	}
+	public String getNodeType() {
+		return nodeType;
+	}
+
 }

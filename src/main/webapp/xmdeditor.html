@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Salesforce Analytics Cloud CSV File Upload</title>
+<script src="js/jquery.1.9.1.min.js"></script>
+
+<script src="js/vendor/jquery.ui.widget.js"></script>
+<script src="js/jquery.iframe-transport.js"></script>
+<script src="js/jquery.fileupload.js"></script>
+
+<!-- bootstrap just to have good looking page -->
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="css/jsoneditor/jsoneditor.min.css" />
+<link href="css/selectize.bootstrap3.css" rel="stylesheet"/>
+
+
+<link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
+<script src="js/validatefunction.js"></script>
+<script type="text/javascript" src="js/jsoneditor/jsoneditor.min.js"></script>
+<script type="text/javascript" src="js/jsoneditor/asset/jsonlint/jsonlint.js"></script>
+<script src="js/selectize.min.js"></script>
+<script src="js/xmdedit.js"></script>
+
+
+</head>
+
+<body>
+
+<div class="container">
+<!--  
+<div id="breadcrumb">
+  <ol class="breadcrumb">
+	  <li><a href="#">Home</a></li>
+	  <li><a href="#">CSV Upload</a></li>
+  </ol>
+</div>
+-->
+<div id="header" class="row">&nbsp;</div>
+</div>
+	<!--
+	<div id="dropzone" class="fade well">Drop files here</div>
+	<div id="progress" class="progress">
+    	<div class="bar" style="width: 0%;"></div>
+	</div>
+	-->
+
+<div class="container xmd-container" style="display: none;">
+	
+	<div class="input-group-xmd">
+		<label for="DatasetName">Dataset Name</label>
+		<select class="demo-default xmd-dataset-select" name="DatasetName" id="DatasetName-xmd" required placeholder="Enter a Dataset Name...">
+                            <option value="">Enter a Dataset Name...</option>
+                        </select>
+        <div class="row" id="xmd-button-row">
+			<button class="btn btn-primary col-lg-4" id="dl-xmd-btn" name="getjson">Download XMD</button>
+			<button class="btn btn-danger col-lg-4" id="submit-xmd-btn" name="postjson">Submit Updated XMD</button>
+		</div>
+	</div>
+		
+ 	
+ 	<div id="jsoncontainer" style="width: 800px; height: 800px; margin-top:20px"></div>
+
+
+	<div id="header2" class="spinner">
+		<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
+	</div>
+
+<!--  
+<div id="spinner" class="spinner" style="display:none;">
+    <img id="img-spinner" src="/img/ajax-loader.gif" alt="Loading"/>
+</div>
+ -->
+	<div id="title2" class="row">
+	</div>
+
+
+    <div class="row">    
+	<table id="result" class="table">
+	</table>
+	</div>
+	
+</div>
+
+
+</body> 
+</html>

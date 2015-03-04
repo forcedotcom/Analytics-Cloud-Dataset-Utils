@@ -48,7 +48,9 @@ import org.apache.commons.fileupload.FileItem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.SessionHistory;
 
 @MultipartConfig 
 public class FileUploadServlet extends HttpServlet {
@@ -122,6 +124,7 @@ public class FileUploadServlet extends HttpServlet {
 
 				String id = request.getParameter("id");
 				String type = request.getParameter("type");
+//				String history  = request.getParameter("history");
 					
 					if(type==null || type.trim().isEmpty())
 					{
@@ -134,9 +137,10 @@ public class FileUploadServlet extends HttpServlet {
 					}
 					
 					Session session = Session.getSession(orgId,id);
-					if(session == null)
+					SessionHistory sessionHistory =  SessionHistory.getSession(orgId, id);
+					if(session == null && sessionHistory==null)
 					{
-						throw new IllegalArgumentException("Invalid 'id' {"+id+"}");
+							throw new IllegalArgumentException("Invalid 'id' {"+id+"}");
 					}
 
 					File file = null;
@@ -144,16 +148,22 @@ public class FileUploadServlet extends HttpServlet {
 					if(type.equalsIgnoreCase("errorCsv"))
 					{
 						contentType = "text/csv";
-						Map<String, String> params = session.getParams();
-						String errorFile = params.get(DatasetUtilConstants.errorCsvParam);
-						if(errorFile != null)
+						if(session!=null)
 						{
-							file = new File(errorFile);
+							Map<String, String> params = session.getParams();
+							String errorFile = params.get(DatasetUtilConstants.errorCsvParam);
+							if(errorFile != null)
+							{
+								file = new File(errorFile);
+							}
+						}else
+						{
+							file = DataFlowMonitorUtil.getJobErrorFile(DatasetUtilServer.partnerConnection, sessionHistory.getName(), sessionHistory.getJobTrackerid());
 						}
 					}else if(type.equalsIgnoreCase("metadataJson"))
 					{
 						contentType = "application/json";
-						Map<String, String> params = session.getParams();
+						Map<String, String> params = session!=null?session.getParams():sessionHistory.getParams();
 						String errorFile = params.get(DatasetUtilConstants.metadataJsonParam);
 						if(errorFile != null)
 						{

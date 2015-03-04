@@ -57,3 +57,38 @@ input[readonly] {
     width: 100px; /* width of the spinner gif */
     height: 102px; /*height of the spinner gif +2px to fix IE8 issue */
 }
+
+#dl-xmd-btn{
+  width: 250px;
+}
+
+#submit-xmd-btn{
+  width: 250px;
+  margin-left: 25px;
+}
+
+#xmd-button-row{
+  margin-left: 0px;
+}
+
+#jsoncontainer{
+  position: absolute;
+  top: 8em;
+}
+
+.xmd-dataset-select {
+  width: 250px;
+}
+
+.DatasetName-xmd {
+  width: 250px;
+}
+
+.input-group-xmd {
+  float:left;
+  margin-bottom: 20px;
+}
+
+.show-history-logs{
+  margin-left: 0px;
+}

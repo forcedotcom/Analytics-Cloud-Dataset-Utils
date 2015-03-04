@@ -26,6 +26,8 @@
 package com.sforce.dataset.server;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -36,7 +38,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
+import com.sforce.dataset.flow.monitor.JobEntry;
+import com.sforce.dataset.flow.monitor.NodeEntry;
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.SessionHistory;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.dataset.util.DatasetType;
 import com.sforce.dataset.util.DatasetUtils;
@@ -164,6 +170,51 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), sessions);
+					}else if(value.equalsIgnoreCase("sessionHistory"))
+					{
+//						LinkedList<SessionHistory> sessions = new LinkedList<SessionHistory>();
+						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(DatasetUtilServer.partnerConnection, null);
+						String orgId = DatasetUtilServer.partnerConnection.getUserInfo().getOrganizationId();
+						long twoDayAgo = System.currentTimeMillis() - 2*24*60*60*1000;
+						for(JobEntry job:jobs)
+						{
+							long lastupdated = job.getStartTimeEpoch();
+							if(job.getEndTimeEpoch()!=0)
+							{
+								lastupdated = job.getEndTimeEpoch();
+							}
+							if(job.getType().equalsIgnoreCase("system") && lastupdated > twoDayAgo)
+							{
+								SessionHistory sessionHistory = SessionHistory.getSessionByJobTrackerId(orgId, job.get_uid());
+								if(sessionHistory==null)
+								{
+									sessionHistory = new SessionHistory(orgId, job);
+								}
+								
+								if(job.getStatus()==2 || !sessionHistory.isNodeDetailsFetched())
+								{									
+									List<NodeEntry> nodes = DataFlowMonitorUtil.getDataFlowJobNodes(DatasetUtilServer.partnerConnection, job.getNodeUrl());
+									for(NodeEntry node:nodes)
+									{
+										if(node.getNodeType() != null && (node.getNodeType().equalsIgnoreCase("csvDigest") || node.getNodeType().equalsIgnoreCase("binDigest")))
+										{
+											sessionHistory.setTargetTotalRowCount(node.getOutputRowsProcessed());
+											sessionHistory.setTargetErrorCount(node.getOutputRowsFailed());
+											if(job.getEndTimeEpoch()!=0L)
+												sessionHistory.updateLastModifiedTime(job.getEndTimeEpoch());
+											if(job.getStatus()!=2)
+											{
+												sessionHistory.setNodeDetailsFetched(true);
+											}
+										}
+									}
+								}
+//								sessions.add(sessionHistory);
+							}
+						}
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), SessionHistory.listSessions(orgId));
 					}else
 					{
 						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+value+"}");
