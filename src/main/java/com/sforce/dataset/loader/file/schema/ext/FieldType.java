@@ -96,10 +96,8 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 			kdt.multiValueSeparator = multivalueSeperator;
 			kdt.isMultiValue = true;
 		}
-		if(defaultValue!=null)
+		if(defaultValue!=null && !defaultValue.trim().isEmpty())
 			kdt.setDefaultValue(defaultValue);
-		else
-			kdt.setDefaultValue("");
 		kdt.setLabel(name);
 		kdt.setFullyQualifiedName(kdt.name);
 		kdt.setDescription(name);
@@ -150,10 +148,8 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 		kdt.setType(FieldType.DATE_TYPE);
 		new SimpleDateFormat(format);
 		kdt.setFormat(format);
-		if(defaultValue!=null)
+		if(defaultValue!=null && !defaultValue.trim().isEmpty())
 			kdt.setDefaultValue(defaultValue);
-		else
-			kdt.setDefaultValue("");
 		kdt.setLabel(name);
 		kdt.setFullyQualifiedName(kdt.name);
 		kdt.setDescription(name);

@@ -78,6 +78,7 @@ input[readonly] {
 
 .xmd-dataset-select {
   width: 250px;
+  margin-bottom:10px;
 }
 
 .DatasetName-xmd {

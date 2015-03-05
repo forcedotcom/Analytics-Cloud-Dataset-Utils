@@ -47,20 +47,22 @@
 	-->
 
 <div class="container xmd-container" style="display: none;">
-	
-	<div class="input-group-xmd">
-		<label for="DatasetName">Dataset Name</label>
-		<select class="demo-default xmd-dataset-select" name="DatasetName" id="DatasetName-xmd" required placeholder="Enter a Dataset Name...">
-                            <option value="">Enter a Dataset Name...</option>
-                        </select>
-        <div class="row" id="xmd-button-row">
-			<button class="btn btn-primary col-lg-4" id="dl-xmd-btn" name="getjson">Download XMD</button>
-			<button class="btn btn-danger col-lg-4" id="submit-xmd-btn" name="postjson">Submit Updated XMD</button>
+
+		<div class="input-group-xmd">
+			<label for="DatasetName">Dataset Name</label> <select
+				class="form-control xmd-dataset-select" name="DatasetName"
+				id="DatasetName-xmd" required placeholder="Enter a Dataset Name...">
+				<option value="">Enter a Dataset Name...</option>
+			</select>
+			<div class="row" id="xmd-button-row">
+				<button class="btn btn-primary col-lg-4" id="dl-xmd-btn"
+					name="getjson">Download XMD</button>
+				<button class="btn btn-danger col-lg-4" id="submit-xmd-btn"
+					name="postjson">Submit Updated XMD</button>
+			</div>
 		</div>
-	</div>
-		
- 	
- 	<div id="jsoncontainer" style="width: 800px; height: 800px; margin-top:20px"></div>
+
+		<div id="jsoncontainer" style="width: 800px; height: 800px; margin-top:20px"></div>
 
 
 	<div id="header2" class="spinner">

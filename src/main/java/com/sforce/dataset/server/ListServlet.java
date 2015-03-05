@@ -26,8 +26,6 @@
 package com.sforce.dataset.server;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.ServletException;

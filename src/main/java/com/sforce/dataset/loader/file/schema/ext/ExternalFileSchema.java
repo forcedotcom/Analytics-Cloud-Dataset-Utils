@@ -984,7 +984,7 @@ public class ExternalFileSchema  {
 		{
 			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
-				if(user_field != null && user_field.isUniqueId)
+				if(user_field != null && user_field.isUniqueId && user_field.getfType()==FieldType.STRING)
 					uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
 			}
 		}
@@ -998,7 +998,7 @@ public class ExternalFileSchema  {
 		{
 			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
-				if(user_field != null && user_field.isUniqueId)
+				if(user_field != null && user_field.isUniqueId && user_field.getfType()==FieldType.STRING)
 					hasUniqueID = true;
 			}
 		}
@@ -1026,7 +1026,7 @@ public class ExternalFileSchema  {
 		{
 			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
-				if(uniqueIdfieldNames.contains(user_field.getFullyQualifiedName()))
+				if(uniqueIdfieldNames.contains(user_field.getFullyQualifiedName()) && user_field.getfType()==FieldType.STRING)
 						user_field.isUniqueId = true;
 			}
 		}
