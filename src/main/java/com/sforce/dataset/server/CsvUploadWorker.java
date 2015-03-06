@@ -216,12 +216,13 @@ public class CsvUploadWorker implements Runnable {
 			return;
 
 //		File parent = inputFile.getAbsoluteFile().getParentFile();
-			
+
 		File directory = DatasetUtilConstants.getSuccessDir(session.getOrgId());
 		if(!isSuccess)
 			directory = DatasetUtilConstants.getErrorDir(session.getOrgId());
 			
-		File doneFile = new File(directory, FilenameUtils.getBaseName(inputFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(inputFile.getName()));
+//		File doneFile = new File(directory, FilenameUtils.getBaseName(inputFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(inputFile.getName()));
+		File doneFile = new File(directory, inputFile.getName());
 		try {
 			FileUtils.moveFile(inputFile, doneFile);
 		} catch (IOException e) {
@@ -230,7 +231,8 @@ public class CsvUploadWorker implements Runnable {
 		File sortedtFile = new File(inputFile.getParent(), FilenameUtils.getBaseName(inputFile.getName())+ "_sorted." + FilenameUtils.getExtension(inputFile.getName()));
 		if(sortedtFile.exists())
 		{
-			File sortedDoneFile = new File(directory,FilenameUtils.getBaseName(sortedtFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(sortedtFile.getName()));
+//			File sortedDoneFile = new File(directory,FilenameUtils.getBaseName(sortedtFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(sortedtFile.getName()));
+			File sortedDoneFile = new File(directory,sortedtFile.getName());
 			try {
 				FileUtils.moveFile(sortedtFile, sortedDoneFile);
 			} catch (IOException e) {

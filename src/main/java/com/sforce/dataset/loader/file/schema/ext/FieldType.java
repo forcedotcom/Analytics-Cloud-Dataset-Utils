@@ -350,22 +350,25 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 	}
 
 	public String getDefaultValue() {
-		return defaultValue;
+		if(defaultValue!=null && !defaultValue.isEmpty())
+			return defaultValue;
+		return null;
 	}
 
-	public void setDefaultValue(String defaultValue) {
-		if(this.type != null && this.type.equals(FieldType.DATE_TYPE) && getCompiledDateFormat() != null)
+	public void setDefaultValue(String defaultValue) 
+	{
+		if(defaultValue!=null && !defaultValue.isEmpty())
 		{
-			if(defaultValue!=null && !defaultValue.isEmpty())
+			if(this.type != null && this.type.equals(FieldType.DATE_TYPE) && getCompiledDateFormat() != null)
 			{
-				try {
-					this.defaultDate = getCompiledDateFormat().parse(defaultValue);
-				} catch (ParseException e) {
-					throw new IllegalArgumentException(e.toString());
-				}
+					try {
+						this.defaultDate = getCompiledDateFormat().parse(defaultValue);
+					} catch (ParseException e) {
+						throw new IllegalArgumentException(e.toString());
+					}
 			}
+			this.defaultValue = defaultValue;
 		}
-		this.defaultValue = defaultValue;
 	}
 
 	public String getFullyQualifiedName() {

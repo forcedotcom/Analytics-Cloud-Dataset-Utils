@@ -127,7 +127,7 @@ public class MultipartRequestHandler {
 					fm.setInputCsv(inputCsv);
 					fm.setInputJson(inputJson);
 //					File outFile = new File(parent,fm.getInputFileName());
-					File outFile = new File(parent,session.getId()+".csv");
+					File outFile = new File(parent,datasetName+"_"+session.getId()+".csv");
 					if(fm.getInputFileName().equalsIgnoreCase(inputJson))
 					{
 						ExternalFileSchema schema = ExternalFileSchema.load(fm.inputFileStream, Charset.forName("UTF-8"), System.out);

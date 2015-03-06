@@ -26,24 +26,109 @@
 package com.sforce.dataset.loader.file.schema;
 
 
+
 public class FieldType {
-	public String name = null; //Required
-	public String fullyQualifiedName = null; //Required
-	public String label = null; //Required
-	public String description = null; //Optional
-	public String type = null; //Required - Text, Numeric, Date
-	public int precision = 0; //Required if type is Numeric, the number 256.99 has a precision of 5
-	public int scale = 0; //Required if type is Numeric, the number 256.99 has a scale of 2
-	public String decimalSeparator = ".";
-	public String defaultValue = null; //required for numeric types	
-	public String format = null; //Required if type is Date
+	protected String name = null; //Required
+	protected  String fullyQualifiedName = null; //Required
+	protected  String label = null; //Required
+	protected  String description = null; //Optional
+	protected String type = null; //Required - Text, Numeric, Date
+	protected int precision = 0; //Required if type is Numeric, the number 256.99 has a precision of 5
+	protected  int scale = 0; //Required if type is Numeric, the number 256.99 has a scale of 2
+	protected String decimalSeparator = ".";
+	protected  String defaultValue = null; //required for numeric types	
+	protected String format = null; //Required if type is Date
 	public boolean isSystemField = false; //Optional
 	public boolean isUniqueId = false; //Optional
 	public boolean isMultiValue = false; //Optional 
-	public String multiValueSeparator = null; //Optional - only used if IsMultiValue = true separator
-	public int fiscalMonthOffset = 0;
-	public int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
-	public boolean isYearEndFiscalYear = true; //Optional 
-	public boolean canTruncateValue = true; //Optional 
-	public boolean isSkipped = false; //Optional 
+	protected String multiValueSeparator = null; //Optional - only used if IsMultiValue = true separator
+	protected int fiscalMonthOffset = 0; //The month in which the fiscal quarter starts
+	protected int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
+	public  boolean isYearEndFiscalYear = true; //Optional 
+	public  boolean canTruncateValue = true; //Optional 
+	public  boolean isSkipped = false; //Optional 
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getFullyQualifiedName() {
+		return fullyQualifiedName;
+	}
+	public void setFullyQualifiedName(String fullyQualifiedName) {
+		this.fullyQualifiedName = fullyQualifiedName;
+	}
+	public String getLabel() {
+		return label;
+	}
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public int getPrecision() {
+		return precision;
+	}
+	public void setPrecision(int precision) {
+		this.precision = precision;
+	}
+	public int getScale() {
+		return scale;
+	}
+	public void setScale(int scale) {
+		this.scale = scale;
+	}
+	public String getDecimalSeparator() {
+		return decimalSeparator;
+	}
+	public void setDecimalSeparator(String decimalSeparator) {
+		this.decimalSeparator = decimalSeparator;
+	}
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+	public void setDefaultValue(String defaultValue) {
+		if(defaultValue!=null && !defaultValue.isEmpty())
+		{
+			this.defaultValue = defaultValue;
+		}
+	}
+	public String getFormat() {
+		return format;
+	}
+	public void setFormat(String format) {
+		this.format = format;
+	}
+	public String getMultiValueSeparator() {
+		return multiValueSeparator;
+	}
+	public void setMultiValueSeparator(String multiValueSeparator) {
+		this.multiValueSeparator = multiValueSeparator;
+	}
+	public int getFiscalMonthOffset() {
+		return fiscalMonthOffset;
+	}
+	public void setFiscalMonthOffset(int fiscalMonthOffset) {
+		this.fiscalMonthOffset = fiscalMonthOffset;
+	}
+	public int getFirstDayOfWeek() {
+		return firstDayOfWeek;
+	}
+	public void setFirstDayOfWeek(int firstDayOfWeek) {
+		this.firstDayOfWeek = firstDayOfWeek;
+	}
+	
+	
 }

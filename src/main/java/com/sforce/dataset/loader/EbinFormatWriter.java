@@ -187,6 +187,12 @@ public class EbinFormatWriter {
 		
 		while(key_value_count<_dataTypes.size())
 		{
+//			System.err.println("Count: " + count + " ; key_value_count: " + key_value_count  );
+//			System.err.println(_dataTypes.get(key_value_count).getName() + ":" + _dataTypes.get(key_value_count).getType() + " = " + values[count]);
+//			System.err.println();
+			
+			if(_dataTypes.get(key_value_count).isComputedField)
+				
 			if(_dataTypes.get(key_value_count).isSkipped)
 			{
 				key_value_count++;
@@ -268,7 +274,7 @@ public class EbinFormatWriter {
 				{
 					//The date is null we don't add null dims
 //					dim_values.add("");
-					dim_keys.add(_dataTypes.get(key_value_count).getName());
+//					dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), null);
 					key_value_count++;
 
@@ -392,6 +398,7 @@ public class EbinFormatWriter {
 				    long sec_epoch = dt.getTime()/(1000);
 				    long day_epoch = dt.getTime()/(1000*60*60*24);
 				    
+				    
 					measure_values.add(sec_epoch);
 					curr.put(_dataTypes.get(key_value_count).getName(), sec_epoch);
 					key_value_count++;
@@ -414,6 +421,7 @@ public class EbinFormatWriter {
 					dim_values.add(Integer.toString(year));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), year);
+//				    System.out.println(_dataTypes.get(key_value_count).getName() + ": "+columnValue + " - "+ year);
 					key_value_count++;
 	
 					dim_values.add(Integer.toString(quarter));
@@ -509,9 +517,9 @@ public class EbinFormatWriter {
 							dim_values.add(columnValue.toString());
 						dim_keys.add(_dataTypes.get(key_value_count).getName());
 					}
-					curr.put(_dataTypes.get(key_value_count).getName(), columnValue.toString());
-					key_value_count++;
 				}
+				curr.put(_dataTypes.get(key_value_count).getName(), columnValue);
+				key_value_count++;
 			}
 			count++;
 		}
@@ -566,6 +574,8 @@ public class EbinFormatWriter {
 
 	protected void dict(LinkedList<String> dim_keys, LinkedList<String> dim_values)  throws IOException
 	{
+//		System.out.println(dim_keys);
+//		System.out.println(dim_values);
 		int dlen = dim_values.size();
 		vInt(dlen);
 		for (int i = 0; i < dlen; i++) {
