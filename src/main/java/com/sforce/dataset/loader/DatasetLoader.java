@@ -188,7 +188,7 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("datasetAlias cannot be null");
 			}
 
-			String santizedDatasetName = ExternalFileSchema.createDevName(datasetAlias, "Dataset", 1);
+			String santizedDatasetName = ExternalFileSchema.createDevName(datasetAlias, "Dataset", 1, false);
 			if(!datasetAlias.equals(santizedDatasetName))
 			{
 				logger.println("\n Warning: dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");

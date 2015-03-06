@@ -562,7 +562,7 @@ public class DatasetUtilMain {
 		{
 			if(params.datasetLabel==null)
 				params.datasetLabel = params.dataset;
-			String santizedDatasetName = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1);
+			String santizedDatasetName = ExternalFileSchema.createDevName(params.dataset, "Dataset", 1, false);
 			if(!params.dataset.equals(santizedDatasetName))
 			{
 				System.out.println("\n Warning: dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");

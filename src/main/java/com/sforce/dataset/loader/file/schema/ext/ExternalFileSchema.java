@@ -174,7 +174,7 @@ public class ExternalFileSchema  {
 	{
 		ExternalFileSchema emd = null;
 		String baseName = FilenameUtils.getBaseName(csvFile.getName());
-		baseName = createDevName(baseName, "Object", 0);
+		baseName = createDevName(baseName, "Object", 0, true);
 		String fullyQualifiedName = baseName; 
 		//try 
 		//{
@@ -356,7 +356,7 @@ public class ExternalFileSchema  {
 							if(user_object.getName().length()>255)
 							{
 								message.append("object name ["+user_object.getName()+"] in schema cannot be greater than 255 characters in length\n");
-							}else if(!createDevName(user_object.getName(), "Dataset", (objectCount-1)).equals(user_object.getName()))
+							}else if(!createDevName(user_object.getName(), "Dataset", (objectCount-1), true).equals(user_object.getName()))
 							{
 								message.append("Object name {"+user_object.getName()+"} contains invalid characters \n");
 							}
@@ -394,7 +394,7 @@ public class ExternalFileSchema  {
 										message.append("field name {"+user_field.getName()+"} is greater than 255 characters\n");
 									}
 
-									if(!createDevName(user_field.getName(), "Column", (fieldCount-1)).equals(user_field.getName()))
+									if(!createDevName(user_field.getName(), "Column", (fieldCount-1), true).equals(user_field.getName()))
 									{
 										message.append("field name {"+user_field.getName()+"} contains invalid characters \n");
 									}
@@ -739,7 +739,7 @@ public class ExternalFileSchema  {
 		for(int i=0;i<headers.length;i++)
 		{
 			originalColumnNames.add(headers[i]);
-			String devName = createDevName(headers[i], "Column", i);
+			String devName = createDevName(headers[i], "Column", i, true);
 				devNames.add(devName);
 		}
 			
@@ -780,7 +780,7 @@ public class ExternalFileSchema  {
 		return uniqueColumnNames.toArray(new String[0]);
 	}
 	
-	public static String createDevName(String inString, String defaultName, int columnIndex) {
+	public static String createDevName(String inString, String defaultName, int columnIndex, boolean allowCustomFieldExtension) {
 		String outString = inString;
 		String suffix = null;
 		try 
@@ -788,7 +788,7 @@ public class ExternalFileSchema  {
 			if(inString != null && !inString.trim().isEmpty())
 			{
 				StringBuffer outStr = new StringBuffer(inString.length()+1);
-				if(inString.endsWith("__c") && !inString.equals("__c"))
+				if(allowCustomFieldExtension && inString.endsWith("__c") && !inString.equals("__c"))
 				{
 					suffix = "__c";
 					inString = inString.substring(0,inString.length()-3);
