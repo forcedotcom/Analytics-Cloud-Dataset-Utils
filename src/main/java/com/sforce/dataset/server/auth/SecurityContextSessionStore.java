@@ -23,28 +23,58 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset;
 
-import java.nio.charset.CodingErrorAction;
 
-public class DatasetUtilParams {
-	String dataset = null;
-	String datasetLabel = null;
-	String app = null;
-	String username = null;
-	String password = null;
-	String token = null;
-	String sessionId = null;
-	String endpoint = null;
-	String inputFile = null;
-	String jsonConfig = null;
-	String rootObject = null;
-	String fileEncoding = null;
-	String uploadFormat = null;
-	String Operation = null;
-	int rowLimit = 0;
-	boolean useBulkAPI = false;
-	boolean debug = false;
-	boolean server = false;
-	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+package com.sforce.dataset.server.auth;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+public class SecurityContextSessionStore  {
+
+    /**
+     * The key used to store the {@code SecurityContext} in the session.
+     */
+    public static final String SECURITY_CONTEXT_SESSION_KEY = "com.force.dataset.server.securitycontext";
+
+    public void storeSecurityContext(HttpServletRequest request, SecurityContext securityContext)
+    {
+        HttpSession session = request.getSession();
+        if(session.isNew())
+        {
+	        session.setMaxInactiveInterval(-1);
+        }
+        session.setAttribute(SECURITY_CONTEXT_SESSION_KEY, securityContext);
+    }
+
+    public SecurityContext retreiveSecurityContext(HttpServletRequest request)
+    {
+        HttpSession session = request.getSession(false);
+        if(session!=null)
+        {
+        	SecurityContext sc = (SecurityContext) session.getAttribute(SECURITY_CONTEXT_SESSION_KEY);
+        	return sc;
+        }
+        return null;
+    }
+
+    public void clearSecurityContext(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+    }
+
+ 
+    public boolean isContextStored(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        
+        if (session != null) {
+            if (session.getAttribute(SECURITY_CONTEXT_SESSION_KEY) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

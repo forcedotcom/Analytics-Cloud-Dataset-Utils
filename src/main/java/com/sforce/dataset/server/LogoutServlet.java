@@ -23,28 +23,41 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset;
+package com.sforce.dataset.server;
 
-import java.nio.charset.CodingErrorAction;
+import java.io.IOException;
 
-public class DatasetUtilParams {
-	String dataset = null;
-	String datasetLabel = null;
-	String app = null;
-	String username = null;
-	String password = null;
-	String token = null;
-	String sessionId = null;
-	String endpoint = null;
-	String inputFile = null;
-	String jsonConfig = null;
-	String rootObject = null;
-	String fileEncoding = null;
-	String uploadFormat = null;
-	String Operation = null;
-	int rowLimit = 0;
-	boolean useBulkAPI = false;
-	boolean debug = false;
-	boolean server = false;
-	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.sforce.dataset.server.auth.SecurityContextSessionStore;
+
+public class LogoutServlet extends HttpServlet {
+	
+	private static final long serialVersionUID = 1L;
+	
+	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+	{
+		try
+		{	        
+	        SecurityContextSessionStore scStore = new SecurityContextSessionStore();
+	        scStore.clearSecurityContext(request);
+
+	    	response.setHeader("Cache-Control", "no-cache, no-store");
+	    	response.setHeader("Pragma", "no-cache");
+
+	    	request.getSession().invalidate();
+			// Set standard HTTP/1.1 no-cache headers.
+			response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+			// Set standard HTTP/1.0 no-cache header.
+			response.setHeader("Pragma", "no-cache");
+	    	response.sendRedirect(request.getContextPath() + "/login.html");
+	    }catch(Throwable t)
+		{
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+		}
+	}
 }

@@ -401,8 +401,15 @@ public class DatasetUtils {
 		if (endpoint == null || endpoint.isEmpty()) {
 			endpoint = DatasetUtilConstants.defaultEndpoint;
 		}
-
 		
+		if(sessionId != null && !sessionId.isEmpty())
+		{
+			while(endpoint.toLowerCase().contains("login.salesforce.com") || endpoint.toLowerCase().contains("test.salesforce.com") || endpoint.toLowerCase().contains("test") || endpoint.toLowerCase().contains("prod") || endpoint.toLowerCase().contains("sandbox"))
+			{
+				throw new IllegalArgumentException("ERROR: endpoint must be the actual serviceURL and not the login url");
+			}
+		}
+
 		URL uri = new URL(endpoint);
 		String protocol = uri.getProtocol();
 		String host = uri.getHost();

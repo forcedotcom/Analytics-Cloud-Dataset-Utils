@@ -39,18 +39,23 @@ import org.apache.commons.io.FileUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.dataset.util.XmdUploader;
+import com.sforce.soap.partner.PartnerConnection;
 
 @MultipartConfig 
 public class JsonServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-//	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2), Executors.defaultThreadFactory());
-//	private static List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		// Set standard HTTP/1.1 no-cache headers.
+		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+		// Set standard HTTP/1.0 no-cache header.
+		response.setHeader("Pragma", "no-cache");
+
 		try
 		{
 			String type = request.getParameter("type");
@@ -67,7 +72,14 @@ public class JsonServlet extends HttpServlet {
 				throw new IllegalArgumentException("datasetAlias is a required param");
 			}
 
-			String orgId = DatasetUtilServer.partnerConnection.getUserInfo().getOrganizationId();
+			PartnerConnection conn = AuthFilter.getConnection(request);
+			if(conn==null)
+			{
+			   	response.sendRedirect(request.getContextPath() + "/login.html");
+			   	return;
+			}
+			
+			String orgId = conn.getUserInfo().getOrganizationId();
 			if(type.equalsIgnoreCase("xmd"))
 			{
 				File dataDir = DatasetUtilConstants.getDataDir(orgId);
@@ -78,7 +90,7 @@ public class JsonServlet extends HttpServlet {
 				Map xmdObject =  mapper.readValue(jsonString, Map.class);
 				File outfile = new File(datasetDir,"user.xmd.json");
 				mapper.writerWithDefaultPrettyPrinter().writeValue(outfile , xmdObject);				
-				XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, DatasetUtilServer.partnerConnection);
+				XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, conn);
 			}else
 			{
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+type+"}");
@@ -96,6 +108,10 @@ public class JsonServlet extends HttpServlet {
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		// Set standard HTTP/1.1 no-cache headers.
+		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+		// Set standard HTTP/1.0 no-cache header.
+		response.setHeader("Pragma", "no-cache");
 		try 
 		{		
 					String type = request.getParameter("type");
@@ -110,26 +126,21 @@ public class JsonServlet extends HttpServlet {
 						throw new IllegalArgumentException("datasetAlias is a required param");
 					}
 
+					PartnerConnection conn = AuthFilter.getConnection(request);
+					if(conn==null)
+					{
+					   	response.sendRedirect(request.getContextPath() + "/login.html");
+					   	return;
+					}					
 					
 					if(type.equalsIgnoreCase("xmd"))
 					{
-						String xmd = DatasetDownloader.getXMD(datasetAlias, DatasetUtilServer.partnerConnection);
+						String xmd = DatasetDownloader.getXMD(datasetAlias, conn);
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 						@SuppressWarnings("rawtypes")
 						Map xmdObject =  mapper.readValue(xmd, Map.class);
 				    	mapper.writeValue(response.getOutputStream(), xmdObject);
-//					}else if(type.equalsIgnoreCase("metadataJson"))
-//					{
-//						List<DatasetType> datasets = DatasetUtils.listDatasets(DatasetUtilServer.partnerConnection);
-//						DatasetType def = new DatasetType();
-//						def.name = "";
-//						def._alias = "";
-//						def._type = "edgemart";
-//						datasets.add(0, def);
-//					    response.setContentType("application/json");
-//				    	ObjectMapper mapper = new ObjectMapper();
-//				    	mapper.writeValue(response.getOutputStream(), datasets);
 					}else
 					{
 						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+type+"}");

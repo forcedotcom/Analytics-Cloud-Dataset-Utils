@@ -125,7 +125,11 @@ $(document).ready(function() {
 	                        .html(obj[displayattr]));
 	        });
 	    	$(".xmd-container").show();
-	    });
+	    })
+	    .fail(function(jqXHR, textStatus, errorThrown) { 
+	    	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+textStatus+"</i></h5>"); 
+	    	$(".xmd-container").show();
+	    	});
 	}
 
 

@@ -23,28 +23,14 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset;
 
-import java.nio.charset.CodingErrorAction;
+package com.sforce.dataset.server.auth;
 
-public class DatasetUtilParams {
-	String dataset = null;
-	String datasetLabel = null;
-	String app = null;
-	String username = null;
-	String password = null;
-	String token = null;
-	String sessionId = null;
-	String endpoint = null;
-	String inputFile = null;
-	String jsonConfig = null;
-	String rootObject = null;
-	String fileEncoding = null;
-	String uploadFormat = null;
-	String Operation = null;
-	int rowLimit = 0;
-	boolean useBulkAPI = false;
-	boolean debug = false;
-	boolean server = false;
-	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+public class SessionExpirationException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 }

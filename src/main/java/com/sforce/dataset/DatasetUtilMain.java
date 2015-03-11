@@ -84,7 +84,7 @@ public class DatasetUtilMain {
 		DatasetUtilParams params = new DatasetUtilParams();
 		String action = null;
 				
-		if (args.length > 2) 
+		if (args.length >= 2) 
 		{
 			for (int i=1; i< args.length; i=i+2){
 				if(args[i-1].equalsIgnoreCase("--help") || args[i-1].equalsIgnoreCase("-help") || args[i-1].equalsIgnoreCase("help"))
@@ -186,6 +186,11 @@ public class DatasetUtilMain {
 				{
 					params.fileEncoding = args[i];
 				}
+				else if(args[i-1].equalsIgnoreCase("--server"))
+				{
+					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
+						params.server = true;
+				}
 				else if(args[i-1].equalsIgnoreCase("--codingErrorAction"))
 				{
 					if(args[i]!=null)
@@ -216,6 +221,36 @@ public class DatasetUtilMain {
 		
 		printBanner();
 
+		if(params.server)
+		{
+			System.out.println();
+			System.out.println("\n*******************************************************************************");					
+	        try {
+		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
+				datasetUtilServer.init(args, false);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.out.println("*******************************************************************************\n");	
+			System.out.println();
+			while(true)
+			{
+				try
+				{
+					String tmp = DatasetUtils.readInputFromConsole("Enter 0  to Exit: ");
+					if(tmp==null)
+						System.exit(0); 
+					if(tmp.trim().isEmpty())
+						continue;
+					long choice = Long.parseLong(tmp.trim());
+					if(choice==0)
+						System.exit(0); 
+				}catch(Throwable me)
+				{				
+				}
+			}
+			
+		}
 
 		if(params.sessionId==null)
 		{
@@ -322,18 +357,17 @@ public class DatasetUtilMain {
 			} catch (InterruptedException e) {
 			}
 			System.out.println("*******************************************************************************\n");	
-			System.out.println();
+			System.out.println();			
 
 			System.out.println("\n*******************************************************************************");					
 	        try {
 		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-				datasetUtilServer.init(args, false, partnerConnection);
+				datasetUtilServer.init(args, false);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			System.out.println("*******************************************************************************\n");	
-			System.out.println();
-	        
+			System.out.println();			
 
 			while(true)
 			{
@@ -347,8 +381,8 @@ public class DatasetUtilMain {
 				boolean status = doAction(action, partnerConnection, params);
 				if(status)
 				{
-					if(action.equalsIgnoreCase("load"))
-						createListener(partnerConnection, params);
+//					if(action.equalsIgnoreCase("load"))
+//						createListener(partnerConnection, params);
 				}
 			}
 		}else
@@ -789,17 +823,20 @@ public class DatasetUtilMain {
 
 			while (params.uploadFormat==null || params.uploadFormat.isEmpty()) 
 			{
-				params.uploadFormat = getInputFromUser("Enter uploadFormat (csv or binary) (default=binary): ", false, false);						
-				if(params.uploadFormat == null || params.uploadFormat.trim().isEmpty())
-					params.uploadFormat = "binary";
-				if(!params.uploadFormat.equalsIgnoreCase("csv") && !params.uploadFormat.equalsIgnoreCase("binary"))
+				String response = getInputFromUser("Parse file before uploading (Yes/No): ", false, false);									
+				if(response!=null && !(response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES") || response.equalsIgnoreCase("N") || response.equalsIgnoreCase("NO")))
 				{
-					System.out.println("Invalid upload format {"+params.uploadFormat+"}");
+					continue;
+				}else if(response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES"))
+				{ 
+					params.uploadFormat = "binary";
+					break;
 				}else
 				{
+					params.uploadFormat = "csv";
 					break;
 				}
-				System.out.println();
+//				System.out.println();
 			}
 			
 		}else if(action.equalsIgnoreCase("downloadErrorFile"))
@@ -971,6 +1008,7 @@ public class DatasetUtilMain {
 	}
 	
 
+	@SuppressWarnings("unused")
 	private static void createListener(PartnerConnection partnerConnection,
 			DatasetUtilParams params) {
 		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);

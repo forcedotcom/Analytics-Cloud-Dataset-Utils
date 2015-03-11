@@ -36,9 +36,8 @@ import java.net.URL;
 import javax.swing.JFrame;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
-
-import com.sforce.soap.partner.PartnerConnection;
 
 
 public class DatasetUtilServer {
@@ -49,22 +48,27 @@ public class DatasetUtilServer {
     static private int port = DEFAULT_PORT;
     static private String host = DEFAULT_HOST;
     
-    static PartnerConnection partnerConnection;
+//    static PartnerConnection partnerConnection;
 
         
     public static void main(String[] args) throws Exception {
 	    DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-	    datasetUtilServer.init(args, true, null);
+	    datasetUtilServer.init(args, true);
     }
 
-    public void init(String[] args, boolean join, PartnerConnection partnerConnection) throws Exception {
+    public void init(String[] args, boolean join) throws Exception {
 
-    	DatasetUtilServer.partnerConnection = partnerConnection;
+//    	DatasetUtilServer.partnerConnection = partnerConnection;
         final String WEBAPPDIR = "index.html";
         final String contextPath = "/";
         final int maxFormContentSize = 40 * 1000 * 1024 * 1024;
 
-        final Server server = new Server(port);
+        final Server server = new Server();
+        
+        ServerConnector connector = new ServerConnector(server);
+        connector.setHost(host);
+        connector.setPort(port);
+        server.addConnector(connector);
         
         final URL warUrl = this.getClass().getClassLoader().getResource(WEBAPPDIR);
         String warUrlString = "src/main/webapp";
@@ -122,7 +126,7 @@ class DatasetUtilClient extends JFrame implements ActionListener {
     
     public void init(String host, int port) throws Exception {
 
-        uri = new URI("http://" + host + ":" + port + "/");
+        uri = new URI("http://" + "127.0.0.1" + ":" + port + "/");
 
         openBrowser();
     }

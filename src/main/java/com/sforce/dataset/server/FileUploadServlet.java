@@ -51,6 +51,8 @@ import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.SessionHistory;
+import com.sforce.dataset.server.auth.AuthFilter;
+import com.sforce.soap.partner.PartnerConnection;
 
 @MultipartConfig 
 public class FileUploadServlet extends HttpServlet {
@@ -63,49 +65,31 @@ public class FileUploadServlet extends HttpServlet {
 	{
 		try
 		{
-//			String pathInfo = request.getPathInfo();
-//			if(pathInfo.equalsIgnoreCase("upload"))
-//			{
-//					files.clear();
-					DatasetUtilServer.partnerConnection.getServerTimestamp();
-					String orgId = DatasetUtilServer.partnerConnection.getUserInfo().getOrganizationId();
-					File dataDir = DatasetUtilConstants.getDataDir(orgId);
-					List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
-					Session session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
-					List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
-					CsvUploadWorker worker = new CsvUploadWorker(files, DatasetUtilServer.partnerConnection, session);
-				    executorPool.execute(worker);
-//				    int cnt=0;
-//				    while(cnt<10)
-//				    {
-//				    	if(worker.isDone())
-//				    	{
-//				    		if(!worker.isUploadStatus())
-//				    		{
-//				    			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File upload failed check <a href=\"file:///"+worker.getLogFile()+"\">"+worker.getLogFile()+"</a> for details");
-//				    			return;
-//				    		}
-//				    		break;
-//				    	}
-//				    	try
-//				    	{
-//				    		Thread.sleep(3000);
-//				    	}catch(Throwable t)
-//				    	{
-//				    		break;
-//				    	}
-//				    	cnt++;
-//				    }
-				    
-//				    response.sendRedirect("/logs.html");
-				    String redirect = "/logs.html";
-				    response.setContentType("application/json");
-			    	ObjectMapper mapper = new ObjectMapper();
-			    	mapper.writeValue(response.getOutputStream(), redirect);
-//			}else
-//			{
-//				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+request.getPathInfo()+"}");
-//			}
+			// Set standard HTTP/1.1 no-cache headers.
+			response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+			// Set standard HTTP/1.0 no-cache header.
+			response.setHeader("Pragma", "no-cache");
+
+			PartnerConnection conn = AuthFilter.getConnection(request);
+			if(conn==null)
+			{
+			   	response.sendRedirect(request.getContextPath() + "/login.html");
+			   	return;
+			}
+				
+			String orgId = conn.getUserInfo().getOrganizationId();
+			File dataDir = DatasetUtilConstants.getDataDir(orgId);
+			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
+			Session session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
+			List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
+			CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
+		    executorPool.execute(worker);
+
+//			response.sendRedirect("/logs.html");
+		    String redirect = "/logs.html";
+		    response.setContentType("application/json");
+	    	ObjectMapper mapper = new ObjectMapper();
+	    	mapper.writeValue(response.getOutputStream(), redirect);
 		}catch(Throwable t)
 		{
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
@@ -116,94 +100,95 @@ public class FileUploadServlet extends HttpServlet {
 	{
 		try 
 		{		
-//			String pathInfo = request.getPathInfo();
-//			if(pathInfo.equalsIgnoreCase("upload"))
-//			{
-				DatasetUtilServer.partnerConnection.getServerTimestamp();
-				String orgId = DatasetUtilServer.partnerConnection.getUserInfo().getOrganizationId();
+			// Set standard HTTP/1.1 no-cache headers.
+			response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+			// Set standard HTTP/1.0 no-cache header.
+			response.setHeader("Pragma", "no-cache");
 
-				String id = request.getParameter("id");
-				String type = request.getParameter("type");
-//				String history  = request.getParameter("history");
+			String id = request.getParameter("id");
+			String type = request.getParameter("type");
 					
-					if(type==null || type.trim().isEmpty())
-					{
-						throw new IllegalArgumentException("Parameter 'type' not found in Request");
-					}
+				if(type==null || type.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("Parameter 'type' not found in Request");
+				}
+				
+				if(id==null || id.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("Parameter 'id' not found in Request");
+				}
+				
+				PartnerConnection conn = AuthFilter.getConnection(request);
+				if(conn==null)
+				{
+			    	response.sendRedirect(request.getContextPath() + "/login.html");
+			    	return;
+				}
 					
-					if(id==null || id.trim().isEmpty())
-					{
-						throw new IllegalArgumentException("Parameter 'id' not found in Request");
-					}
-					
-					Session session = Session.getSession(orgId,id);
-					SessionHistory sessionHistory =  SessionHistory.getSession(orgId, id);
-					if(session == null && sessionHistory==null)
-					{
-							throw new IllegalArgumentException("Invalid 'id' {"+id+"}");
-					}
+				String orgId = conn.getUserInfo().getOrganizationId();
+				Session session = Session.getSession(orgId,id);
+				SessionHistory sessionHistory =  SessionHistory.getSession(orgId, id);
+				if(session == null && sessionHistory==null)
+				{
+						throw new IllegalArgumentException("Invalid 'id' {"+id+"}");
+				}
 
-					File file = null;
-					String contentType = null;
-					if(type.equalsIgnoreCase("errorCsv"))
+				File file = null;
+				String contentType = null;
+				if(type.equalsIgnoreCase("errorCsv"))
+				{
+					contentType = "text/csv";
+					if(session!=null)
 					{
-						contentType = "text/csv";
-						if(session!=null)
-						{
-							Map<String, String> params = session.getParams();
-							String errorFile = params.get(DatasetUtilConstants.errorCsvParam);
-							if(errorFile != null)
-							{
-								file = new File(errorFile);
-							}
-						}else
-						{
-							file = DataFlowMonitorUtil.getJobErrorFile(DatasetUtilServer.partnerConnection, sessionHistory.getName(), sessionHistory.getJobTrackerid());
-						}
-					}else if(type.equalsIgnoreCase("metadataJson"))
-					{
-						contentType = "application/json";
-						Map<String, String> params = session!=null?session.getParams():sessionHistory.getParams();
-						String errorFile = params.get(DatasetUtilConstants.metadataJsonParam);
+						Map<String, String> params = session.getParams();
+						String errorFile = params.get(DatasetUtilConstants.errorCsvParam);
 						if(errorFile != null)
 						{
 							file = new File(errorFile);
 						}
-					}else if(type.equalsIgnoreCase("sessionLog"))
-					{
-						contentType = "text/plain";
-						file = session.getSessionLog();
-					}else if(type.equalsIgnoreCase("terminateSession"))
-					{
-						session.terminate(null);
-					    response.setContentType("application/json");
-				    	ObjectMapper mapper = new ObjectMapper();
-						ResponseStatus status = new ResponseStatus("success",null);
-				    	mapper.writeValue(response.getOutputStream(), status);
-				    	return;
 					}else
 					{
-						throw new IllegalArgumentException("Invalid 'type' {"+type+"}");
+						file = DataFlowMonitorUtil.getJobErrorFile(conn, sessionHistory.getName(), sessionHistory.getJobTrackerid());
 					}
-						
-					if(file!=null && file.exists())
+				}else if(type.equalsIgnoreCase("metadataJson"))
+				{
+					contentType = "application/json";
+					Map<String, String> params = session!=null?session.getParams():sessionHistory.getParams();
+					String errorFile = params.get(DatasetUtilConstants.metadataJsonParam);
+					if(errorFile != null)
 					{
-						response.setContentType(contentType);
-						response.setHeader("Content-disposition", "attachment; filename=\""+file.getName()+"\"");
-
-						InputStream input = new FileInputStream(file);
-				        OutputStream output = response.getOutputStream();
-				        IOUtils.copy(input, output);
-				        output.close();
-				        input.close();
-					}else
-					{
-						response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found {"+type+"}");
+						file = new File(errorFile);
 					}
-//			}else
-//			{
-//				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+request.getPathInfo()+"}");
-//			}
+				}else if(type.equalsIgnoreCase("sessionLog"))
+				{
+					contentType = "text/plain";
+					file = session.getSessionLog();
+				}else if(type.equalsIgnoreCase("terminateSession"))
+				{
+					session.terminate(null);
+				    response.setContentType("application/json");
+			    	ObjectMapper mapper = new ObjectMapper();
+					ResponseStatus status = new ResponseStatus("success",null);
+			    	mapper.writeValue(response.getOutputStream(), status);
+			    	return;
+				}else
+				{
+					throw new IllegalArgumentException("Invalid 'type' {"+type+"}");
+				}
+					
+				if(file!=null && file.exists())
+				{
+					response.setContentType(contentType);
+					response.setHeader("Content-disposition", "attachment; filename=\""+file.getName()+"\"");
+					InputStream input = new FileInputStream(file);
+			        OutputStream output = response.getOutputStream();
+			        IOUtils.copy(input, output);
+			        output.close();
+			        input.close();
+				}else
+				{
+					response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found {"+type+"}");
+				}
 		 }catch (Throwable t) {
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
 		 }

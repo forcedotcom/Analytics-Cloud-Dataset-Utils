@@ -2,21 +2,45 @@
 
 Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the Analytics cloud External data API. 
 
+## Downloading DatasetUtils
+
+Download the latest jar from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
 
 ## Running DatasetUtils
-Just download the latest jar from release section (see link at the top) and follow the examples below:
+
+### Server mode with Web UI
+
+To start the jar in server mode and use the web UI to upload open a console and enter the following command:
+ 
+    java -jar datasetutil-<version>.jar --server true
+
+### Console Mode
 
 Best is to run in interactive mode. open a terminal and type in the following command and follow the prompts on the console: 
 
     java -jar datasetutil-<version>.jar
 
-Or you can pass in all the param in the command line and let it run in uninterrupted.
-
+Or you can pass in all the param in the command line and let it run uninterrupted.
+ 
     java -jar datasetutil-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
 
 Input Parameter
 
---action  :"load" OR "defineExtractFlow" OR "defineAugmentFlow"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding" OR "downloadErrorFile". Use load for loading csv, defineAugmentFlow for augmenting existing datasets, downloadxmd to download existing xmd files, uploadxmd for uploading user.xmd.json, "defineExtractFlow"  for extracting data from salesforce, "detectEncoding" to detect the encoding of the inputFile, "downloadErrorFile" for downloading the error file for csv upload jobs.
+--action  :"load" OR "defineExtractFlow" OR "defineAugmentFlow"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding" OR "downloadErrorFile"
+ 
+**load**: for loading csv  
+
+**defineAugmentFlow**: for augmenting existing datasets  
+
+**downloadxmd**: to download existing xmd files  
+
+**uploadxmd**: for uploading user.xmd.json  
+
+**defineExtractFlow**: for extracting data from Salesforce  
+
+**detectEncoding**: To detect the encoding of the inputFile  
+
+**downloadErrorFile**: To downloading the error file for csv upload jobs
 
 --u       : Salesforce.com login
 
@@ -28,9 +52,9 @@ Input Parameter
 
 --dataset : (Optional) the dataset alias. required if action=load
 
---datasetLabel : (Optional) the dataset label.
+--datasetLabel : (Optional) the dataset label, Defaults to dataset alias.
 
---app     : (Optional) the app name for the dataset
+--app     : (Optional) the app/folder name for the dataset
 
 --inputFile : (Optional) the input csv file. required if action=load
 
@@ -46,28 +70,33 @@ Input Parameter
 
 --uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
 
+**OR**
 
-## Usage Example 1: Upload a local csv to a dataset
+--server  : set this to true if you want to run this in server mode and use the UI. **If you give this param all other params will be ignored**
+
+## Usage Example 1: Start the server for using the UI
+    java -jar datasetutils-32.0.0.jar --server true
+
+## Usage Example 2: Upload a local csv to a dataset
     java -jar datasetutils-32.0.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
 
-## Usage Example 2: Download dataset xmd files
+## Usage Example 3: Download dataset xmd files
     java -jar datasetutils-32.0.0.jar --action downloadxmd --u pgupta@force.com --p @#@#@# --dataset puntest
 
-## Usage Example 3: Upload user.xmd.json
+## Usage Example 4: Upload user.xmd.json
     java -jar datasetutils-32.0.0.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset puntest
 
-## Usage Example 4: Augment datasets
+## Usage Example 5: Augment datasets
     java -jar datasetutils-32.0.0.jar --action defineAugmentFlow --u pgupta@force.com --p @#@#@#
 
-## Usage Example 5: Extract salesforce data
+## Usage Example 6: Define Salesforce data flow
     java -jar datasetutils-32.0.0.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
 
-## Usage Example 6: Detect inputFile encoding
+## Usage Example 7: Detect inputFie encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
 
-## Usage Example 7: download error logs file for csv uploads
+## Usage Example 8: download error logs file for csv uploads
     java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
-
 
 ## Building DatasetUtils
     git clone git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git

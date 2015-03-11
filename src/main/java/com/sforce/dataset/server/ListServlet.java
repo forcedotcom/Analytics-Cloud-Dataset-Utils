@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,82 +41,41 @@ import com.sforce.dataset.flow.monitor.NodeEntry;
 import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.SessionHistory;
 import com.sforce.dataset.loader.DatasetLoader;
+import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.util.DatasetType;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.FolderType;
+import com.sforce.soap.partner.PartnerConnection;
 
-@MultipartConfig 
 public class ListServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-//	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2), Executors.defaultThreadFactory());
-//	private static List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
-
-	/*
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-	{
-		try
-		{
-//			String pathInfo = request.getPathInfo();
-//			if(pathInfo.equalsIgnoreCase("upload"))
-//			{
-					files.clear();
-					files.addAll(MultipartRequestHandler.uploadByApacheFileUpload(request));
-					CsvUploadWorker worker = new CsvUploadWorker(files, DatasetUtilServer.partnerConnection);
-				    executorPool.execute(worker);
-				    int cnt=0;
-				    while(cnt<10)
-				    {
-				    	if(worker.isDone())
-				    	{
-				    		if(!worker.isUploadStatus())
-				    		{
-				    			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File upload failed check <a href=\"file:///"+worker.getLogFile()+"\">"+worker.getLogFile()+"</a> for details");
-				    			return;
-				    		}
-				    		break;
-				    	}
-				    	try
-				    	{
-				    		Thread.sleep(3000);
-				    	}catch(Throwable t)
-				    	{
-				    		break;
-				    	}
-				    	cnt++;
-				    }
-				    
-				    
-				    response.setContentType("application/json");
-			    	ObjectMapper mapper = new ObjectMapper();
-			    	mapper.writeValue(response.getOutputStream(), files);
-//			}else
-//			{
-//				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+request.getPathInfo()+"}");
-//			}
-		}catch(Throwable t)
-		{
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
-		}
-	}
-*/
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		// Set standard HTTP/1.1 no-cache headers.
+		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+		// Set standard HTTP/1.0 no-cache header.
+		response.setHeader("Pragma", "no-cache");
+
 		try 
 		{		
-//			String pathInfo = request.getPathInfo();
-//			if(pathInfo.equalsIgnoreCase("upload"))
-//			{
 					String value = request.getParameter("type");
 					if(value==null || value.trim().isEmpty())
 					{
 						throw new IllegalArgumentException("type is required param");
 					}
 					
+					PartnerConnection conn = AuthFilter.getConnection(request);
+					if(conn==null)
+					{
+					   	response.sendRedirect(request.getContextPath() + "/login.html");
+					   	return;
+					}
+
 					if(value.equalsIgnoreCase("folder"))
 					{
-						List<FolderType> folders = DatasetUtils.listFolders(DatasetUtilServer.partnerConnection);
+						List<FolderType> folders = DatasetUtils.listFolders(conn);
 						FolderType def = new FolderType();
 						def.name = DatasetUtilConstants.defaultAppName;
 						def.developerName = DatasetUtilConstants.defaultAppName;
@@ -128,7 +86,7 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), folders);
 					}else if(value.equalsIgnoreCase("dataset"))
 					{
-						List<DatasetType> datasets = DatasetUtils.listDatasets(DatasetUtilServer.partnerConnection);
+						List<DatasetType> datasets = DatasetUtils.listDatasets(conn);
 						DatasetType def = new DatasetType();
 						def.name = "";
 						def._alias = "";
@@ -139,7 +97,7 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), datasets);
 					}else if(value.equalsIgnoreCase("session"))
 					{
-						List<Session> sessions = DatasetUtils.listSessions(DatasetUtilServer.partnerConnection);
+						List<Session> sessions = DatasetUtils.listSessions(conn);
 						for(Session s:sessions)
 						{
 							if(s.getStatus().equalsIgnoreCase("COMPLETED"))
@@ -152,7 +110,7 @@ public class ListServlet extends HttpServlet {
 									{
 										try
 										{
-											String temp = DatasetLoader.getUploadedFileStatus(DatasetUtilServer.partnerConnection, hdrId);
+											String temp = DatasetLoader.getUploadedFileStatus(conn, hdrId);
 											if(temp!=null && !temp.isEmpty())
 											{
 												s.setParam(DatasetUtilConstants.serverStatusParam,temp.toUpperCase());
@@ -170,9 +128,8 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), sessions);
 					}else if(value.equalsIgnoreCase("sessionHistory"))
 					{
-//						LinkedList<SessionHistory> sessions = new LinkedList<SessionHistory>();
-						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(DatasetUtilServer.partnerConnection, null);
-						String orgId = DatasetUtilServer.partnerConnection.getUserInfo().getOrganizationId();
+						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(conn, null);
+						String orgId = conn.getUserInfo().getOrganizationId();
 						long twoDayAgo = System.currentTimeMillis() - 2*24*60*60*1000;
 						for(JobEntry job:jobs)
 						{
@@ -191,7 +148,7 @@ public class ListServlet extends HttpServlet {
 								
 								if(job.getStatus()==2 || !sessionHistory.isNodeDetailsFetched())
 								{									
-									List<NodeEntry> nodes = DataFlowMonitorUtil.getDataFlowJobNodes(DatasetUtilServer.partnerConnection, job.getNodeUrl());
+									List<NodeEntry> nodes = DataFlowMonitorUtil.getDataFlowJobNodes(conn, job.getNodeUrl());
 									for(NodeEntry node:nodes)
 									{
 										if(node.getNodeType() != null && (node.getNodeType().equalsIgnoreCase("csvDigest") || node.getNodeType().equalsIgnoreCase("binDigest")))
@@ -207,7 +164,6 @@ public class ListServlet extends HttpServlet {
 										}
 									}
 								}
-//								sessions.add(sessionHistory);
 							}
 						}
 					    response.setContentType("application/json");
@@ -217,22 +173,7 @@ public class ListServlet extends HttpServlet {
 					{
 						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+value+"}");
 					}
-					
-//					FileUploadRequest getFile = files.get(Integer.parseInt(value));
-//					response.setContentType(getFile.getInputFileType());
-//				 	
-//				 	response.setHeader("Content-disposition", "attachment; filename=\""+getFile.getInputFileName()+"\"");
-//				 	
-//			        InputStream input = new FileInputStream(getFile.savedFile);
-//			        OutputStream output = response.getOutputStream();
-//			        IOUtils.copy(input, output);
-//			        output.close();
-//			        input.close();
-					
-//			}else
-//			{
-//				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+request.getPathInfo()+"}");
-//			}
+
 		 }catch (Throwable t) {
 			 	t.printStackTrace();
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");

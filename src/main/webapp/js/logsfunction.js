@@ -72,7 +72,11 @@ $(document).ready(function() {
           currentData = data;
         }
         displayOnTable(currentData, historyData);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) { 
+	    	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+textStatus+"</i></h5>"); 
       });
+
     }
 
     function displayOnTable(current, history){
@@ -186,7 +190,11 @@ function loadlist(selobj,url,nameattr,displayattr)
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
         });
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+    	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+textStatus+"</i></h5>"); 
     });
+
 }
 
 function loadlistAndSelectize(selobj,url,nameattr,displayattr)
@@ -200,7 +208,11 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr)
                  $('<option></option>')
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) { 
+        	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+textStatus+"</i></h5>"); 
         });
+
 
     	$(selobj).selectize({
     		create: true

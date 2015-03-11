@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="cache-control" content="max-age=0" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+<meta http-equiv="pragma" content="no-cache" />	
+<title>Salesforce Analytics Cloud Login</title>
+
+<script src="js/jquery.1.9.1.min.js"></script>
+
+<script src="js/vendor/jquery.ui.widget.js"></script>
+<script src="js/jquery.iframe-transport.js"></script>
+<script src="js/jquery.fileupload.js"></script>
+
+<!-- bootstrap just to have good looking page -->
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
+
+ <link href="css/selectize.bootstrap3.css" type="text/css" rel="stylesheet"/>
+ <script src="js/selectize.min.js"></script>
+
+<link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
+<script src="js/login.js"></script>
+
+
+</head>
+
+<body>
+
+<div class="container">
+<!--  
+<div id="breadcrumb">
+  <ol class="breadcrumb">
+	  <li><a href="#">Home</a></li>
+	  <li><a href="#">CSV Upload</a></li>
+  </ol>
+</div>
+-->
+<div id="header" class="row">&nbsp;</div>
+</div>
+	<!--
+	<div id="dropzone" class="fade well">Drop files here</div>
+	<div id="progress" class="progress">
+    	<div class="bar" style="width: 0%;"></div>
+	</div>
+	-->
+
+<div class="container">
+
+		<div class="row">
+			<!--div class="col-sm-6 col-md-4 col-md-offset-4"-->
+			<div class="col-sm-offset-4 col-sm-4">			
+				<h1 class="text-center login-title">Sign in to Salesforce to
+					continue</h1>
+				<div class="account-wall">
+					<img class="profile-img"
+						src="img/salesforceaclogo.png"
+						alt="">
+					<form method="post" action="login" id="loginForm" class="form-signin" enctype="multipart/form-data">
+						<div class="form-group">
+							<label for="UserName">User Name</label>
+							<div class="input-group">
+								<input type="text" class="form-control" name="UserName"
+									id="UserName" required placeholder="Enter a email address..."
+									autofocus /> <span class="input-group-addon danger"><span
+									class="glyphicon glyphicon-remove"></span></span>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="Password">Password</label>
+							<div class="input-group">
+								<input type="password" class="form-control" name="Password"
+									id="password" required placeholder="Enter your pasword..." />
+								<span class="input-group-addon danger"><span
+									class="glyphicon glyphicon-remove"></span></span>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="AuthEndpoint">Server Url</label>
+							<div class="input-group">
+								<select class="demo-default" name="AuthEndpoint" id="AuthEndpoint"
+									required placeholder="Salesforce Server URL......">
+									<option value="">Salesforce Server URL......</option>
+									<option value="https://login.salesforce.com">https://login.salesforce.com</option>
+									<option value="https://test.salesforce.com">https://test.salesforce.com</option>
+								</select> 
+								<span class="input-group-addon danger"><span class="glyphicon glyphicon-remove"></span></span>
+							</div>
+						</div>
+						<button class="btn btn-lg btn-primary btn-block" type="submit" id="login" disabled>Sign in</button>
+					</form>
+				</div>
+			</div>
+		</div>
+
+<!--
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-6 col-md-4 col-md-offset-4">
+					<h1 class="text-center login-title">Sign in to continue to
+						Bootsnipp</h1>
+					<div class="account-wall">
+						<img class="profile-img"
+							src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=120"
+							alt="">
+						<form class="form-signin">
+							<input type="text" class="form-control" placeholder="Email"
+								required autofocus> <input type="password"
+								class="form-control" placeholder="Password" required>
+							<button class="btn btn-lg btn-primary btn-block" type="submit">
+								Sign in</button>
+							<label class="checkbox pull-left"> <input type="checkbox"
+								value="remember-me"> Remember me
+							</label> <a href="#" class="pull-right need-help">Need help? </a><span
+								class="clearfix"></span>
+						</form>
+					</div>
+					<a href="#" class="text-center new-account">Create an account </a>
+				</div>
+			</div>
+		</div>
+  -->
+		<div id="header2" class="spinner">
+	<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
+</div>
+
+<!--  
+<div id="spinner" class="spinner" style="display:none;">
+    <img id="img-spinner" src="/img/ajax-loader.gif" alt="Loading"/>
+</div>
+ -->
+	<div id="title2" class="row">
+	</div>
+
+	
+</div>
+
+
+</body> 
+</html>

@@ -58,7 +58,7 @@ public class DatasetDownloader {
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	public static String getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
 	{
 		partnerConnection.getServerTimestamp();
@@ -124,8 +124,8 @@ public class DatasetDownloader {
 						{
 							versionID = (String) edgemartData.get("_uid");
 						}
-						System.out.println("Found EM {"+_alias+"}, Version {"+versionID+"}, Created: {"+createdDateTime+"}");
-						System.out.println("Downloading EM File.. \n");
+//						System.out.println("Found EM {"+_alias+"}, Version {"+versionID+"}, Created: {"+createdDateTime+"}");
+//						System.out.println("Downloading EM File.. \n");
 						Map _files = (Map) resp.get("_files");
 						if(_files != null)
 						{
@@ -142,7 +142,7 @@ public class DatasetDownloader {
 								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 								HttpGet listEMPost1 = new HttpGet(listEMURI1);
 
-								System.out.println("Downloading file {"+filename+"}");
+//								System.out.println("Downloading file {"+filename+"}");
 								listEMPost1.setConfig(requestConfig);
 								listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
 

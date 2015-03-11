@@ -23,28 +23,41 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset;
 
-import java.nio.charset.CodingErrorAction;
 
-public class DatasetUtilParams {
-	String dataset = null;
-	String datasetLabel = null;
-	String app = null;
-	String username = null;
-	String password = null;
-	String token = null;
-	String sessionId = null;
-	String endpoint = null;
-	String inputFile = null;
-	String jsonConfig = null;
-	String rootObject = null;
-	String fileEncoding = null;
-	String uploadFormat = null;
-	String Operation = null;
-	int rowLimit = 0;
-	boolean useBulkAPI = false;
-	boolean debug = false;
-	boolean server = false;
-	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+package com.sforce.dataset.server.auth;
+
+import java.io.Serializable;
+import java.security.Principal;
+
+/**
+ * 
+ * A security principal that represents a Force.com user.
+ *
+ */
+public class ForceUserPrincipal implements Principal, Serializable {
+
+    private static final long serialVersionUID = 1L;
+    private final String name;
+    private final String sessionId;
+    
+    /**
+     * Creates a {@code ForceUserPrincipal} with this name and session id.
+     * 
+     * @param name String
+     * @param sessionId String
+     */
+    public ForceUserPrincipal(String name, String sessionId) {
+        this.name = name;
+        this.sessionId = sessionId;
+    }
+    
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
 }
