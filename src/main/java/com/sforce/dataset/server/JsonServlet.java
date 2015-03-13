@@ -93,7 +93,11 @@ public class JsonServlet extends HttpServlet {
 				XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, conn);
 			}else
 			{
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+type+"}");
+				response.setContentType("application/json");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				ResponseStatus status = new ResponseStatus("error","Invalid Request {"+type+"}");
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
 			}
 			
 			ResponseStatus status = new ResponseStatus("success",null);
@@ -102,7 +106,11 @@ public class JsonServlet extends HttpServlet {
 			mapper.writeValue(response.getOutputStream(), status);
 		}catch(Throwable t)
 		{
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			ResponseStatus status = new ResponseStatus("error",t.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
 		}
 	}
 	
@@ -143,11 +151,18 @@ public class JsonServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), xmdObject);
 					}else
 					{
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+type+"}");
+						response.setContentType("application/json");
+						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+						ResponseStatus status = new ResponseStatus("error","Invalid Request {"+type+"}");
+						ObjectMapper mapper = new ObjectMapper();
+						mapper.writeValue(response.getOutputStream(), status);
 					}
 		 }catch (Throwable t) {
-			 	t.printStackTrace();
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+				response.setContentType("application/json");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				ResponseStatus status = new ResponseStatus("error",t.getMessage());
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
 		 }
 	}
 }

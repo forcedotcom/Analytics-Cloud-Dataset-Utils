@@ -42,6 +42,15 @@ $(document).ready(function() {
 					}
 					firstTime = false;
 			})
+	        .fail(function(jqXHR, textStatus, errorThrown) { 
+	            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+	                self.location.href = 'login.html';
+	            }else
+	            {
+		        	   var err = eval("(" + jqXHR.responseText + ")");
+		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+	            }
+	        });
 		}
 	}
 
@@ -67,7 +76,16 @@ $(document).ready(function() {
 		    async: false,
 		    success: function() {
 		        submittedButton();
-		    }
+		    },
+           error: function(xhr, status, error) {
+               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                   self.location.href = 'login.html';
+               }else
+               {
+	        	   var err = eval("(" + xhr.responseText + ")");
+	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+               }
+          }
 		});
 	}
 
@@ -108,8 +126,16 @@ $(document).ready(function() {
 	    		sortField: 'text'
 	    	});
 	    	$(".xmd-container").show();
-	    });
-
+	    })
+        .fail(function(jqXHR, textStatus, errorThrown) { 
+            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                self.location.href = 'login.html';
+            }else
+            {
+	        	   var err = eval("(" + jqXHR.responseText + ")");
+	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+            }
+        });
 	}
 	
 	function loadlist(selobj,url,nameattr,displayattr)
@@ -126,10 +152,15 @@ $(document).ready(function() {
 	        });
 	    	$(".xmd-container").show();
 	    })
-	    .fail(function(jqXHR, textStatus, errorThrown) { 
-	    	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+textStatus+"</i></h5>"); 
-	    	$(".xmd-container").show();
-	    	});
+        .fail(function(jqXHR, textStatus, errorThrown) { 
+            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                self.location.href = 'login.html';
+            }else
+            {
+	        	   var err = eval("(" + jqXHR.responseText + ")");
+	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+            }
+        });
 	}
 
 
@@ -155,3 +186,6 @@ $(document).ready(function() {
 });
 
 
+function isEmpty(str) {
+    return (!str || 0 === str.length);
+}

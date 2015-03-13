@@ -56,14 +56,17 @@ $(document).ready(function() {
 				processData : false,
 				dataType : 'json',
 				success : function(data) {
-					self.location.href = 'logs.html';
+					self.location.href = 'csvupload.html';
 				},
-				error : function(response) {
-					$("#title2").append('').html(
-							"<h5 style='text-align:center'><i style='color:#FF0000'>"
-									+ response.responseText
-									+ "</i></h5>");
-				}
+		           error: function(jqXHR, status, error) {
+		               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+		                   self.location.href = 'login.html';
+		               }else
+		               {
+			        	   var err = eval("(" + jqXHR.responseText + ")");
+			            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+		               }
+		          }
 			});
 	}));
     
@@ -78,3 +81,7 @@ $(document).ajaxSend(function(event, request, settings) {
 $(document).ajaxComplete(function(event, request, settings) {
 	$('#loading-indicator').hide();
 });
+
+function isEmpty(str) {
+    return (!str || 0 === str.length);
+}

@@ -58,7 +58,7 @@ import com.sforce.soap.partner.PartnerConnection;
 public class FileUploadServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2), Executors.defaultThreadFactory());
+	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 2, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(20), Executors.defaultThreadFactory());
 //	private static List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
@@ -69,6 +69,8 @@ public class FileUploadServlet extends HttpServlet {
 			response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
 			// Set standard HTTP/1.0 no-cache header.
 			response.setHeader("Pragma", "no-cache");
+			
+		    response.setContentType("application/json");
 
 			PartnerConnection conn = AuthFilter.getConnection(request);
 			if(conn==null)
@@ -83,16 +85,25 @@ public class FileUploadServlet extends HttpServlet {
 			Session session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
 			List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
 			CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
-		    executorPool.execute(worker);
+		    try
+		    {
+		    	executorPool.execute(worker);
+		    }catch(Throwable t)
+		    {
+		    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
+		    	return;
+		    }
 
-//			response.sendRedirect("/logs.html");
-		    String redirect = "/logs.html";
-		    response.setContentType("application/json");
-	    	ObjectMapper mapper = new ObjectMapper();
-	    	mapper.writeValue(response.getOutputStream(), redirect);
+			ResponseStatus status = new ResponseStatus("success",null);
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
 		}catch(Throwable t)
 		{
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			ResponseStatus status = new ResponseStatus("error",t.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
 		}
 	}
 
@@ -190,7 +201,11 @@ public class FileUploadServlet extends HttpServlet {
 					response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found {"+type+"}");
 				}
 		 }catch (Throwable t) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+				response.setContentType("application/json");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				ResponseStatus status = new ResponseStatus("error",t.getMessage());
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
 		 }
 	}
 }

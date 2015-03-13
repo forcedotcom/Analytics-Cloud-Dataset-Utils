@@ -166,6 +166,7 @@ public class AuthFilter implements Filter {
      * @throws ServletException 
      */
     private void doLogin(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        response.addHeader("REQUIRES_AUTH","1");
         response.sendRedirect("/login.html");
     }
 

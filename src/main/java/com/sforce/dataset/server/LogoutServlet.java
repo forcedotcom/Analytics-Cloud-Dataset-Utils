@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.server.auth.SecurityContextSessionStore;
 
 public class LogoutServlet extends HttpServlet {
@@ -57,7 +58,11 @@ public class LogoutServlet extends HttpServlet {
 	    	response.sendRedirect(request.getContextPath() + "/login.html");
 	    }catch(Throwable t)
 		{
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			ResponseStatus status = new ResponseStatus("error",t.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
 		}
 	}
 }

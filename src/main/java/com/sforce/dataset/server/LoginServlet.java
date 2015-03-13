@@ -149,10 +149,15 @@ public class LoginServlet extends HttpServlet {
 			// Set standard HTTP/1.1 no-cache headers.
 			response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
 			// Set standard HTTP/1.0 no-cache header.
+			
 			response.setHeader("Pragma", "no-cache");
 		}catch(Throwable t)
 		{
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			ResponseStatus status = new ResponseStatus("error",t.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
 		}
 	}	
 }

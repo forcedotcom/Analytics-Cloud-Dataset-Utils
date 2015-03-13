@@ -52,7 +52,6 @@ $(document).ready(function() {
     $("#uploadForm").on('submit',(function(e) {
     	$("#title2").empty();
     	$("#result").empty();
-//    	deleteRow('result');
         e.preventDefault();
         $.ajax({
             url: "upload",
@@ -61,34 +60,18 @@ $(document).ready(function() {
             contentType: false,
             cache: false,
             processData:false,
-            dataType:  'json', 
+            dataType:  'json',
             success: function(data){
-            	self.location.href = 'logs.html';
-            	
-//            	$("#title2").append('').html('<h5 style="text-align:center"><i style="color:#0000FF">File is being uploaded check log file below for details</i></h5>');
-//            	$("tr:has(td)").remove();
-//                $("#result").append(
-//                		$('<tr/>')
-//                  		.append($('<td/>').text('File'))
-//                  		.append($('<td/>').text('File Size'))
-//                  		.append($('<td/>').text('File Type'))
-//                  		.append($('<td/>').text('File Download Link'))
-//                		)//end $("#uploaded-files").append()
-//            	for (i = 0; i < data.length; i++) {
-//            		var link = "<a href='upload?f="+i+"'>Download</a>";
-//            		if(data[i].inputFileType == "Csv")
-//            			link = "&nbsp;";
-//                    $("#result").append(
-//                    		$('<tr/>')
-//                      		.append($('<td/>').text(data[i].savedFile))
-//                      		.append($('<td/>').text(data[i].inputFileSize))
-//                      		.append($('<td/>').text(data[i].inputFileType))
-//                      		.append($('<td/>').html(link))
-//                    		)//end $("#uploaded-files").append()
-//            	}
+            	self.location.href = 'logs.html';            	
            },
-            error: function (response) {
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+response.responseText+"</i></h5>");
+           error: function(jqXHR, status, error) {
+               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                   self.location.href = 'login.html';
+               }else
+               {
+	        	   var err = eval("(" + jqXHR.responseText + ")");
+	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+               }
           }
        });
     }));
@@ -154,8 +137,17 @@ function loadlist(selobj,url,nameattr,displayattr)
                  $('<option></option>')
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
-        });
-    });
+        })
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });    
 }
 
 function loadlistAndSelectize(selobj,url,nameattr,displayattr)
@@ -169,12 +161,21 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr)
                  $('<option></option>')
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
-        });
+        })
 
     	$(selobj).selectize({
     		create: true
     	});
-    });
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });    
 }
 
 function loadDiv(selobj,url,nameattr,displayattr)
@@ -190,6 +191,19 @@ function loadDiv(selobj,url,nameattr,displayattr)
                  		.attr('data-selectable','')
                  		.attr('class','option')
             			.html(obj[displayattr]));
-        });
-    });
+        })
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });    
+}
+
+function isEmpty(str) {
+    return (!str || 0 === str.length);
 }

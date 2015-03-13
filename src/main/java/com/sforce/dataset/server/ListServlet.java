@@ -171,12 +171,19 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), SessionHistory.listSessions(orgId));
 					}else
 					{
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+value+"}");
+						response.setContentType("application/json");
+						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+						ResponseStatus status = new ResponseStatus("error","Invalid Request {"+value+"}");
+						ObjectMapper mapper = new ObjectMapper();
+						mapper.writeValue(response.getOutputStream(), status);
 					}
 
 		 }catch (Throwable t) {
-			 	t.printStackTrace();
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Request {"+t.toString()+"}");
+				response.setContentType("application/json");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				ResponseStatus status = new ResponseStatus("error",t.getMessage());
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
 		 }
 	}
 }
