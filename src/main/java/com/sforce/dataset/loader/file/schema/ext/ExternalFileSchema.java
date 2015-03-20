@@ -996,7 +996,17 @@ public class ExternalFileSchema  {
 		boolean hasUniqueID = false;
 		if(inSchema!= null && inSchema.objects != null && inSchema.objects.size() > 0 && inSchema.objects.get(0).getFields() != null)
 		{
-			for(FieldType user_field: inSchema.objects.get(0).getFields())
+			hasUniqueID = hasUniqueID(inSchema.objects.get(0).getFields());
+		}
+		return hasUniqueID;
+	}
+
+	static boolean hasUniqueID(List<FieldType> fields) 
+	{
+		boolean hasUniqueID = false;
+		if(fields != null)
+		{
+			for(FieldType user_field: fields)
 			{
 				if(user_field != null && user_field.isUniqueId && user_field.getfType()==FieldType.STRING)
 					hasUniqueID = true;

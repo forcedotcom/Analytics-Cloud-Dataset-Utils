@@ -153,7 +153,7 @@ public class DetectFieldTypes {
 				FieldType newField = null;
 				int prec = detectTextPrecision(uniqueColumnValues);
 				BigDecimal bd = detectNumeric(columnValues);
-				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0)
+				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0 && !uniqueColumnFound)
 				{	
 					bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
 				}
@@ -284,7 +284,7 @@ public class DetectFieldTypes {
 	    	maxScale = maxScale.setScale(maxScaleCalculated, RoundingMode.HALF_EVEN);
 	    }
 	    
-	    maxPrecision.setScale(maxScale.scale(), RoundingMode.HALF_EVEN);
+	    maxPrecision = maxPrecision.setScale(maxScale.scale(), RoundingMode.HALF_EVEN);
 
 	    if((1.0*success/columnValues.size()) > 0.95)
 	    {
