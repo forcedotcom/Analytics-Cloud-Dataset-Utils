@@ -8,6 +8,17 @@ Download the latest jar from [releases](https://github.com/forcedotcom/Analytics
 
 ## Running DatasetUtils
 
+## Prerequisite
+
+Download and install Java JDK (not JRE) from Oracle
+
+* [Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+
+After installation is complete. open a console and check that the java version is 1.7 or higher by running the following command:
+
+``java -version``
+
+
 ### Server mode with Web UI
 
 To start the jar in server mode and use the web UI to upload open a console and enter the following command:
