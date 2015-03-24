@@ -7,7 +7,7 @@ $(document).ready(function() {
 
 	var container = $('#jsoncontainer')[0];
 	var options = {
-		mode: 'form',
+		mode: 'tree',
 		change: jsonChange
 	};
 	var editor = new JSONEditor(container, options);
@@ -57,36 +57,64 @@ $(document).ready(function() {
 	function jsonChange(){
 		$("#submit-xmd-btn").prop('disabled', false);
 
-		if ($("submit-xmd-btn").hasClass("btn-success")){
+		if ($("#submit-xmd-btn").hasClass("btn-success")){
 			submittedButton();
 		}
 	}
 
 	function sendJson(event){
-		$.ajax({
-		    url: '/json',
-		    type: 'POST',
-		    data: {	
-		    			jsonString: JSON.stringify(editor.get()),
-		    			type:'xmd',
-		    			datasetAlias:currentAlias
-		     		},
-		    contentType: 'application/x-www-form-urlencoded; charset=utf-8',
-		    dataType: 'json',
-		    async: false,
-		    success: function() {
-		        submittedButton();
-		    },
-           error: function(xhr, status, error) {
-               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
-                   self.location.href = 'login.html';
-               }else
-               {
-	        	   var err = eval("(" + xhr.responseText + ")");
-	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
-               }
-          }
-		});
+		$("#submit-xmd-btn").text("Submitting XMD...");
+		disableButtons(true);
+		setTimeout(function() {
+			$.ajax({
+			    url: '/json',
+			    type: 'POST',
+			    data: {	
+			    			jsonString: JSON.stringify(editor.get()),
+			    			type:'xmd',
+			    			datasetAlias:currentAlias
+			     		},
+			    contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+			    dataType: 'json',
+			    async: false,
+			    success: function() {
+			    	$("#submit-xmd-btn").text("Submit Updated XMD");
+			    	disableButtons(false);
+	           	   	$("#submit-xmd-btn").prop('disabled', true);
+			        submittedButton();
+			    },
+	            error: function(xhr, status, error) {
+	           	   $("#submit-xmd-btn").text("Submit Updated XMD");
+	           	   disableButtons(false);
+	           	   $("#submit-xmd-btn").prop('disabled', true);
+	               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+	                   self.location.href = 'login.html';
+	               }
+	               else
+	               {
+		        	    var err = eval("(" + xhr.responseText + ")");
+		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+	               }
+	          	 }
+			});
+		},13);
+		
+	}
+
+	function disableButtons(disEn){
+		if(disEn){
+			$("#submit-xmd-btn").prop('disabled', true);
+			$("button[name=getjson]").prop('disabled', true);
+			$('#DatasetName-xmd').prop('disabled', true);
+			editor.setMode('view');
+		}
+		else{
+			$("#submit-xmd-btn").prop('disabled', false);
+			$("button[name=getjson]").prop('disabled', false);
+			$('#DatasetName-xmd').prop('disabled', false);
+			editor.setMode('tree');
+			editor.expandAll();
+		}
 	}
 
 	function cleanSystemFields(jsonObject){

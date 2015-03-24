@@ -119,6 +119,25 @@ input[readonly] {
     box-sizing: border-box;
 }
 
+#uploadForm .selectize-control
+{
+  height: 34px;
+}
+
+#loginForm .form-group
+{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#login
+{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .form-signin .form-control:focus
 {
     z-index: 2;
@@ -133,9 +152,14 @@ input[readonly] {
 
 .form-signin input[type="password"]
 {
-    margin-bottom: 10px;
+    margin-bottom: -1px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+}
+
+#loginForm .selectize-control
+{
+  height: 34px;
 }
 
 .account-wall
