@@ -115,6 +115,10 @@ public class DatasetUtilMain {
 				{
 					action = args[i];
 				}
+				else if(args[i-1].equalsIgnoreCase("--operation"))
+				{
+					params.Operation = args[i];
+				}
 				else if(args[i-1].equalsIgnoreCase("--debug"))
 				{
 					params.debug = true;
@@ -803,6 +807,13 @@ public class DatasetUtilMain {
 					params.app = null;
 			}
 
+			if (params.Operation==null || params.Operation.isEmpty()) 
+			{
+				params.Operation = getInputFromUser("Enter Operation (Default=Overwrite): ", false, false);
+				if(params.Operation != null && params.Operation.isEmpty())
+					params.app = null;
+			}
+			
 			if (params.fileEncoding==null || params.fileEncoding.isEmpty()) 
 			{
 				while(true)
