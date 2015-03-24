@@ -65,6 +65,7 @@ public class FileUploadServlet extends HttpServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		Session session = null;
 		try
 		{
 			// Set standard HTTP/1.1 no-cache headers.
@@ -90,7 +91,7 @@ public class FileUploadServlet extends HttpServlet {
 			String orgId = conn.getUserInfo().getOrganizationId();
 			File dataDir = DatasetUtilConstants.getDataDir(orgId);
 			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
-			Session session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
+			session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
 			List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
 			CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
 			
@@ -99,7 +100,7 @@ public class FileUploadServlet extends HttpServlet {
 		    	executorPool.execute(worker);
 		    }catch(Throwable t)
 		    {
-		    	Session.removeCurrentSession();
+		    	Session.removeCurrentSession(session);
 		    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
 		    	return;
 		    }
@@ -109,7 +110,7 @@ public class FileUploadServlet extends HttpServlet {
 			mapper.writeValue(response.getOutputStream(), status);
 		}catch(Throwable t)
 		{
-	    	Session.removeCurrentSession();
+	    	Session.removeCurrentSession(session);
 			response.setContentType("application/json");
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			ResponseStatus status = new ResponseStatus("error",t.getMessage());

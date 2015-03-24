@@ -360,10 +360,13 @@ public static final Session getCurrentSession(String orgId,String name, boolean 
     return session;	
 }
 
-public static final void removeCurrentSession()
+public static final void removeCurrentSession(Session session)
 {
-    ThreadContext threadContext = ThreadContext.get();
-    Session session = threadContext.getSession();
+	ThreadContext threadContext = ThreadContext.get();
+    if(session==null)
+    {
+     session = threadContext.getSession();
+    }
     if(session != null)
     {
     	q.remove(session);
