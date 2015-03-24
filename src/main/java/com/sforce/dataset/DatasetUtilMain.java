@@ -117,7 +117,26 @@ public class DatasetUtilMain {
 				}
 				else if(args[i-1].equalsIgnoreCase("--operation"))
 				{
-					params.Operation = args[i];
+					if(args[i]!=null)
+					{
+						if(args[i].equalsIgnoreCase("overwrite"))
+						{
+							params.Operation = args[i];
+						}else if(args[i].equalsIgnoreCase("upsert"))
+						{
+							params.Operation = args[i];
+						}else if(args[i].equalsIgnoreCase("append"))
+						{
+							params.Operation = args[i];
+						}else if(args[i].equalsIgnoreCase("delete"))
+						{
+							params.Operation = args[i];							
+						}else
+						{
+							System.out.println("Invalid Operation {"+args[i]+"} Must be Overwrite or Upsert or Append or Delete");
+							System.exit(-1);
+						}
+					}
 				}
 				else if(args[i-1].equalsIgnoreCase("--debug"))
 				{
@@ -642,7 +661,7 @@ public class DatasetUtilMain {
 				try {
 					String orgId = null;
 					orgId = partnerConnection.getUserInfo().getOrganizationId();
-					session = Session.getCurrentSession(orgId, params.dataset);
+					session = Session.getCurrentSession(orgId, params.dataset, true);
 //					session = new Session(orgId,params.dataset);
 //			        ThreadContext threadContext = ThreadContext.get();
 //			        threadContext.setSession(session);
@@ -807,11 +826,35 @@ public class DatasetUtilMain {
 					params.app = null;
 			}
 
-			if (params.Operation==null || params.Operation.isEmpty()) 
+			while (params.Operation==null || params.Operation.isEmpty()) 
 			{
 				params.Operation = getInputFromUser("Enter Operation (Default=Overwrite): ", false, false);
-				if(params.Operation != null && params.Operation.isEmpty())
-					params.app = null;
+				if(params.Operation == null || params.Operation.isEmpty())
+				{
+					params.Operation = "overwrite";
+				}
+				else
+				{
+					if(params.Operation.equalsIgnoreCase("overwrite"))
+					{
+						params.Operation = "overwrite";
+					}else if(params.Operation.equalsIgnoreCase("upsert"))
+					{
+						params.Operation = "upsert";
+					}else if(params.Operation.equalsIgnoreCase("append"))
+					{
+						params.Operation = "append";
+					}else if(params.Operation.equalsIgnoreCase("delete"))
+					{
+						params.Operation = "delete";							
+					}else
+					{
+						System.out.println("Invalid Operation {"+params.Operation+"} Must be Overwrite or Upsert or Append or Delete");
+						params.Operation = null;
+					}
+				}
+
+				
 			}
 			
 			if (params.fileEncoding==null || params.fileEncoding.isEmpty()) 
@@ -834,8 +877,12 @@ public class DatasetUtilMain {
 
 			while (params.uploadFormat==null || params.uploadFormat.isEmpty()) 
 			{
-				String response = getInputFromUser("Parse file before uploading (Yes/No): ", false, false);									
-				if(response!=null && !(response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES") || response.equalsIgnoreCase("N") || response.equalsIgnoreCase("NO")))
+				String response = getInputFromUser("Parse file before uploading (Yes/No): ", false, false);	
+				if(response==null || response.isEmpty())
+				{
+					params.uploadFormat = "binary";
+					break;
+				}else if(response!=null && !(response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES") || response.equalsIgnoreCase("N") || response.equalsIgnoreCase("NO")))
 				{
 					continue;
 				}else if(response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES"))

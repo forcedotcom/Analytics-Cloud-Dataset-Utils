@@ -67,6 +67,8 @@ Input Parameter
 
 --app     : (Optional) the app/folder name for the dataset
 
+--operation     : (Optional) the operation for load (Overwrite/Upsert/Append/Delete) Default is Overwrite
+
 --inputFile : (Optional) the input csv file. required if action=load
 
 --rootObject: (Optional) the root SObject for the extract

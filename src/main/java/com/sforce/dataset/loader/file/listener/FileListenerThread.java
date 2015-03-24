@@ -117,7 +117,7 @@ public void run() {
 					{
 						String orgId = null;
 						orgId = partnerConnection.getUserInfo().getOrganizationId();
-						session = Session.getCurrentSession(orgId, fileListener.getDataset());
+						session = Session.getCurrentSession(orgId, fileListener.getDataset(), true);
 //						session = new Session(orgId,fileListener.getDataset());
 //				        ThreadContext threadContext = ThreadContext.get();
 //				        threadContext.setSession(session);

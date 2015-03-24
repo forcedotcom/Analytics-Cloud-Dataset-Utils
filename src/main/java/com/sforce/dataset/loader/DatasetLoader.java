@@ -209,7 +209,7 @@ public class DatasetLoader {
 			
 			if(session==null)
 			{
-				session = Session.getCurrentSession(partnerConnection.getUserInfo().getOrganizationId(), datasetAlias);
+				session = Session.getCurrentSession(partnerConnection.getUserInfo().getOrganizationId(), datasetAlias, false);
 			}
 			
 			if(session.isDone())

@@ -344,11 +344,11 @@ public static final Session getSession(String orgId,String id)
 	return null;
 }
 
-public static final Session getCurrentSession(String orgId,String name)
+public static final Session getCurrentSession(String orgId,String name, boolean force)
 {
     ThreadContext threadContext = ThreadContext.get();
     Session session = threadContext.getSession();
-    if(session == null)
+    if(force || session == null)
     {
     	if(orgId == null || name == null || orgId.trim().isEmpty() || name.trim().isEmpty())
     	{
@@ -358,6 +358,17 @@ public static final Session getCurrentSession(String orgId,String name)
     	threadContext.setSession(session);
     }
     return session;	
+}
+
+public static final void removeCurrentSession()
+{
+    ThreadContext threadContext = ThreadContext.get();
+    Session session = threadContext.getSession();
+    if(session != null)
+    {
+    	q.remove(session);
+    	threadContext.setSession(null);
+    }
 }
 
 @Override

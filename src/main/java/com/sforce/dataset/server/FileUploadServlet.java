@@ -27,6 +27,7 @@ package com.sforce.dataset.server;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,7 +59,8 @@ import com.sforce.soap.partner.PartnerConnection;
 public class FileUploadServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 2, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(20), Executors.defaultThreadFactory());
+	private static final int MAX_THREAD_POOL = 20;
+	private static final ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 2, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(MAX_THREAD_POOL), Executors.defaultThreadFactory());
 //	private static List<FileUploadRequest> files = new LinkedList<FileUploadRequest>();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
@@ -78,18 +80,26 @@ public class FileUploadServlet extends HttpServlet {
 			   	response.sendRedirect(request.getContextPath() + "/login.html");
 			   	return;
 			}
-				
+			
+			if(executorPool.getQueue().size()>=MAX_THREAD_POOL)
+			{
+		    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
+		    	return;
+			}
+			
 			String orgId = conn.getUserInfo().getOrganizationId();
 			File dataDir = DatasetUtilConstants.getDataDir(orgId);
 			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
 			Session session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
 			List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
 			CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
+			
 		    try
 		    {
 		    	executorPool.execute(worker);
 		    }catch(Throwable t)
 		    {
+		    	Session.removeCurrentSession();
 		    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
 		    	return;
 		    }
@@ -99,6 +109,7 @@ public class FileUploadServlet extends HttpServlet {
 			mapper.writeValue(response.getOutputStream(), status);
 		}catch(Throwable t)
 		{
+	    	Session.removeCurrentSession();
 			response.setContentType("application/json");
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			ResponseStatus status = new ResponseStatus("error",t.getMessage());
@@ -198,7 +209,7 @@ public class FileUploadServlet extends HttpServlet {
 			        input.close();
 				}else
 				{
-					response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found {"+type+"}");
+					throw new FileNotFoundException("File " + type + " not found");
 				}
 		 }catch (Throwable t) {
 				response.setContentType("application/json");
