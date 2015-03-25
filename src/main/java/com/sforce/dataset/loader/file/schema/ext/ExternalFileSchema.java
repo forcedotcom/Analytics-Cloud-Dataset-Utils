@@ -379,7 +379,7 @@ public class ExternalFileSchema  {
 						}
 						
 
-						if(user_fields!=null && !user_fields.isEmpty())
+						if(user_fields!=null && !user_fields.isEmpty() && user_fields.size()<=5000)
 						{
 							HashSet<String> fieldNames = new HashSet<String>();
 							HashSet<String> uniqueIdfieldNames = new HashSet<String>();
@@ -536,7 +536,13 @@ public class ExternalFileSchema  {
 							}
 						}else
 						{
-							message.append("[objects["+objectCount+"].fields] in schema cannot be null or empty\n");
+							if(user_fields==null || user_fields.isEmpty())
+							{
+								message.append("[objects["+objectCount+"].fields] in schema cannot be null or empty\n");
+							}else if(user_fields.size()>5000)
+							{
+								message.append("[objects["+objectCount+"].fields] in schema cannot contain more than 5000 fields\n");
+							}
 						}
 				}
 			}else

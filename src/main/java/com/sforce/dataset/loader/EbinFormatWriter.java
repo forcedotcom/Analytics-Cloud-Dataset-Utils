@@ -100,6 +100,12 @@ public class EbinFormatWriter {
 	{
 		this(out, logger);
 //		this.numColumns = dataTypes.length;
+		
+		if(dataTypes.length>5000)
+		{
+			throw new IllegalArgumentException("Input file cannot contain more than 5000 columns. Found {"+dataTypes.length+"} columns");
+		}
+
 		for (FieldType dataType: dataTypes)
 		{
 			_dataTypes.add(dataType);

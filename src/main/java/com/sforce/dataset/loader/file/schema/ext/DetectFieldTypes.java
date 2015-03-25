@@ -66,16 +66,25 @@ public class DetectFieldTypes {
 		{
 			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
 			header = reader.getHeader(true);
-
+			
 			if(reader!=null)
 			{
 				reader.close();
 				reader = null;
 			}
-			
+
 			List<String> nextLine = null;
 			types = new LinkedList<FieldType>();
 			boolean uniqueColumnFound = false;
+			
+			if(header==null)
+				return types;
+			
+			if(header.length>5000)
+			{
+				throw new IllegalArgumentException("Input file cannot contain more than 5000 columns. found {"+header.length+"} columns");
+			}
+
 			String devNames[] = ExternalFileSchema.createUniqueDevName(header);
 			boolean first = true;
 			for (int i=0; i< header.length; i++) 
