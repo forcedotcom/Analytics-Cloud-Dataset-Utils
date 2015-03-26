@@ -44,6 +44,8 @@ import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.SimpleBindings;
 
+import org.apache.commons.io.IOUtils;
+
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.util.FiscalDateUtil;
@@ -626,14 +628,11 @@ public class EbinFormatWriter {
 	{
 		if (out != null) {
 			out.flush();
-			out.close();
+			IOUtils.closeQuietly(out);
 		}
 		out = null;
 		if(totalRowCount!=0)
 		{
-//			throw new IOException("Atleast one row must be written");
-//		}else
-//		{
 			long newStartTime = System.currentTimeMillis();
 			if(startTime==0)
 				startTime = newStartTime;

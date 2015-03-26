@@ -34,6 +34,7 @@ import java.nio.charset.CodingErrorAction;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.encoder.DefaultCsvEncoder;
 import org.supercsv.io.CsvListReader;
@@ -146,7 +147,7 @@ public class ErrorWriter {
 	{
 		if (fWriter != null) {
 			fWriter.flush();
-			fWriter.close();
+			IOUtils.closeQuietly(fWriter);
 		}
 		fWriter = null;
 	}

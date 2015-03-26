@@ -25,7 +25,6 @@
  */
 package com.sforce.dataset.loader;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -120,12 +119,12 @@ public void run() {
     {
 	    try {
 			ebinWriter.finish();
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			e.printStackTrace(logger);
 		}
 	    try {
 	    	errorwriter.finish();
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			e.printStackTrace(logger);
 		}
     }

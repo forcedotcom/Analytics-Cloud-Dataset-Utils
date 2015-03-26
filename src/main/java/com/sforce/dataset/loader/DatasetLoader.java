@@ -462,7 +462,7 @@ public class DatasetLoader {
 							}
 						}//end while
 						int retryCount = 0;
-						while(!writer.isDone() && !writer.isAborted())
+						while(!writer.isDone())
 						{
 							try
 							{
@@ -483,15 +483,15 @@ public class DatasetLoader {
 				}finally
 				{
 					if(reader!=null)
-						reader.close();
+						IOUtils.closeQuietly(reader);
 					if(out!=null)
-						out.close();
+						IOUtils.closeQuietly(out);
 					if(gzos!=null)
-						gzos.close();
+						IOUtils.closeQuietly(gzos);
 					if(bos!=null)
-						bos.close();
+						IOUtils.closeQuietly(bos);
 					if(fos!=null)
-						fos.close();
+						IOUtils.closeQuietly(fos);
 					out = null;
 					gzos = null;
 					bos = null;
