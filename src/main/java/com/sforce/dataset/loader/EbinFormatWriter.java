@@ -86,6 +86,7 @@ public class EbinFormatWriter {
 
 	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     DecimalFormat df = new DecimalFormat("00");
+    DecimalFormat df4 = new DecimalFormat("0000");
 
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 	long startTime = 0L;
@@ -426,7 +427,7 @@ public class EbinFormatWriter {
 					curr.put(_dataTypes.get(key_value_count).getName(), (month+1));
 					key_value_count++;
 	
-					dim_values.add(Integer.toString(year));
+					dim_values.add(df4.format(year));
 					dim_keys.add(_dataTypes.get(key_value_count).getName());
 					curr.put(_dataTypes.get(key_value_count).getName(), year);
 //				    System.out.println(_dataTypes.get(key_value_count).getName() + ": "+columnValue + " - "+ year);
@@ -472,7 +473,7 @@ public class EbinFormatWriter {
 							curr.put(_dataTypes.get(key_value_count).getName(), (fiscal_month+1));
 							key_value_count++;
 			
-							dim_values.add(Integer.toString(fiscal_year));
+							dim_values.add(df4.format(fiscal_year));
 							dim_keys.add(_dataTypes.get(key_value_count).getName());
 							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_year);
 							key_value_count++;
