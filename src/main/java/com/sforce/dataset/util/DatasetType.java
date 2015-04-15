@@ -40,6 +40,23 @@ public class DatasetType {
     class PermissionType {
     	public boolean modify=true;
     	public boolean manage=true;
-    	public boolean view=true;    	
+    	public boolean view=true;
+		@Override
+		public String toString() {
+			return "PermissionType [modify=" + modify + ", manage=" + manage
+					+ ", view=" + view + "]";
+		} 
     }
+    
+	@Override
+	public String toString() {
+		return "DatasetType [assetIcon=" + assetIcon + ", _uid=" + _uid
+				+ ", _type=" + _type + ", _createdDateTime=" + _createdDateTime
+				+ ", _lastAccessed=" + _lastAccessed + ", name=" + name
+				+ ", _alias=" + _alias + ", _url=" + _url + ", assetIconUrl="
+				+ assetIconUrl + ", assetSharingUrl=" + assetSharingUrl
+				+ ", _permissions=" + _permissions + "]";
+	}
+    
+    
 }

@@ -404,7 +404,7 @@ public class ExternalFileSchema  {
 										message.append("Duplicate field name {"+user_field.getName()+"}\n");
 									}
 									
-									if(user_field.getName().endsWith("_sec_epoch") || user_field.getName().endsWith("_day_epoch") || user_field.getName().endsWith("_Day") || user_field.getName().endsWith("_Month") || user_field.getName().endsWith("_Year") || user_field.getName().endsWith("_Quarter") || user_field.getName().endsWith("_Week"))
+									if(user_field.getName().endsWith("_sec_epoch") || user_field.getName().endsWith("_day_epoch") || user_field.getName().endsWith("_Day") || user_field.getName().endsWith("_Month") || user_field.getName().endsWith("_Year") || user_field.getName().endsWith("_Quarter") || user_field.getName().endsWith("_Week") || user_field.getName().endsWith("_Hour")|| user_field.getName().endsWith("_Minute")|| user_field.getName().endsWith("_Second")|| user_field.getName().endsWith("_Month_Fiscal")|| user_field.getName().endsWith("_Year_Fiscal")|| user_field.getName().endsWith("_Quarter_Fiscal") || user_field.getName().endsWith("_Week_Fiscal"))
 									{
 										for(FieldType user_field_2:user_fields)
 										{

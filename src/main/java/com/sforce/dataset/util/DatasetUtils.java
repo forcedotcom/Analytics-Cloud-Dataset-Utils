@@ -83,16 +83,16 @@ public class DatasetUtils {
 	public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 	private static final  SimpleDateFormat sfdcDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	
-	private static final Charset utf8Charset = Charset.forName("UTF-8");
+	public static final Charset utf8Charset = Charset.forName("UTF-8");
 
 	
 	private static boolean hasLoggedIn = false;
 
 	@SuppressWarnings("rawtypes")
-	public static Map<String,Map> listPublicDataset(PartnerConnection connection) throws Exception {
+	public static Map<String,Map> listPublicDataset(PartnerConnection connection, boolean isCurrent) throws Exception {
 		GetUserInfoResult userInfo = connection.getUserInfo();
 		String userID = userInfo.getUserId();
-		Map<String, Map> dataSetMap = listDataset(connection);
+		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
 		if(dataSetMap==null || dataSetMap.size()==0)
 		{
 			return dataSetMap;
@@ -115,7 +115,7 @@ public class DatasetUtils {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String,Map> listDataset(PartnerConnection partnerConnection) throws Exception {
+	public static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws Exception {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
@@ -134,7 +134,7 @@ public class DatasetUtils {
 		   		
 		URI u = new URI(serviceEndPoint);
 
-		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current="+isCurrent+"&sortOrder=Mru",null);			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
 		listEMPost.setConfig(requestConfig);
@@ -143,6 +143,7 @@ public class DatasetUtils {
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		String emList = IOUtils.toString(emis, "UTF-8");
+		System.out.println("Response Size:"+emList.length());
 		emis.close();
 		httpClient.close();
 		
@@ -179,10 +180,10 @@ public class DatasetUtils {
 
 
 	@SuppressWarnings("rawtypes")
-	public static List<DatasetType> listDatasets(PartnerConnection connection) throws Exception 
+	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws Exception 
 	{
 		List<DatasetType> datasetList = new LinkedList<DatasetType>();
-		Map<String, Map> dataSetMap = listDataset(connection);
+		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
 		if(dataSetMap != null && !dataSetMap.isEmpty())
 		{
 			for(String alias:dataSetMap.keySet())

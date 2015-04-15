@@ -86,7 +86,7 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), folders);
 					}else if(value.equalsIgnoreCase("dataset"))
 					{
-						List<DatasetType> datasets = DatasetUtils.listDatasets(conn);
+						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, false);
 						DatasetType def = new DatasetType();
 						def.name = "";
 						def._alias = "";

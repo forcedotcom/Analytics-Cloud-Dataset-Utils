@@ -89,6 +89,7 @@ import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
+import com.sforce.ws.util.Base64;
 
 public class DatasetLoader {
 	
@@ -217,35 +218,53 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 			
+			
 			schemaFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
 			ExternalFileSchema schema = null;
-			logger.println("\n*******************************************************************************");					
-			if(FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
-			{	
-				if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
-					session.setStatus("LOADING SCHEMA");
-				else
-					session.setStatus("DETECTING SCHEMA");
-							
-				schema = ExternalFileSchema.init(inputFile, inputFileCharset, logger);
-				if(schema==null)
-				{
-					logger.println("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
-					throw new DatasetLoaderException("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
-				}
-			}else
+			
+			if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
 			{
-				if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
-					session.setStatus("LOADING SCHEMA");
-				schema = ExternalFileSchema.load(inputFile, inputFileCharset, logger);
-				if(schema==null)
+				//If this is incremental, fetch last uploaded json instead of generating a new one
+				if(Operation.equalsIgnoreCase("Append") || (Operation.equalsIgnoreCase("Upsert")) || (Operation.equalsIgnoreCase("Delete")))
 				{
-					logger.println("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
-					throw new DatasetLoaderException("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
+					schema = getLastUploadedJson(partnerConnection, datasetAlias, logger);
 				}
 			}
-			logger.println("*******************************************************************************\n");
 			
+			if(session.isDone())
+			{
+				throw new DatasetLoaderException("Operation terminated on user request");
+			}
+
+			if(schema==null)
+			{
+				logger.println("\n*******************************************************************************");					
+				if(FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
+				{	
+					if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
+						session.setStatus("LOADING SCHEMA");
+					else
+						session.setStatus("DETECTING SCHEMA");
+								
+					schema = ExternalFileSchema.init(inputFile, inputFileCharset, logger);
+					if(schema==null)
+					{
+						logger.println("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
+						throw new DatasetLoaderException("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
+					}
+				}else
+				{
+					if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
+						session.setStatus("LOADING SCHEMA");
+					schema = ExternalFileSchema.load(inputFile, inputFileCharset, logger);
+					if(schema==null)
+					{
+						logger.println("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
+						throw new DatasetLoaderException("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
+					}
+				}
+				logger.println("*******************************************************************************\n");
+			}
 			
 
 			if(schema != null)
@@ -1765,7 +1784,78 @@ public class DatasetLoader {
 			}// End While
 		}
 		return status; 
-	}	
+	}
+	
+	
+	private static ExternalFileSchema getLastUploadedJson(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
+	{
+		String json = null;
+		ExternalFileSchema schema = null;
+		String soqlQuery = String.format("SELECT Id,Status,MetadataJson FROM InsightsExternalData WHERE Status = 'Completed' AND EdgemartAlias = '%s' ORDER BY LastModifiedDate DESC LIMIT 1",datasetAlias);
+		partnerConnection.setQueryOptions(2000);
+		QueryResult qr = partnerConnection.query(soqlQuery);
+		int rowsSoFar = 0;
+		boolean done = false;
+		if (qr.getSize() > 0) 
+		{
+			while (!done) 
+			{
+				SObject[] records = qr.getRecords();
+				for (int i = 0; i < records.length; ++i) 
+				{
+					if(rowsSoFar==0) //only get the first one
+					{
+						String fieldName = "Id";
+						Object value = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
+						fieldName = "Status";
+						Object Status = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
+						fieldName = "MetadataJson";
+						if (value != null && Status != null && Status.toString().equalsIgnoreCase("Completed")) 
+						{
+								Object temp = SfdcUtils.getFieldValueFromQueryResult(fieldName,records[i]);
+								if(temp!=null)
+								{
+									if(temp instanceof byte[])
+									{
+										json = IOUtils.toString((byte[])temp, "UTF-8");										
+									}else if(temp instanceof InputStream)
+									{
+										json = IOUtils.toString((InputStream)temp, "UTF-8");
+									}else
+									{
+										String str = temp.toString();
+										if(Base64.isBase64(str))
+										{
+											json = IOUtils.toString(Base64.decode(str.getBytes()),"UTF-8");
+										}else
+										{
+											json = str;
+										}
+									}
+								}
+						}
+					}
+					rowsSoFar++;
+				}
+				if (qr.isDone()) {
+					done = true;
+				} else {
+					qr = partnerConnection.queryMore(qr.getQueryLocator());
+				}
+			}// End While
+		}
+		if(rowsSoFar>1)
+		{
+			logger.println("getLastIncompleteFileHdr() returned more than one row");
+		}
+
+		if(json != null)
+		{
+			schema = ExternalFileSchema.load(IOUtils.toInputStream(json), DatasetUtils.utf8Charset, logger);
+		}
+		return schema; 
+	}
+
 
 	 
 }

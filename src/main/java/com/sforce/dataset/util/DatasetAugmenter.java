@@ -82,7 +82,7 @@ public class DatasetAugmenter {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void augmentEM(PartnerConnection partnerConnection) throws Exception
 	{
-		Map<String, Map> map = DatasetUtils.listPublicDataset(partnerConnection);
+		Map<String, Map> map = DatasetUtils.listPublicDataset(partnerConnection, true);
 		System.out.println("\n");
 		if(map==null || map.size()==0)
 		{
