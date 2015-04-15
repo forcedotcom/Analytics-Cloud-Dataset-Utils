@@ -200,11 +200,11 @@ public class DatasetUtilMain {
 				{
 					params.rootObject = args[i];
 				}
-				else if(args[i-1].equalsIgnoreCase("--createNewDateParts"))
-				{
-					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
-						DatasetUtilConstants.createNewDateParts = true;
-				}
+//				else if(args[i-1].equalsIgnoreCase("--createNewDateParts"))
+//				{
+//					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
+//						DatasetUtilConstants.createNewDateParts = true;
+//				}
 				else if(args[i-1].equalsIgnoreCase("--fileEncoding"))
 				{
 					params.fileEncoding = args[i];

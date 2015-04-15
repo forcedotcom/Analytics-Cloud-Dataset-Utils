@@ -130,8 +130,8 @@ public class EbinFormatWriter {
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter", null, null));
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week", null, null));
 
-				if(DatasetUtilConstants.createNewDateParts)
-				{
+//				if(DatasetUtilConstants.createNewDateParts)
+//				{
 					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Hour", null, null));
 					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Minute", null, null));
 					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Second", null, null));
@@ -143,7 +143,7 @@ public class EbinFormatWriter {
 						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter_Fiscal", null, null));
 						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week_Fiscal", null, null));
 					}
-				}
+//				}
 			}			
 		}
 
@@ -323,8 +323,8 @@ public class EbinFormatWriter {
 					key_value_count++;	
 
 					//This check is temporary remove when schema supports these new data parts
-					if(DatasetUtilConstants.createNewDateParts)
-					{		
+//					if(DatasetUtilConstants.createNewDateParts)
+//					{		
 						//dim_values.add(Integer.toString(hour));
 						//dim_keys.add(_dataTypes.get(key_value_count).getName());
 						curr.put(_dataTypes.get(key_value_count).getName(), null);
@@ -362,7 +362,7 @@ public class EbinFormatWriter {
 							curr.put(_dataTypes.get(key_value_count).getName(), null);
 							key_value_count++;	
 						}
-					}
+//					}
 				}else
 				{	
 					Date dt = null;
@@ -444,8 +444,8 @@ public class EbinFormatWriter {
 					key_value_count++;
 					
 					//This check is temporary remove when schema supports these new data parts
-					if(DatasetUtilConstants.createNewDateParts)
-					{		
+//					if(DatasetUtilConstants.createNewDateParts)
+//					{		
 						dim_values.add(df.format(hour));
 						dim_keys.add(_dataTypes.get(key_value_count).getName());
 						curr.put(_dataTypes.get(key_value_count).getName(), hour);
@@ -488,7 +488,7 @@ public class EbinFormatWriter {
 							curr.put(_dataTypes.get(key_value_count).getName(), fiscal_week);
 							key_value_count++;
 						}
-					}
+//					}
 					
 				}
 

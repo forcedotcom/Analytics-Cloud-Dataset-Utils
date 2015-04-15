@@ -314,8 +314,8 @@ public class DatasetLoader {
 //			}
 			
 			ExternalFileSchema altSchema = schema;
-			if(DatasetUtilConstants.createNewDateParts)
-				altSchema = ExternalFileSchema.getSchemaWithNewDateParts(schema);
+//			if(DatasetUtilConstants.createNewDateParts)
+//				altSchema = ExternalFileSchema.getSchemaWithNewDateParts(schema);
 			
 			String hdrId = getLastIncompleteFileHdr(partnerConnection, datasetAlias, logger);
 			if(hdrId!=null)
