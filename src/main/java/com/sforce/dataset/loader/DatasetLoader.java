@@ -81,6 +81,7 @@ import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.loader.file.sort.CsvExternalSort;
+import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.soap.partner.PartnerConnection;
@@ -145,7 +146,27 @@ public class DatasetLoader {
 			codingErrorAction = CodingErrorAction.REPORT;
 		
 		if(inputFileCharset==null)
-			inputFileCharset = Charset.forName("UTF-8");
+		{
+			Charset tmp = null;
+			try 
+			{
+				inputFile = new File(inputFileString);
+				if(inputFile.exists() && inputFile.length()>0)
+				{
+					tmp = CharsetChecker.detectCharset(inputFile,logger);
+				}
+			} catch (Exception e) 
+			{
+			}
+
+			if(tmp!=null)
+			{
+				inputFileCharset = tmp;
+			}else
+			{
+				inputFileCharset = Charset.forName("UTF-8");
+			}
+		}
 		
 		if(Operation == null)
 		{

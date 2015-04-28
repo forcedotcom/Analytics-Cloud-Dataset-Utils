@@ -60,7 +60,7 @@ public class CsvUploadWorker implements Runnable {
 	private final File logFile;
 	private final Session session;
 
-	private Charset inputFileCharset = Charset.forName("UTF-8");
+	private Charset inputFileCharset = null;
 	private final PrintStream logger;
 	private File csvFile = null;
 	private String datasetName = null;
@@ -87,12 +87,21 @@ public class CsvUploadWorker implements Runnable {
 				if(inputFile.getInputCsv().equalsIgnoreCase(inputFile.getInputFileName()))
 				{
 					this.csvFile = inputFile.savedFile;
-					this.inputFileCharset = Charset.forName(inputFile.getInputFileCharset());
+//					this.inputFileCharset = Charset.forName(inputFile.getInputFileCharset());
 					this.datasetName = inputFile.getDatasetName();
 					this.datasetLabel = inputFile.getDatasetLabel();
 					this.datasetApp = inputFile.getDatasetApp();
 					this.operation = inputFile.getOperation();
 					inputFile.setInputFileType("Csv");
+					
+					if(inputFile.getInputFileCharset()!=null && !inputFile.getInputFileCharset().trim().isEmpty() && !inputFile.getInputFileCharset().equalsIgnoreCase("auto"))
+					{
+						try
+						{
+							this.inputFileCharset = Charset.forName(inputFile.getInputFileCharset());
+						} catch (Throwable  e) {
+						}
+					}
 				}
 			}
 
@@ -107,11 +116,13 @@ public class CsvUploadWorker implements Runnable {
 			}
 		}
 		
-		if(csvFile==null)
+		if(this.csvFile==null)
 		{
 			throw new IOException("CSV file not found in Upload Request");
 		}
 		
+
+
 		
 //		String orgId = null;
 //		orgId = partnerConnection.getUserInfo().getOrganizationId();
@@ -171,8 +182,7 @@ public class CsvUploadWorker implements Runnable {
 //		logFileParam.setInputFileSize(logFile.length()+"");
 //		logFileParam.setOperation(operation);
 //		logFileParam.setInputFileType("Log");
-//		requestFiles.add(logFileParam);
-		
+//		requestFiles.add(logFileParam);		
 	}
 	
 	@Override

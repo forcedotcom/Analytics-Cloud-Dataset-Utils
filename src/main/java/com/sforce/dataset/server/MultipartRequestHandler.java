@@ -90,6 +90,7 @@ public class MultipartRequestHandler {
 		String operation = null;
 		String inputCsv = null;
 		String inputJson = null;
+		String inputFileCharset = null;
 				
 		for (FileItem item : items) {
 				    if (item.isFormField()) {
@@ -110,6 +111,9 @@ public class MultipartRequestHandler {
 				        	inputCsv = item.getString();
 				        if(item.getFieldName().equals("inputJson"))
 				        	inputJson = item.getString();
+				        if(item.getFieldName().equals("inputFileCharset"))
+				        	inputFileCharset = item.getString();
+				        
 				    } else {
 				    	if(item.getSize()>0 && item.getInputStream() != null)
 				    	{
@@ -161,6 +165,7 @@ public class MultipartRequestHandler {
 						}
 						fm.setInputFileName(outFile.getName());
 						fm.setInputCsv(outFile.getName());
+						fm.setInputFileCharset(inputFileCharset);
 					}
 					fm.savedFile = outFile;
 					fm.setInputFileSize(outFile.length()+"");

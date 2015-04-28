@@ -353,9 +353,9 @@ public class ExternalFileSchema  {
 							message.append("[objects["+objectCount+"].name] in schema cannot be null or empty\n");
 						}else
 						{
-							if(user_object.getName().length()>255)
+							if(user_object.getName().length()>40)
 							{
-								message.append("object name ["+user_object.getName()+"] in schema cannot be greater than 255 characters in length\n");
+								message.append("object name ["+user_object.getName()+"] in schema cannot be greater than 40 characters in length\n");
 							}else if(!createDevName(user_object.getName(), "Dataset", (objectCount-1), true).equals(user_object.getName()))
 							{
 								message.append("Object name {"+user_object.getName()+"} contains invalid characters \n");
@@ -365,17 +365,17 @@ public class ExternalFileSchema  {
 						if(user_object.getLabel()==null||user_object.getLabel().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].label] in schema cannot be null or empty\n");
-						}else if(user_object.getLabel().length()>255)
+						}else if(user_object.getLabel().length()>40)
 						{
-							message.append("object label ["+user_object.getLabel()+"] in schema cannot be greater than 255 characters in  length\n");
+							message.append("object label ["+user_object.getLabel()+"] in schema cannot be greater than 40 characters in  length\n");
 						}
 
 						if(user_object.getFullyQualifiedName()==null||user_object.getFullyQualifiedName().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].fullyQualifiedName] in schema cannot be null or empty\n");
-						}else if(user_object.getFullyQualifiedName().length()>255)
+						}else if(user_object.getFullyQualifiedName().length()>80)
 						{
-							message.append("object ["+user_object.getFullyQualifiedName()+"] in schema cannot be greater than 255 characters in  length\n");
+							message.append("object ["+user_object.getFullyQualifiedName()+"] in schema cannot be greater than 80 characters in  length\n");
 						}
 						
 
@@ -389,9 +389,9 @@ public class ExternalFileSchema  {
 								fieldCount++;
 								if(user_field != null && user_field.getName()!=null && !user_field.getName().isEmpty())
 								{
-									if(user_field.getName().length()>255)
+									if(user_field.getName().length()>40)
 									{
-										message.append("field name {"+user_field.getName()+"} is greater than 255 characters\n");
+										message.append("field name {"+user_field.getName()+"} is greater than 40 characters\n");
 									}
 
 									if(!createDevName(user_field.getName(), "Column", (fieldCount-1), true).equals(user_field.getName()))
@@ -421,9 +421,9 @@ public class ExternalFileSchema  {
 								
 								if(user_field.getLabel()!=null && !user_field.getLabel().trim().isEmpty())
 								{
-									if(user_field.getLabel().length()>255)
+									if(user_field.getLabel().length()>40)
 									{
-										message.append("field label {"+user_field.getLabel()+"} is greater than 255 characters\n");
+										message.append("field label {"+user_field.getLabel()+"} is greater than 40 characters\n");
 									}
 								}else
 								{
@@ -432,9 +432,9 @@ public class ExternalFileSchema  {
 
 								if(user_field.getFullyQualifiedName()!=null && !user_field.getFullyQualifiedName().trim().isEmpty())
 								{
-									if(user_field.getFullyQualifiedName().length()>255)
+									if(user_field.getFullyQualifiedName().length()>80)
 									{
-										message.append("field {"+user_field.getFullyQualifiedName()+"} is greater than 255 characters\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"} is greater than 80 characters\n");
 									}
 								}else
 								{
@@ -832,8 +832,8 @@ public class ExternalFileSchema  {
 			    } else 
 			    {
 					outString = outStr.toString();
-			    	if(outString.length() > 255) {
-			    		outString= outString.substring(0, 255);
+			    	if(outString.length() > 40) {
+			    		outString= outString.substring(0, 40);
 			    	}
 			    	while(outString.endsWith("_") && outString.length() > 0) {
 			    		outString = outString.substring(0, outString.length()-1);

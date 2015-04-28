@@ -25,41 +25,52 @@
 <link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
 <script src="js/login.js"></script>
 
-
 </head>
 
 <body>
 
-<div class="container">
-<!--  
-<div id="breadcrumb">
-  <ol class="breadcrumb">
-	  <li><a href="#">Home</a></li>
-	  <li><a href="#">CSV Upload</a></li>
-  </ol>
+
+<div class="navbar navbar-default navbar-static-top" style="background-color: #00c0b7;">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span class="navbar-brand" style="color: white;">Salesforce Analytics Cloud Dataset Utils</span>
+        </div>
+        <div id="navbar-collapse1" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+             <li>
+                <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i class="glyphicon glyphicon-th-list"></i></a>
+                <ul class="dropdown-menu">
+                <li><a class="navlink" href="csvupload.html" target="_top">CSV Upload</a></li>
+				<li><a class="navlink" href="logs.html" target="_top">Logs</a></li>
+				<li><a class="navlink" href="xmdeditor.html" target="_top">XMD Editor</a></li>
+				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
+				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
+                </ul>
+             </li>
+           </ul>
+        </div>    
+     </div>	
 </div>
--->
+
+<div class="container">
 <div id="header" class="row">&nbsp;</div>
 </div>
-	<!--
-	<div id="dropzone" class="fade well">Drop files here</div>
-	<div id="progress" class="progress">
-    	<div class="bar" style="width: 0%;"></div>
-	</div>
-	-->
-
 <div class="container">
-
 		<div class="row">
-			<!--div class="col-sm-6 col-md-4 col-md-offset-4"-->
 			<div class="col-sm-offset-4 col-sm-4">			
-				<h1 class="text-center login-title">Sign in to Salesforce to
-					continue</h1>
+				<h1 class="text-center login-title">Sign in to Salesforce to continue</h1>
 				<div class="account-wall">
 					<img class="profile-img"
 						src="img/salesforceaclogo.png"
 						alt="">
-					<form method="post" action="login" id="loginForm" class="form-signin" enctype="multipart/form-data">
+						<!-- class="form-signin"  -->
+					<form method="post" action="login" id="loginForm" enctype="multipart/form-data">
 						<div class="form-group">
 							<label for="UserName">User Name</label>
 							<div class="input-group">
@@ -69,7 +80,6 @@
 									class="glyphicon glyphicon-remove"></span></span>
 							</div>
 						</div>
-
 						<div class="form-group">
 							<label for="Password">Password</label>
 							<div class="input-group">
@@ -79,7 +89,6 @@
 									class="glyphicon glyphicon-remove"></span></span>
 							</div>
 						</div>
-
 						<div class="form-group">
 							<label for="AuthEndpoint">Server Url</label>
 							<div class="input-group">
@@ -101,18 +110,8 @@
 		<div id="header2" class="spinner">
 	<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
 </div>
-
-<!--  
-<div id="spinner" class="spinner" style="display:none;">
-    <img id="img-spinner" src="/img/ajax-loader.gif" alt="Loading"/>
-</div>
- -->
 	<div id="title2" class="row">
 	</div>
-
-	
 </div>
-
-
 </body> 
 </html>

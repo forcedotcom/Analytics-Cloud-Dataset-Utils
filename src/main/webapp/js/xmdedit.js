@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	loadlist($('#DatasetName-xmd').get(0),/*the 'select' object*/
-     		 'list?type=dataset',/*the url of the server-side script*/
+     		 'list?type=dataset&current=true',/*the url of the server-side script*/
      		 '_alias',/*The name of the field in the returned list*/
      		 'name'
      		 );

@@ -46,7 +46,7 @@ public class FileListener {
 	private int fileAge = 10000;
 	
 	@JsonIgnore
-	Charset charset = Charset.forName("UTF-8");
+	Charset charset = null;
 	
 	@JsonIgnore
 	File fileDir = null;
@@ -87,7 +87,7 @@ public class FileListener {
 		return filecharset;
 	}
 	public void setFilecharset(String filecharset) {
-		if(filecharset!=null)
+		if(filecharset!=null && !filecharset.trim().isEmpty())
 		{
 			charset = Charset.forName(filecharset);
 			this.filecharset = filecharset;

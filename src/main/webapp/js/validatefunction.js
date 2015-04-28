@@ -162,6 +162,8 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr)
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
         })
+        
+        $(selobj).toggleClass("form-control demo-default");
 
     	$(selobj).selectize({
     		create: true

@@ -629,20 +629,18 @@ public class DatasetUtilMain {
 		}
 		
 		Charset fileCharset = null;
-		try
+		if(params.fileEncoding!=null && !params.fileEncoding.trim().isEmpty())
 		{
-			if(params.fileEncoding!=null && !params.fileEncoding.trim().isEmpty())
-				fileCharset = Charset.forName(params.fileEncoding);
-			else
-				fileCharset = Charset.forName("UTF-8");
-		} catch (Throwable  e) {
-			e.printStackTrace();
-			System.out.println("\nERROR: Invalid fileEncoding {"+params.fileEncoding+"}");
-			return false;
+			try
+			{
+					fileCharset = Charset.forName(params.fileEncoding);
+			} catch (Throwable  e) {
+				e.printStackTrace();
+				System.out.println("\nERROR: Invalid fileEncoding {"+params.fileEncoding+"}");
+				return false;
+			}
 		}
-			
-
-		
+	
 			if(action.equalsIgnoreCase("load"))
 			{
 				if (params.inputFile==null || params.inputFile.isEmpty()) 
@@ -694,7 +692,7 @@ public class DatasetUtilMain {
 				}
 				
 				try {
-					CharsetChecker.detectCharset(new File(params.inputFile));
+					CharsetChecker.detectCharset(new File(params.inputFile),System.out);
 				} catch (Exception e) {
 						e.printStackTrace(System.out);
 						return false;
@@ -861,14 +859,19 @@ public class DatasetUtilMain {
 			{
 				while(true)
 				{
-					params.fileEncoding = getInputFromUser("Enter fileEncoding (default=UTF-8): ", false, false);
-					if(params.fileEncoding == null || params.fileEncoding.trim().isEmpty())
-						params.fileEncoding = "UTF-8";
-					try
+					params.fileEncoding = getInputFromUser("Enter fileEncoding (Optional): ", false, false);
+					if(params.fileEncoding != null && !params.fileEncoding.trim().isEmpty())
 					{
-						Charset.forName(params.fileEncoding);
+						try
+						{
+							Charset.forName(params.fileEncoding);
+							break;
+						} catch (Throwable  e) {
+						}
+					}else
+					{
+						params.fileEncoding  = null;
 						break;
-					} catch (Throwable  e) {
 					}
 					System.out.println("\nERROR: Invalid fileEncoding {"+params.fileEncoding+"}");
 					System.out.println();

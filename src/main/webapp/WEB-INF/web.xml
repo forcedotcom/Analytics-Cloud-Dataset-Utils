@@ -6,7 +6,7 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns
 id="WebApp_ID" version="3.0">
   <display-name>Archetype Created Web Application</display-name>
   <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
+    <welcome-file>csvupload.html</welcome-file>
   </welcome-file-list>
   
   <servlet>

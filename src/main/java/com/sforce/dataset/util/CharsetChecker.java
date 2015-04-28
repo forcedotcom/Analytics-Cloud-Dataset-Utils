@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.Charset;
 
 import com.ibm.icu.text.CharsetDetector;
@@ -41,7 +42,7 @@ public class CharsetChecker {
 //	private static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
 //	private static final int EOF = -1;
 	
-	public static Charset detectCharset(File inputFile)
+	public static Charset detectCharset(File inputFile, PrintStream logger)
 	{
 		CharsetDetector detector = null;
 	    InputStream input = null;
@@ -58,9 +59,9 @@ public class CharsetChecker {
 //				detector.setText(buffer);
 //			}
 		    CharsetMatch cm = detector.detect();
-			System.out.println("\n*******************************************************************************");					
-		    System.out.println("File {"+inputFile+"} has Charset {"+cm.getName()+"}, Confidence: {"+cm.getConfidence()+"%}");
-			System.out.println("*******************************************************************************\n");					
+			logger.println("\n*******************************************************************************");					
+		    logger.println("File {"+inputFile+"} has Charset {"+cm.getName()+"}, Confidence: {"+cm.getConfidence()+"%}");
+			logger.println("*******************************************************************************\n");					
 		    
 		    return Charset.forName(cm.getName());
 		} catch (FileNotFoundException e) {

@@ -29,23 +29,38 @@
 
 <body>
 
+<div class="navbar navbar-default navbar-static-top" style="background-color: #00c0b7;">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span class="navbar-brand" style="color: white;">Salesforce Analytics Cloud Dataset Utils</span>
+        </div>
+        <div id="navbar-collapse1" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+             <li>
+                <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i class="glyphicon glyphicon-th-list"></i></a>
+                <ul class="dropdown-menu">
+                <li><a class="navlink" href="csvupload.html" target="_top">CSV Upload</a></li>
+				<li><a class="navlink" href="logs.html" target="_top">Logs</a></li>
+				<li><a class="navlink" href="xmdeditor.html" target="_top">XMD Editor</a></li>
+				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
+				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
+                </ul>
+             </li>
+           </ul>
+        </div>    
+     </div>	
+</div>
+
+
 <div class="container">
-<!--  
-<div id="breadcrumb">
-  <ol class="breadcrumb">
-	  <li><a href="#">Home</a></li>
-	  <li><a href="#">CSV Upload</a></li>
-  </ol>
+	<div id="header" class="row">&nbsp;</div>
 </div>
--->
-<div id="header" class="row">&nbsp;</div>
-</div>
-	<!--
-	<div id="dropzone" class="fade well">Drop files here</div>
-	<div id="progress" class="progress">
-    	<div class="bar" style="width: 0%;"></div>
-	</div>
-	-->
 
 <div class="container">
     
@@ -55,7 +70,7 @@
 				<div class="form-group">
         			<label for="DatasetName">Dataset Name</label>
 					<div class="input-group">
-                        <select class="demo-default" name="DatasetName" id="DatasetName" required placeholder="Enter a Dataset Name..." style="width: 321px; top: 34px; left: 0px;">
+                        <select class="form-control" name="DatasetName" id="DatasetName" required placeholder="Enter a Dataset Name...">
                             <option value="">Enter a Dataset Name...</option>
                         </select>
 						<span class="input-group-addon danger"><span class="glyphicon glyphicon-remove"></span></span>
@@ -107,6 +122,26 @@
 						<span class="input-group-addon info"><span class="glyphicon glyphicon-asterisk"></span></span>
 		            </div>
 		        </div>
+				<div class="form-group">
+        			<label for="inputFileCharset">File Encoding</label>
+					<div class="input-group">
+                        <select class="form-control" name="inputFileCharset" id="inputFileCharset">
+							<option value="Auto" selected="selected">Auto Detect</option>
+							<option value="ISO-8859-1">ISO-8859-1 (General US &amp; Western European, ISO-LATIN-1)</option>
+							<option value="UTF-8">Unicode (UTF-8)</option>
+							<option value="MS932">Japanese (Windows)</option>
+							<option value="Shift_JIS">Japanese (Shift-JIS)</option>
+							<option value="GB18030">Chinese National Standard (GB18030)</option>
+							<option value="GB2312">Chinese Simplified (GB2312)</option>
+							<option value="Big5">Chinese Traditional (Big5)</option>
+							<option value="EUC_KR">Korean</option>
+							<option value="UTF-16">Unicode (UTF-16, Big Endian)</option>
+							<option value="Big5-HKSCS">Big5 Traditional Chinese (HKSCS)</option>
+							<option value="x-SJIS_0213">Japanese (Shift_JIS-2004)</option>
+                        </select>
+						<span class="input-group-addon info"><span class="glyphicon glyphicon-asterisk"></span></span>
+					</div>
+				</div>
                 <button type="submit" id="fileupload" class="btn btn-primary col-xs-12" disabled>Upload CSV</button>
             </form>
         </div>
