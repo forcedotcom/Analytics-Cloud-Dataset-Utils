@@ -27,6 +27,7 @@ package com.sforce.dataset.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -39,6 +40,8 @@ import org.apache.commons.io.FileUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.DataFlow;
+import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.dataset.util.XmdUploader;
@@ -48,6 +51,8 @@ import com.sforce.soap.partner.PartnerConnection;
 public class JsonServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
+	
+	private HashMap<String, DataFlow> dfMap = new HashMap<String,DataFlow>();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -59,7 +64,6 @@ public class JsonServlet extends HttpServlet {
 		try
 		{
 			String type = request.getParameter("type");
-			String datasetAlias = request.getParameter("datasetAlias");
 			String jsonString = request.getParameter("jsonString");
 				    
 			if(type==null || type.trim().isEmpty())
@@ -67,11 +71,12 @@ public class JsonServlet extends HttpServlet {
 				throw new IllegalArgumentException("type is a required param");
 			}
 
-			if(datasetAlias==null || datasetAlias.trim().isEmpty())
+			if(jsonString==null || jsonString.trim().isEmpty())
 			{
-				throw new IllegalArgumentException("datasetAlias is a required param");
+				throw new IllegalArgumentException("jsonString is a required param");
 			}
 
+			
 			PartnerConnection conn = AuthFilter.getConnection(request);
 			if(conn==null)
 			{
@@ -82,6 +87,11 @@ public class JsonServlet extends HttpServlet {
 			String orgId = conn.getUserInfo().getOrganizationId();
 			if(type.equalsIgnoreCase("xmd"))
 			{
+				String datasetAlias = request.getParameter("datasetAlias");
+				if(datasetAlias==null || datasetAlias.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("datasetAlias is a required param");
+				}
 				File dataDir = DatasetUtilConstants.getDataDir(orgId);
 				File datasetDir = new File(dataDir,datasetAlias);
 				FileUtils.forceMkdir(datasetDir);
@@ -91,6 +101,23 @@ public class JsonServlet extends HttpServlet {
 				File outfile = new File(datasetDir,"user.xmd.json");
 				mapper.writerWithDefaultPrettyPrinter().writeValue(outfile , xmdObject);				
 				XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, conn);
+			}else if(type.equalsIgnoreCase("dataflow"))
+			{
+				String dataflowName = request.getParameter("dataflowName");
+				if(dataflowName==null || dataflowName.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("dataflowName is a required param");
+				}
+				DataFlow df = dfMap.get(dataflowName);
+				if(df != null)
+				{
+					ObjectMapper mapper = new ObjectMapper();	
+					df.workflowDefinition = mapper.readValue(jsonString, Map.class);
+					DataFlowUtil.uploadDataFlow(conn, df);
+				}else
+				{
+					throw new IllegalArgumentException("dataflowName {"+dataflowName+"} not found");
+				}
 			}else
 			{
 				response.setContentType("application/json");
@@ -127,12 +154,6 @@ public class JsonServlet extends HttpServlet {
 					{
 						throw new IllegalArgumentException("type is a required param");
 					}
-					
-					String datasetAlias = request.getParameter("datasetAlias");
-					if(datasetAlias==null || datasetAlias.trim().isEmpty())
-					{
-						throw new IllegalArgumentException("datasetAlias is a required param");
-					}
 
 					PartnerConnection conn = AuthFilter.getConnection(request);
 					if(conn==null)
@@ -143,12 +164,28 @@ public class JsonServlet extends HttpServlet {
 					
 					if(type.equalsIgnoreCase("xmd"))
 					{
+						String datasetAlias = request.getParameter("datasetAlias");
+						if(datasetAlias==null || datasetAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("datasetAlias is a required param");
+						}
 						String xmd = DatasetDownloader.getXMD(datasetAlias, conn);
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 						@SuppressWarnings("rawtypes")
 						Map xmdObject =  mapper.readValue(xmd, Map.class);
 				    	mapper.writeValue(response.getOutputStream(), xmdObject);
+					}else if(type.equalsIgnoreCase("dataflow"))
+					{
+						String dataflowName = request.getParameter("dataflowName");
+						if(dataflowName==null || dataflowName.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("dataflowName is a required param");
+						}
+						DataFlow df = DataFlowUtil.getDataFlow(conn, dataflowName);
+						dfMap.put(dataflowName, df);
+				    	ObjectMapper mapper = new ObjectMapper();
+						mapper.writeValue(response.getOutputStream(), df.workflowDefinition);
 					}else
 					{
 						response.setContentType("application/json");

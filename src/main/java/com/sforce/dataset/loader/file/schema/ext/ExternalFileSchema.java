@@ -344,6 +344,7 @@ public class ExternalFileSchema  {
 			if(user_objects!=null && !user_objects.isEmpty())
 			{
 				int objectCount=0;
+				int dateFieldCount=0;
 				for(ObjectType user_object:user_objects)
 				{
 						objectCount++;
@@ -485,6 +486,7 @@ public class ExternalFileSchema  {
 									{
 										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have FirstDayOfWeek between (-1 && 6)\n");
 									}
+									dateFieldCount++;
 								}else
 								{
 									message.append("field {"+user_field.getFullyQualifiedName()+"}  has invalid type  {"+user_field.getType()+"}\n");
@@ -533,6 +535,10 @@ public class ExternalFileSchema  {
 							if(uniqueIdfieldNames.size()>1)
 							{
 								message.append("More than one field has 'isUniqueId' attribute set to true {"+uniqueIdfieldNames+"}\n");
+							}
+							if(dateFieldCount>1000)
+							{
+								message.append("[objects["+objectCount+"].fields] in schema cannot contain more than 1000 fields of type Date\n");
 							}
 						}else
 						{
@@ -1028,7 +1034,7 @@ public class ExternalFileSchema  {
 		{
 			for(FieldType user_field: inSchema.objects.get(0).getFields())
 			{
-				if(user_field != null && user_field.getfType()==FieldType.STRING)
+				if(user_field != null && (user_field.getfType()==FieldType.STRING || user_field.getfType()==FieldType.DATE))
 					hasDim = true;
 			}
 		}
