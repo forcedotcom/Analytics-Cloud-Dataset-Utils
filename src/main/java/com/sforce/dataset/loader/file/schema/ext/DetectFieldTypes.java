@@ -57,14 +57,28 @@ public class DetectFieldTypes {
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
 	public static final String[] additionalDatePatterns  = {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","MM/dd/yyyy HH:mm:ss","MM/dd/yy HH:mm:ss","MM-dd-yyyy HH:mm:ss","MM-dd-yy HH:mm:ss","dd/MM/yyyy HH:mm:ss","dd/MM/yy HH:mm:ss","dd-MM-yyyy HH:mm:ss","dd-MM-yy HH:mm:ss","MM/dd/yyyy","MM/dd/yy","dd/MM/yy","dd/MM/yyyy","MM-dd-yyyy","MM-dd-yy","dd-MM-yyyy","dd-MM-yy","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss","M/d/yy","M/d/yyyy","d/M/yy","d/M/yyyy","M-d-yy","M-d-yyyy","d-M-yy","d-M-yyyy","M/dd/yyyy HH:mm:ss","M/dd/yy HH:mm:ss","M-dd-yyyy HH:mm:ss","M-dd-yy HH:mm:ss","dd/M/yyyy HH:mm:ss","dd/M/yy HH:mm:ss","dd-M-yyyy HH:mm:ss","dd-M-yy HH:mm:ss","M/dd/yy","dd/M/yy","M-dd-yy","dd-M-yy","M/dd/yyyy","dd/M/yyyy","M-dd-yyyy","dd-M-yyyy","MM/d/yyyy HH:mm:ss","MM/d/yy HH:mm:ss","MM-d-yyyy HH:mm:ss","MM-d-yy HH:mm:ss","d/MM/yyyy HH:mm:ss","d/MM/yy HH:mm:ss","d-MM-yyyy HH:mm:ss","d-MM-yy HH:mm:ss","MM/d/yy","d/MM/yy","MM-d-yy","d-MM-yy","MM/d/yyyy","d/MM/yyyy","MM-d-yyyy","d-MM-yyyy"};
 	
-	public LinkedList<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
+	public List<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, CsvPreference pref, PrintStream logger) throws IOException
 	{
 		CsvListReader reader = null;
 		LinkedList<FieldType> types = null;
 		String[] header = null;
+		
+		if(userSchema!=null && userSchema.getFileFormat() != null && userSchema.getFileFormat().getNumberOfLinesToIgnore()==0)
+		{
+			LinkedList<ObjectType> obj = userSchema.getObjects();
+			if(obj!= null && !obj.isEmpty())
+			{
+				List<FieldType> fields = obj.get(0).getFields();
+				if(fields!= null && !fields.isEmpty())
+				{
+					return fields;
+				}
+			}
+		}
+		
 		try 
 		{
-			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
+			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
 			header = reader.getHeader(true);
 			
 			if(reader!=null)
@@ -72,6 +86,32 @@ public class DetectFieldTypes {
 				reader.close();
 				reader = null;
 			}
+			
+			if(userSchema!=null && userSchema.getFileFormat() != null && userSchema.getFileFormat().getNumberOfLinesToIgnore()>0)
+			{
+				LinkedList<ObjectType> obj = userSchema.getObjects();
+				if(obj!= null && !obj.isEmpty())
+				{
+					List<FieldType> fields = obj.get(0).getFields();
+					if(fields!= null && !fields.isEmpty())
+					{
+						int fieldCount = 0;
+						for(FieldType field:fields)
+						{
+							if(!field.isComputedField)
+								fieldCount++;
+						}
+						
+						if(header.length!=fieldCount)
+						{
+							throw new IllegalArgumentException("Input file header count {"+header.length+"} does not match json field count {"+fieldCount+"}");
+						}
+						
+						return fields;
+					}
+				}
+			}
+
 
 			List<String> nextLine = null;
 			types = new LinkedList<FieldType>();
@@ -94,29 +134,30 @@ public class DetectFieldTypes {
 					if(header[i] != null && header[i].startsWith("#"))
 						header[i] = header[i].replace("#", "");
 				}
-				boolean found = false;
-				if(userSchema != null)
-				{					
-					LinkedList<ObjectType> obj = userSchema.getObjects();
-					if(obj!= null && !obj.isEmpty())
-					{
-						List<FieldType> fields = obj.get(0).getFields();
-						if(fields!= null && !fields.isEmpty())
-						{
-							for(FieldType field:fields)
-							{
-								if(field.getName().equals(devNames[i]))
-								{
-									types.add(field);
-									found = true;
-									break;
-								}
-							}
-						}
-					}
-				}
-				if(found)
-					continue;
+
+//				boolean found = false;
+//				if(userSchema != null)
+//				{						
+//					LinkedList<ObjectType> obj = userSchema.getObjects();
+//					if(obj!= null && !obj.isEmpty())
+//					{
+//						List<FieldType> fields = obj.get(0).getFields();
+//						if(fields!= null && !fields.isEmpty())
+//						{							
+//							for(FieldType field:fields)
+//							{
+//								if(field.getName().equals(devNames[i]) || field.getFullyQualifiedName().equals(devNames[i]))
+//								{
+//									types.add(field);
+//									found = true;
+//									break;
+//								}
+//							}
+//						}
+//					}
+//				}
+//				if(found)
+//					continue;
 				
 				if(first)
 				{
@@ -131,7 +172,7 @@ public class DetectFieldTypes {
 				logger.print("Column: "+ header[i]);
 				try
 				{
-					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
+					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
 					header = reader.getHeader(true);
 
 					rowCount++;

@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +45,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.SeparatorGuesser;
 
 public class ExternalFileSchema  {
 
@@ -133,7 +134,7 @@ public class ExternalFileSchema  {
 		return true;
 	}
 
-	public static ExternalFileSchema init(File csvFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
+	public static ExternalFileSchema init(File csvFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
 		ExternalFileSchema newSchema = null;
 		//try 
@@ -170,27 +171,56 @@ public class ExternalFileSchema  {
 
 
 	
-	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException
+	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException, DatasetLoaderException
 	{
 		ExternalFileSchema emd = null;
 		String baseName = FilenameUtils.getBaseName(csvFile.getName());
+		String fileExt = FilenameUtils.getExtension(csvFile.getName());
 		baseName = createDevName(baseName, "Object", 0, true);
 		String fullyQualifiedName = baseName; 
-		//try 
-		//{
-			if(userSchema!=null)
-			{
+
+		if(userSchema!=null)
+		{
 				if(userSchema.objects!=null && userSchema.objects.size()==1)
 				{
 					baseName = userSchema.objects.get(0).getName();
 					//because fully qualified name is used to match auto schema we will use user specified 
 					fullyQualifiedName = userSchema.objects.get(0).getName(); 
 				}
-			}
+		}
+		
+		boolean isParsable = false;
+		if(fileExt != null && (fileExt.equalsIgnoreCase("csv") || fileExt.equalsIgnoreCase("txt") ))
+		{
+			isParsable = true;
+		}
+
+		if(!isParsable)
+			return null;
+		
+		char delim = ',';
+		if(userSchema!=null)
+		{
+			delim = userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0);
+		}else
+		{	
+				delim = SeparatorGuesser.guessSeparator(csvFile, fileCharset, true);
+//				logger.println("\n*******************************************************************************");					
+			    logger.println("File {"+csvFile+"} has delimiter {"+delim+"}");
+//				logger.println("*******************************************************************************\n");					
+				
+				if(delim==0)
+				{
+					throw new DatasetLoaderException("Failed to determine field Delimiter for file {"+csvFile+"}");
+				}
+		}
+
+		CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), delim, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 		
 			DetectFieldTypes detEFT = new DetectFieldTypes();
-			LinkedList<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset, logger);
+			List<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset,pref, logger);
 			FileFormat fileFormat = new FileFormat();
+			fileFormat.setFieldsDelimitedBy(delim+"");
 
 			ObjectType od = new ObjectType();
 			od.setName(baseName);
@@ -198,8 +228,6 @@ public class ExternalFileSchema  {
 			od.setLabel(baseName);
 			od.setDescription(baseName);
 			od.setConnector("SalesforceAnalyticsCloudDatasetLoader");
-//			od.isPrimaryObject = true;
-//			od.rowLevelSecurityFilter = "";
 			od.setFields(fields);
 			
 			LinkedList<ObjectType> objects = new LinkedList<ObjectType>();
@@ -209,9 +237,6 @@ public class ExternalFileSchema  {
 			emd.fileFormat = fileFormat;
 			emd.objects = objects;
 
-		//} catch (Throwable t) {
-		//	t.printStackTrace();
-		//}
 		validateSchema(emd, logger);
 		return emd;
 	}
@@ -243,9 +268,10 @@ public class ExternalFileSchema  {
 	public static ExternalFileSchema load(File inputCSV, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
 	{
 		File schemaFile = inputCSV;
+		String fileExt = FilenameUtils.getExtension(inputCSV.getName());
+
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		boolean isCSV = false;
 		if(!inputCSV.getName().endsWith(SCHEMA_FILE_SUFFIX))
 		{
 			schemaFile = new File(inputCSV.getParent(),FilenameUtils.getBaseName(inputCSV.getName())+SCHEMA_FILE_SUFFIX);
@@ -261,19 +287,23 @@ public class ExternalFileSchema  {
 		if(userSchema==null)
 			return null;
 		
-		if(FilenameUtils.getExtension(inputCSV.getName()).equalsIgnoreCase("csv"))
-		{			
-			isCSV = true;
+		validateSchema(userSchema, logger);
+		
+		boolean isParsable = false;
+		if(fileExt != null && (fileExt.equalsIgnoreCase("csv") || fileExt.equalsIgnoreCase("txt") ))
+		{
+			isParsable = true;
 		}
-
-			
-			String[] header = null;
-			if(isCSV)
-			{
+				
+		if(isParsable && userSchema!=null && userSchema.getFileFormat() != null && userSchema.getFileFormat().getNumberOfLinesToIgnore()==1)
+		{
+				String[] header = null;
 				CsvListReader reader = null;
+				CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+
 				try 
 				{
-					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null , fileCharset)), CsvPreference.STANDARD_PREFERENCE);
+					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
 					header = reader.getHeader(true);
 				}catch(Throwable t){t.printStackTrace();}
 				finally{
@@ -286,8 +316,13 @@ public class ExternalFileSchema  {
 						}
 					}
 				}
-			}
-			
+		
+				if(header != null && header.length > 0 && header.length != userSchema.getObjects().get(0).getFields().size())
+				{
+					throw new IllegalArgumentException("CSV header count ["+header.length+"] does not match JSON Field count ["+userSchema.getObjects().get(0).getFields().size()+"]");
+				}
+				
+			/*
 			if(header != null && header.length > 0)
 			{
 					String devNames[] = ExternalFileSchema.createUniqueDevName(header);
@@ -330,8 +365,9 @@ public class ExternalFileSchema  {
 						}
 					}
 			}
-			validateSchema(userSchema, logger);
-			return userSchema;
+			*/
+		}
+		return userSchema;
 	}
 	
 
@@ -669,6 +705,63 @@ public class ExternalFileSchema  {
 			t.printStackTrace(logger);
 		}
 		return mergedSchema;
+	}
+
+	
+	public static void mergeExtendedFields(ExternalFileSchema extSchema, ExternalFileSchema baseSchema, PrintStream logger)
+	{
+		try 
+		{
+			if(extSchema == null)
+			{
+				return;
+			}
+			LinkedList<ObjectType> ext_objects = extSchema.objects;
+			LinkedList<ObjectType> base_objects = baseSchema.objects;
+			if(ext_objects==null || base_objects==null)
+				return;
+			for(ObjectType base_object:base_objects)
+			{
+				for(ObjectType ext_object:ext_objects)
+				{
+					if(base_object.getFullyQualifiedName().equals(ext_object.getFullyQualifiedName()))
+					{
+						List<FieldType> ext_fields = ext_object.getFields();
+						List<FieldType> base_fields = base_object.getFields();
+						if(ext_fields==null || ext_fields.isEmpty())
+						{
+							return;
+						}
+						if(base_fields==null || base_fields.isEmpty())
+						{
+							return;
+						}
+						for(FieldType base_field:base_fields)
+						{
+							boolean found = false;
+							for(FieldType ext_field:ext_fields)
+							{
+								if(base_field.getFullyQualifiedName().equals(ext_field.getFullyQualifiedName()))
+								{
+										found = true;
+										base_field.isComputedField = ext_field.isComputedField;
+										base_field.isSortAscending = ext_field.isSortAscending;
+										base_field.setSortIndex(ext_field.getSortIndex());
+										base_field.setComputedFieldExpression(ext_field.getComputedFieldExpression());
+								}								
+							}
+							if(!found)
+							{
+								logger.println("Found new field {"+base_field+"} in CSV");
+							}
+						}
+					}
+				}
+			}
+		} catch (Throwable t) {
+			t.printStackTrace(logger);
+		}
+		return;
 	}
 
 

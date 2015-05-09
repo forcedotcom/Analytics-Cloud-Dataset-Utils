@@ -41,6 +41,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.monitor.Session;
@@ -138,7 +139,12 @@ public class MultipartRequestHandler {
 					fm.setInputCsv(inputCsv);
 					fm.setInputJson(inputJson);
 //					File outFile = new File(parent,fm.getInputFileName());
-					File outFile = new File(parent,datasetName+"_"+session.getId()+".csv");
+					String fileExt = "csv";
+					if(fm.getInputFileName()!=null && !fm.getInputFileName().isEmpty())
+						fileExt = FilenameUtils.getExtension(fm.getInputFileName());
+					if(fileExt == null || fileExt.isEmpty())
+						fileExt = "csv";
+					File outFile = new File(parent,datasetName+"_"+session.getId()+"."+fileExt);
 					if(fm.getInputFileName().equalsIgnoreCase(inputJson))
 					{
 						ExternalFileSchema schema = ExternalFileSchema.load(fm.inputFileStream, Charset.forName("UTF-8"), System.out);
@@ -146,7 +152,14 @@ public class MultipartRequestHandler {
 						fm.setInputFileName(ExternalFileSchema.getSchemaFile(outFile, System.out).getName());
 						fm.setInputJson(fm.getInputFileName());
 						outFile = new File(parent,fm.getInputFileName());
-						ExternalFileSchema.save(outFile, schema, System.out);
+						try
+						{
+							DatasetUtilConstants.ext = true;
+							ExternalFileSchema.save(outFile, schema, System.out);
+						}finally
+						{
+							DatasetUtilConstants.ext = false;					
+						}
 					}else
 					{
 						FileOutputStream fos = null;

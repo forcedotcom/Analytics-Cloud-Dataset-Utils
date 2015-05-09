@@ -66,7 +66,7 @@ public class ErrorWriter {
 
 	
 
-	public ErrorWriter(File inputCsv,String delimiter)
+	public ErrorWriter(File inputCsv,String delimiter, CsvPreference pref)
 			throws IOException 
 	{
 		if(inputCsv==null|| !inputCsv.exists())
@@ -81,7 +81,7 @@ public class ErrorWriter {
 
 		this.delimiter = delimiter;
 
-		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(CodingErrorAction.IGNORE, null)), CsvPreference.STANDARD_PREFERENCE);
+		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(CodingErrorAction.IGNORE, null)), pref);
 		headerColumns = reader.getHeader(true);		
 		reader.close();
 		

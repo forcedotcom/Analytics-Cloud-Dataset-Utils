@@ -55,7 +55,7 @@ import com.sforce.dataset.util.DatasetUtils;
 
 public class CsvExternalSort extends ExternalSort {
 	
-    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema) throws IOException
+    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema, CsvPreference pref) throws IOException
     {
     	if(inputCsv==null || !inputCsv.canRead())
     	{
@@ -87,9 +87,9 @@ public class CsvExternalSort extends ExternalSort {
 		session.setStatus("SORTING");
 			
 			
-		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize);
+		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize, pref);
 //		System.out.println("CsvExternalSort created " + l.size() + " tmp files");
-		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize);
+		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize, pref);
 		return outputFile;
     }
 
@@ -120,11 +120,11 @@ public class CsvExternalSort extends ExternalSort {
      * @return a list of temporary flat files
      * @throws IOException
      */
-    public static List<File> sortInBatch(File inputCsv, final Charset cs, CsvRowComparator cmp, final boolean distinct,final int numHeader) throws IOException 
+    public static List<File> sortInBatch(File inputCsv, final Charset cs, CsvRowComparator cmp, final boolean distinct,final int numHeader, CsvPreference pref) throws IOException 
     {
             List<File> files = new ArrayList<File>();
             long blocksize = estimateBestSizeOfBlocks(inputCsv.length(), DEFAULTMAXTEMPFILES, estimateAvailableMemory());// in bytes
-			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), CsvPreference.STANDARD_PREFERENCE);				
+			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
 			File tmpdirectory = new File(inputCsv.getParent(),"archive");
 			try
 			{
@@ -150,12 +150,12 @@ public class CsvExternalSort extends ExternalSort {
                                             tmplist.add(row);
                                             currentblocksize += row.size()*300;
                                     }
-                                    files.add(sortAndSave(tmplist, cmp, cs, tmpdirectory, distinct));
+                                    files.add(sortAndSave(tmplist, cmp, cs, tmpdirectory, distinct, pref));
                                     tmplist.clear();
                             }
                     } catch (EOFException oef) {
                             if (tmplist.size() > 0) {
-                                    files.add(sortAndSave(tmplist, cmp, cs,tmpdirectory, distinct));
+                                    files.add(sortAndSave(tmplist, cmp, cs,tmpdirectory, distinct, pref));
                                     tmplist.clear();
                             }
                     }
@@ -188,12 +188,12 @@ public class CsvExternalSort extends ExternalSort {
      * @throws IOException
      */
 	private static File sortAndSave(List<List<String>> tmplist,
-			CsvRowComparator cmp, Charset cs, File tmpdirectory, boolean distinct)  throws IOException {
+			CsvRowComparator cmp, Charset cs, File tmpdirectory, boolean distinct, CsvPreference pref)  throws IOException {
         Collections.sort(tmplist, cmp);
         File newtmpfile = File.createTempFile("sortInBatch",
                 "flatfile", tmpdirectory);
         newtmpfile.deleteOnExit();
-        CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newtmpfile), cs)),CsvPreference.STANDARD_PREFERENCE);
+        CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newtmpfile), cs)),pref);
         List<String> lastLine = null;
         try {
                 for (List<String> rowData : tmplist) {
@@ -226,6 +226,7 @@ public class CsvExternalSort extends ExternalSort {
      * @param cs
      *                The {@link Charset} to be used for the byte to
      *                character conversion.
+     * @param pref 
      * @param append
      *                Pass <code>true</code> if result should append to
      *                {@link File} instead of overwrite. Default to be false
@@ -237,14 +238,14 @@ public class CsvExternalSort extends ExternalSort {
      * @since v0.1.4
      */
     public static int mergeSortedFiles(List<File> files, File outputfile,
-            final Comparator<List<String>> cmp, Charset cs, boolean distinct, File inputfile,final int headersize) throws IOException {
+            final Comparator<List<String>> cmp, Charset cs, boolean distinct, File inputfile,final int headersize, CsvPreference pref) throws IOException {
             ArrayList<CsvFileBuffer> bfbs = new ArrayList<CsvFileBuffer>();
             for (File f : files) {
-            	CsvFileBuffer bfb = new CsvFileBuffer(f, cs);
+            	CsvFileBuffer bfb = new CsvFileBuffer(f, cs, pref);
             	bfbs.add(bfb);
             }
-            CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputfile), cs)),CsvPreference.STANDARD_PREFERENCE);
-            copyHeader(inputfile, writer, cs, headersize);
+            CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputfile), cs)),pref);
+            copyHeader(inputfile, writer, cs, headersize, pref);
             int rowcounter = mergeSortedFiles(writer, cmp, distinct, bfbs);
             for (File f : files)
                     f.delete();
@@ -338,9 +339,9 @@ public class CsvExternalSort extends ExternalSort {
      * @return a list of temporary flat files
      * @throws IOException
      */
-    public static void copyHeader(File inputCsv, CsvListWriter writer, Charset cs, final int numHeader) throws IOException 
+    public static void copyHeader(File inputCsv, CsvListWriter writer, Charset cs, final int numHeader, CsvPreference pref) throws IOException 
     {
-		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), CsvPreference.STANDARD_PREFERENCE);				
+		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
 		try {
 			int counter = 0;
 			List<String> row = new ArrayList<String>();
@@ -362,8 +363,8 @@ public class CsvExternalSort extends ExternalSort {
  * the last line in memory.
  */
 final class CsvFileBuffer {
-        public CsvFileBuffer(File inputCsv, Charset cs) throws IOException {
-			this.reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), CsvPreference.STANDARD_PREFERENCE);				
+        public CsvFileBuffer(File inputCsv, Charset cs, CsvPreference pref) throws IOException {
+			this.reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
             reload();
         }
         public void close() throws IOException {

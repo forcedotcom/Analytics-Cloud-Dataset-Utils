@@ -66,6 +66,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.soap.partner.CallOptions_element;
+import com.sforce.soap.partner.Connector;
 import com.sforce.soap.partner.GetUserInfoResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.fault.LoginFault;
@@ -431,7 +433,7 @@ public class DatasetUtils {
 		
 
 		try {
-			ConnectorConfig config = new ConnectorConfig();
+			ConnectorConfig config = getConnectorConfig();
 			if(sessionId!=null)
 			{
 			    config.setServiceEndpoint(endpoint);
@@ -443,7 +445,15 @@ public class DatasetUtils {
 				config.setAuthEndpoint(endpoint);
 				config.setSessionRenewer(new SessionRenewerImpl(username, password, null, endpoint));
 			}
-			PartnerConnection connection = new PartnerConnection(config);
+			
+//			PartnerConnection connection = new PartnerConnection(config);
+			PartnerConnection connection = Connector.newConnection(config);
+	
+			//Set the clientId
+			CallOptions_element co = new CallOptions_element();
+		    co.setClient(DatasetUtilConstants.clientId);
+		    connection.__setCallOptions(co);
+		        
 			@SuppressWarnings("unused")
 			GetUserInfoResult userInfo = connection.getUserInfo();
 			if(!hasLoggedIn)
@@ -477,6 +487,64 @@ public class DatasetUtils {
 			throw new ConnectionException(e.toString());
 		}
 	}
+
+    protected static ConnectorConfig getConnectorConfig() {
+        ConnectorConfig cc = new ConnectorConfig();
+        cc.setTransport(HttpClientTransport.class);
+        
+        // proxy properties
+        try {
+        	com.sforce.dataset.Config conf = DatasetUtilConstants.getSystemConfig();
+            if (conf.proxyHost != null && conf.proxyHost.length() > 0 && conf.proxyPort > 0) {
+                cc.setProxy(conf.proxyHost, conf.proxyPort);
+
+                if (conf.proxyUsername != null && conf.proxyUsername.length() > 0) {
+                    cc.setProxyUsername(conf.proxyUsername);
+
+                    if (conf.proxyPassword != null && conf.proxyPassword.length() > 0) {
+                        cc.setProxyPassword(conf.proxyPassword);
+                    } else {
+                        cc.setProxyPassword("");
+                    }
+                }
+
+                if (conf.proxyNtlmDomain != null && conf.proxyNtlmDomain.length() > 0) {
+                    cc.setNtlmDomain(conf.proxyNtlmDomain);
+                }
+            }
+
+            // Time out after 5 seconds for connection
+            cc.setConnectionTimeout(conf.connectionTimeoutSecs * 1000);
+
+            // Time out after 1 minute 10 sec for login response
+            cc.setReadTimeout((conf.timeoutSecs * 1000));
+
+            // use compression or turn it off
+            cc.setCompression(!conf.noCompression);
+
+            if (conf.debugMessages) {
+                cc.setTraceMessage(true);
+                cc.setPrettyPrintXml(true);
+                    try {
+                        cc.setTraceFile(DatasetUtilConstants.getDebugFile().getAbsolutePath());
+                    } catch (Throwable e) {
+                    	e.printStackTrace();
+                    }
+            }
+        
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+//        String server = getSession().getServer();
+//        if (server != null) {
+//            cc.setAuthEndpoint(server + DEFAULT_AUTH_ENDPOINT_URL.getPath());
+//            cc.setServiceEndpoint(server + DEFAULT_AUTH_ENDPOINT_URL.getPath());
+//            cc.setRestEndpoint(server + REST_ENDPOINT);
+//        }
+
+        return cc;
+    }
 
 	
 	@SuppressWarnings("rawtypes")

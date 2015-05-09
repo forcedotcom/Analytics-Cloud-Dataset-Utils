@@ -1,9 +1,6 @@
 $(document).ready(function() {
-	loadlist($('#DatasetName-xmd').get(0),/*the 'select' object*/
-     		 'list?type=dataset&current=true',/*the url of the server-side script*/
-     		 '_alias',/*The name of the field in the returned list*/
-     		 'name'
-     		 );
+	
+	loadlistStatic($('#DatasetName-xmd').get(0));
 
 	var container = $('#jsoncontainer')[0];
 	var options = {
@@ -22,8 +19,6 @@ $(document).ready(function() {
    		
 	};
 	editor.set(json);
-	//editor.validate();
-	//console.log('valdiation');
 	//editor.expandAll();
 
 	$("button[name=getjson]").click(getJson);
@@ -33,7 +28,7 @@ $(document).ready(function() {
 		if (($('#DatasetName-xmd').val()))
 		{
 			var emToGet = $('#DatasetName-xmd').val();
-			full_url = "/json?type=xmd&datasetAlias=" + emToGet;
+			full_url = "/json?type=dataflow&dataflowName=" + emToGet;
 			$.getJSON(full_url, {}, function(data){
 					cleanSystemFields(data);
 					editor.set(data);
@@ -74,6 +69,7 @@ $(document).ready(function() {
 	function sendJson(event){
 		var json_string;
 
+
 		try{
 			json_string = JSON.stringify(editor.get());
 		}
@@ -82,7 +78,7 @@ $(document).ready(function() {
 			return;
 		}
 
-		$("#submit-xmd-btn").text("Submitting XMD...");
+		$("#submit-xmd-btn").text("Submitting Workflow...");
 		disableButtons(true);
 		setTimeout(function() {
 			$.ajax({
@@ -97,13 +93,13 @@ $(document).ready(function() {
 			    dataType: 'json',
 			    async: false,
 			    success: function() {
-			    	$("#submit-xmd-btn").text("Submit Updated XMD");
+			    	$("#submit-xmd-btn").text("Submit Updated Workflow");
 			    	disableButtons(false);
 	           	   	$("#submit-xmd-btn").prop('disabled', true);
 			        submittedButton();
 			    },
 	            error: function(xhr, status, error) {
-	           	   $("#submit-xmd-btn").text("Submit Updated XMD");
+	           	   $("#submit-xmd-btn").text("Submit Updated Workflow");
 	           	   disableButtons(false);
 	           	   $("#submit-xmd-btn").prop('disabled', true);
 	               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
@@ -184,6 +180,15 @@ $(document).ready(function() {
             }
         });
 	}
+
+	function loadlistStatic(selobj){
+		$(selobj).empty();
+		$(selobj).append(
+	                 $('<option></option>')
+	                        .val("SalesEdgeEltWorkflow")
+	                        .html("SalesEdgeEltWorkflow"));
+		$(".xmd-container").show();
+	}
 	
 	function loadlist(selobj,url,nameattr,displayattr)
 	{
@@ -216,10 +221,10 @@ $(document).ready(function() {
 		$("#submit-xmd-btn").toggleClass("btn-success");
 
 		if ($("#submit-xmd-btn").hasClass("btn-danger")){
-			$("#submit-xmd-btn").text("Submit Updated XMD");
+			$("#submit-xmd-btn").text("Submit Updated Workflow");
 		}
 		else{
-			$("#submit-xmd-btn").text("XMD Submitted!");
+			$("#submit-xmd-btn").text("Workflow Submitted!");
 		}
 	}
 

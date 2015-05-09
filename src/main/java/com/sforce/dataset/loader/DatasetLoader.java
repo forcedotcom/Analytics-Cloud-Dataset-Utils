@@ -243,14 +243,54 @@ public class DatasetLoader {
 			schemaFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
 			ExternalFileSchema schema = null;
 			
-			if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
+			//If this is incremental, fetch last uploaded json instead of generating a new one
+			if(schemaFile == null || !schemaFile.exists() || schemaFile.length()==0)
 			{
-				//If this is incremental, fetch last uploaded json instead of generating a new one
 				if(Operation.equalsIgnoreCase("Append") || (Operation.equalsIgnoreCase("Upsert")) || (Operation.equalsIgnoreCase("Delete")))
 				{
 					schema = getLastUploadedJson(partnerConnection, datasetAlias, logger);
+					if(schemaFile != null && schema !=null)
+					{
+						ExternalFileSchema.save(schemaFile, schema, logger);
+					}
 				}
 			}
+
+//			if(schema!=null)
+//			{
+//				if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
+//				{
+//					ExternalFileSchema extSchema = ExternalFileSchema.load(schemaFile, inputFileCharset, logger);
+//					ExternalFileSchema.mergeExtendedFields(extSchema, schema, logger);
+//				}else if(schemaFile != null)
+//				{
+//					ExternalFileSchema.save(schemaFile, schema, logger);
+//				}
+//			}
+			
+			CsvPreference pref = null;				
+			String fileExt = FilenameUtils.getExtension(inputFile.getName());
+			boolean isParsable = false;
+			if(fileExt != null && (fileExt.equalsIgnoreCase("csv") || fileExt.equalsIgnoreCase("txt") ))
+			{
+				isParsable = true;
+//				if(!fileExt.equalsIgnoreCase("csv"))
+//				{
+//					char sep = SeparatorGuesser.guessSeparator(inputFile, inputFileCharset, true);
+//					if(sep!=0)
+//					{
+//						pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), sep, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+//					}else
+//					{
+//						throw new DatasetLoaderException("Failed to determine field Delimiter for file {"+inputFile+"}");
+//					}
+//				}else
+//				{
+//					pref = CsvPreference.STANDARD_PREFERENCE;
+//				}
+			}
+				
+			
 			
 			if(session.isDone())
 			{
@@ -260,14 +300,14 @@ public class DatasetLoader {
 			if(schema==null)
 			{
 				logger.println("\n*******************************************************************************");					
-				if(FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
+				if(isParsable)
 				{	
 					if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
 						session.setStatus("LOADING SCHEMA");
 					else
 						session.setStatus("DETECTING SCHEMA");
 								
-					schema = ExternalFileSchema.init(inputFile, inputFileCharset, logger);
+					schema = ExternalFileSchema.init(inputFile, inputFileCharset,logger);
 					if(schema==null)
 					{
 						logger.println("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
@@ -277,7 +317,7 @@ public class DatasetLoader {
 				{
 					if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
 						session.setStatus("LOADING SCHEMA");
-					schema = ExternalFileSchema.load(inputFile, inputFileCharset, logger);
+					schema = ExternalFileSchema.load(inputFile, inputFileCharset,logger);
 					if(schema==null)
 					{
 						logger.println("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
@@ -299,6 +339,9 @@ public class DatasetLoader {
 				{
 					throw new DatasetLoaderException("Schema File {"+ExternalFileSchema.getSchemaFile(inputFile, logger) +"} has a uniqueId set. Choose 'Upsert' operation instead");
 				}
+				
+			   pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+
 			}
 			
 			if(session.isDone())
@@ -370,7 +413,7 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
-			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema);
+			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema, pref);
 			
 			if(session.isDone())
 			{
@@ -380,7 +423,7 @@ public class DatasetLoader {
 			//Create the Bin file
 			//File binFile = new File(csvFile.getParent(), datasetName + ".bin");
 			File gzbinFile = inputFile;
-			if(!FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
+			if(!isParsable)
 			{
 				if(!FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("gz") || !FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("zip"))
 				{
@@ -393,7 +436,7 @@ public class DatasetLoader {
 			File lastgzbinFile = new File(datasetArchiveDir, hdrId + "." + FilenameUtils.getBaseName(inputFile.getName()) + ".gz");
 			if(!lastgzbinFile.exists())
 			{
-			if(uploadFormat.equalsIgnoreCase("binary") && FilenameUtils.getExtension(inputFile.getName()).equalsIgnoreCase("csv"))
+			if(uploadFormat.equalsIgnoreCase("binary") && isParsable)
 			{	
 				FileOutputStream fos = null;
 				BufferedOutputStream out = null;
@@ -413,11 +456,11 @@ public class DatasetLoader {
 				long errorRowCount = 0;
 				long startTime = System.currentTimeMillis();
 				EbinFormatWriter ebinWriter = new EbinFormatWriter(out, schema.getObjects().get(0).getFields().toArray(new FieldType[0]), logger);
-				ErrorWriter errorWriter = new ErrorWriter(inputFile,",");
+				ErrorWriter errorWriter = new ErrorWriter(inputFile,",", pref);
 				
 				session.setParam(DatasetUtilConstants.errorCsvParam, errorWriter.getErrorFile().getAbsolutePath()); 
 				
-				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), CsvPreference.STANDARD_PREFERENCE);				
+				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), pref);				
 				WriterThread writer = new WriterThread(q, ebinWriter, errorWriter, logger,session);
 				Thread th = new Thread(writer,"Writer-Thread");
 				th.setDaemon(true);

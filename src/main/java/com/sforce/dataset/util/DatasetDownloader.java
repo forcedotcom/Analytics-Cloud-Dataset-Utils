@@ -24,11 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 package com.sforce.dataset.util;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +50,10 @@ import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectorConfig;
 
 public class DatasetDownloader {
-	
 
+	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+//	private static final int EOF = -1;
+	
 	/**
 	 * @param EM_NAME
 	 * @param partnerConnection
@@ -268,6 +270,8 @@ public class DatasetDownloader {
 								FileUtils.forceMkdir(edgemartDir);
 								for(Object filename:_files.keySet())
 								{
+									try
+									{
 									if(filename==null)
 										continue;
 											
@@ -286,6 +290,8 @@ public class DatasetDownloader {
 									listEMPost1.setConfig(requestConfig);
 									listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
 
+									long startTime = System.currentTimeMillis();
+									long endTime = 0L;
 									CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
 
 								   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
@@ -303,27 +309,57 @@ public class DatasetDownloader {
 									File outfile = new File(edgemartDir,(String) filename);
 									if(!filename.toString().endsWith("json"))
 									{
-										System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
-										BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
-										IOUtils.copy(emis1, out);
-										out.close();
+//										System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
+										FileOutputStream out = new FileOutputStream(outfile);
+										byte[] buffer = new byte[DatasetUtilConstants.DEFAULT_BUFFER_SIZE];											
+										try
+										{
+											IOUtils.copyLarge(emis1, out, buffer);
+											endTime = System.currentTimeMillis();
+										}catch(Throwable t)
+										{
+											endTime = System.currentTimeMillis();
+											t.printStackTrace();
+										}finally
+										{
+											out.close();
+											emis1.close();
+											emresponse1.close();
+											httpClient1.close();
+										}
 									}else
 									{
-										String xmd = IOUtils.toString(emis1, "UTF-8");
-										emis1.close();
-										httpClient1.close();
-	
-										Map xmdObject =  mapper.readValue(xmd, Map.class);
-										mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, xmdObject);
+										try
+										{
+											String xmd = IOUtils.toString(emis1, "UTF-8");
+											endTime = System.currentTimeMillis();
+											Map xmdObject =  mapper.readValue(xmd, Map.class);
+											mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, xmdObject);
+										}catch(Throwable t)
+										{
+											endTime = System.currentTimeMillis();
+											t.printStackTrace();
+										}finally
+										{
+											emis1.close();
+											httpClient1.close();
+										}
 									}
-									System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}\n");
-								}
+										System.out.println("file {"+outfile+"} downloaded. Size{"+nf.format(outfile.length())+"}, Time{"+nf.format(endTime-startTime)+"}\n");
+									} catch (Throwable t) {
+										t.printStackTrace();
+									}
+								} //end for
+								System.out.println("Completed downloading Files for dataset {"+EM_NAME+"}");							
+								return true;
+							}else
+							{
+								System.out.println("\n Dataset {"+EM_NAME+"} does not have any files");							
+								return false;
 							}
-							System.out.println("Completed downloading Files..");							
-							return true;
 						}else
 						{
-							System.out.println("\n EM {"+EM_NAME+"} not found");							
+							System.out.println("\n Datset {"+EM_NAME+"} not found");							
 							return false;
 						}
 					}

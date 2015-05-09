@@ -23,46 +23,22 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.loader.file.schema;
 
-public class FileFormat {
-	private String charsetName = "UTF-8";
-	private String fieldsDelimitedBy = ",";
-	private char fieldsEnclosedBy = '"';
-	private String linesTerminatedBy = "\n";
-    private int numberOfLinesToIgnore = 1; //BY DEFAULT THERE IS A HEADER LINE IN CSV
-    
-	public String getCharsetName() {
-		return charsetName;
-	}
-	public void setCharsetName(String charsetName) {
-		this.charsetName = charsetName;
-	}
-	public String getFieldsDelimitedBy() {
-		return fieldsDelimitedBy;
-	}
-	public void setFieldsDelimitedBy(String fieldsDelimitedBy) {
-		if(fieldsDelimitedBy != null && !fieldsDelimitedBy.isEmpty())
-			this.fieldsDelimitedBy = fieldsDelimitedBy;
-	}
-	public char getFieldsEnclosedBy() {
-		return fieldsEnclosedBy;
-	}
-	public void setFieldsEnclosedBy(char fieldsEnclosedBy) {
-		this.fieldsEnclosedBy = fieldsEnclosedBy;
-	}
-	public String getLinesTerminatedBy() {
-		return linesTerminatedBy;
-	}
-	public void setLinesTerminatedBy(String linesTerminatedBy) {
-		this.linesTerminatedBy = linesTerminatedBy;
-	}
-	public int getNumberOfLinesToIgnore() {
-		return numberOfLinesToIgnore;
-	}
-	public void setNumberOfLinesToIgnore(int numberOfLinesToIgnore) {
-		this.numberOfLinesToIgnore = numberOfLinesToIgnore;
-	}
-    
-    
+package com.sforce.dataset;
+
+
+
+public class Config {
+    public String proxyUsername = null;
+	public String proxyPassword = null;
+	public String proxyNtlmDomain = null;
+	public String proxyHost = null;
+	public int proxyPort = 0;
+	
+	public int timeoutSecs = 540;
+	public int connectionTimeoutSecs = 60;
+	
+	public boolean noCompression = false;
+
+	public boolean debugMessages = false;
 }

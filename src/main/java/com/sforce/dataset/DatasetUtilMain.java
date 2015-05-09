@@ -271,8 +271,7 @@ public class DatasetUtilMain {
 				}catch(Throwable me)
 				{				
 				}
-			}
-			
+			}			
 		}
 
 		if(params.sessionId==null)
@@ -382,15 +381,15 @@ public class DatasetUtilMain {
 			System.out.println("*******************************************************************************\n");	
 			System.out.println();			
 
-			System.out.println("\n*******************************************************************************");					
-	        try {
-		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-				datasetUtilServer.init(args, false);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			System.out.println("*******************************************************************************\n");	
-			System.out.println();			
+//			System.out.println("\n*******************************************************************************");					
+//	        try {
+//		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
+//				datasetUtilServer.init(args, false);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//			System.out.println("*******************************************************************************\n");	
+//			System.out.println();			
 
 			while(true)
 			{
@@ -437,7 +436,7 @@ public class DatasetUtilMain {
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
 		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
-		System.out.println("--createNewDateParts : (Optional) wether to create new date parts");
+//		System.out.println("--createNewDateParts : (Optional) wether to create new date parts");
 //		System.out.println("jsonConfig: (Optional) the dataflow definition json file");
 		System.out.println("*******************************************************************************\n");
 		System.out.println("Usage Example 1: Upload a csv to a dataset");
@@ -1003,7 +1002,7 @@ public class DatasetUtilMain {
 			}
 			
 			String ext = FilenameUtils.getExtension(temp.getName());
-			if(ext == null || !(ext.equalsIgnoreCase("csv") || ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz")  || ext.equalsIgnoreCase("json")))
+			if(ext == null || !(ext.equalsIgnoreCase("csv") || ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("bin") || ext.equalsIgnoreCase("gz")  || ext.equalsIgnoreCase("json")))
 			{
 				System.out.println("\nERROR: inputFile does not have valid extension");
 				return null;

@@ -26,9 +26,18 @@
 package com.sforce.dataset;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.BOMInputStream;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.util.DatasetUtils;
 
 
 public class DatasetUtilConstants {
@@ -52,11 +61,16 @@ public class DatasetUtilConstants {
 	public static final String errorDirName = "error";
 	public static final String dataDirName = "data";
 	public static final String configDirName = "config";
+	public static final String configFileName = "settings.json";
+	public static final String debugFileName = "debug.log";
+	
+
 	
 	public static final String errorCsvParam = "ERROR_CSV";
 	public static final String metadataJsonParam = "METADATA_JSON";
 	public static final String hdrIdParam = "HEADER_ID";
 	public static final String serverStatusParam = "SERVER_STATUS";
+	public static final String clientId = "com.sforce.dataset.utils";
 	
 	
 	
@@ -137,6 +151,54 @@ public class DatasetUtilConstants {
 			e.printStackTrace();
 		}
 		return logsDir;
+	}
+
+	public static final File getDebugFile()
+	{
+		File logsDir = new File(DatasetUtilConstants.currentDir,logsDirName);
+		try {
+			FileUtils.forceMkdir(logsDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		File debugFile = new File(logsDir,debugFileName);
+		return debugFile;
+	}
+
+	public static final Config getSystemConfig()
+	{
+		Config conf = new Config();
+		File configDir = new File(DatasetUtilConstants.currentDir,configDirName);
+		try {
+			FileUtils.forceMkdir(configDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		File configFile = new File(configDir,configFileName);
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		if(configFile != null && configFile.exists())
+		{
+			InputStreamReader reader = null;
+			try {
+				reader = new InputStreamReader(new BOMInputStream(new FileInputStream(configFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+				conf  =  mapper.readValue(reader, Config.class);						
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}finally
+			{
+				IOUtils.closeQuietly(reader);
+			}
+		}else
+		{
+			try
+			{
+				mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, conf);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+		return conf;
 	}
 
 }
