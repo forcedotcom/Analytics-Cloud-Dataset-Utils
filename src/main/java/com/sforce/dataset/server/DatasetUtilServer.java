@@ -59,7 +59,7 @@ public class DatasetUtilServer {
     public void init(String[] args, boolean join) throws Exception {
 
 //    	DatasetUtilServer.partnerConnection = partnerConnection;
-        final String WEBAPPDIR = "index.html";
+        final String WEBAPPDIR = "login.html";
         final String contextPath = "/";
         final int maxFormContentSize = 40 * 1000 * 1024 * 1024;
 
@@ -72,13 +72,14 @@ public class DatasetUtilServer {
         
         final URL warUrl = this.getClass().getClassLoader().getResource(WEBAPPDIR);
         String warUrlString = "src/main/webapp";
+        System.out.println("warUrl:"+warUrlString);
         if(warUrl!=null)
         {
         	warUrlString = warUrl.toExternalForm();
-//            System.out.println("warUrlString:"+warUrlString);
+            System.out.println("warUrlString:"+warUrlString);
         	warUrlString = warUrlString.replace(WEBAPPDIR, "");
         }
-//        System.out.println("warUrlString:"+warUrlString);
+        System.out.println("warUrlString:"+warUrlString);
         WebAppContext context = new WebAppContext(warUrlString, contextPath);
         context.setMaxFormContentSize(maxFormContentSize);
         server.setHandler(context);

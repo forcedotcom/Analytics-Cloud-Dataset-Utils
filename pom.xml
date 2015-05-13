@@ -6,7 +6,7 @@
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>32.0.22-SNAPSHOT</version>
+	<version>32.0.23-SNAPSHOT</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
@@ -14,7 +14,7 @@
 	</organization>
 	<properties>
 		<force.version>32.0.0</force.version>
-		<java.compile.version>1.6</java.compile.version>
+		<java.compile.version>1.7</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<distributionManagement>
@@ -119,12 +119,12 @@
     <dependency>
     	<groupId>org.eclipse.jetty</groupId>
 		<artifactId>jetty-server</artifactId>
-		<version>9.2.6.v20141205</version>
+		<version>9.2.10.v20150310</version>
     </dependency>
     <dependency>
 		<groupId>org.eclipse.jetty</groupId>
 		<artifactId>jetty-webapp</artifactId>
-		<version>9.2.6.v20141205</version>
+		<version>9.2.10.v20150310</version>
 	</dependency>
  	</dependencies>
 	<build>

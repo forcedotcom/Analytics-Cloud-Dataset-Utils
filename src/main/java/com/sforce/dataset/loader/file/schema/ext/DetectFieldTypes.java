@@ -267,8 +267,7 @@ public class DetectFieldTypes {
 	{
         BigDecimal maxScale  = null;
         BigDecimal maxPrecision  = null;
-	    @SuppressWarnings("unused")
-		int failures = 0;
+	    int consectiveFailures = 0;
 	    int success = 0;
 	    int absoluteMaxScale = 6;
 	    int absoluteMaxScaleExceededCount = 0;
@@ -303,10 +302,14 @@ public class DetectFieldTypes {
 	    			 maxPrecision = bd;
 	    		 
 				success++;
+				consectiveFailures=0; //reset the failure count
 	         }catch(Throwable t)
 	         {
-					failures++;
+	        	 consectiveFailures++;
 	         }
+	    	
+	    	if(consectiveFailures>=1000)
+	    		return null;
 	    }
 	    
 	    if(maxScale==null || maxPrecision==null)
@@ -388,8 +391,7 @@ public class DetectFieldTypes {
 
 	    	 if(dt!=null)
 	    	 {
-	    		    @SuppressWarnings("unused")
-	    			int failures = 0;
+	    		    int consectiveFailures = 0;
 	    		    int success = 0;
 	    		    for(int k=0;k<columnValues.size();k++)
 	    		    {
@@ -402,13 +404,17 @@ public class DetectFieldTypes {
 				        	 String tmpDate = dtf.format(dt1);
 				        	 if(tmpDate.length() == columnValue.length())
 				        	 {
-				        		 success++;
+				        		success++;
+								consectiveFailures=0; //reset the failure count
 				        	 }
 						} catch (ParseException e) {
-							failures++;
-						}	    		    	
+							consectiveFailures++;
+						}
+
+			        	 if(consectiveFailures>=1000)
+				    		break;
 	    		    }
-	    		    if((1.0*success/columnValues.size()) > 0.95)
+	    		    if(!(consectiveFailures>=1000) && (1.0*success/columnValues.size()) > 0.95)
 	    		    {
 	    		    	return dtf;
 	    		    }else
