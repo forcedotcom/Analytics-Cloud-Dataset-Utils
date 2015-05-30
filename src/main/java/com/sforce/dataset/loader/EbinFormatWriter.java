@@ -130,20 +130,17 @@ public class EbinFormatWriter {
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter", null, null));
 				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week", null, null));
 
-//				if(DatasetUtilConstants.createNewDateParts)
-//				{
-					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Hour", null, null));
-					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Minute", null, null));
-					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Second", null, null));
+				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Hour", null, null));
+				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Minute", null, null));
+				_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Second", null, null));
 					
-					if(dataType.getFiscalMonthOffset()>0)
-					{
-						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Month_Fiscal", null, null));
-						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Year_Fiscal", null, null));
-						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter_Fiscal", null, null));
-						_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week_Fiscal", null, null));
-					}
-//				}
+				if(dataType.getFiscalMonthOffset()>0)
+				{
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Month_Fiscal", null, null));
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Year_Fiscal", null, null));
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Quarter_Fiscal", null, null));
+					_dataTypes.add(FieldType.GetStringKeyDataType(dataType.getName() + "_Week_Fiscal", null, null));
+				}
 			}			
 		}
 
@@ -199,18 +196,18 @@ public class EbinFormatWriter {
 //			System.err.println("Count: " + count + " ; key_value_count: " + key_value_count  );
 //			System.err.println(_dataTypes.get(key_value_count).getName() + ":" + _dataTypes.get(key_value_count).getType() + " = " + values[count]);
 //			System.err.println();
-			
-			if(_dataTypes.get(key_value_count).isComputedField)
-				
+
 			if(_dataTypes.get(key_value_count).isSkipped)
 			{
 				key_value_count++;
 				count++;
 				continue;
 			}
+			
 			Object columnValue = _dataTypes.get(key_value_count).getDefaultValue();
 			if(_dataTypes.get(key_value_count).getfType() == FieldType.DATE)
 				columnValue =  _dataTypes.get(key_value_count).getDefaultDate();
+			
 			if(_dataTypes.get(key_value_count).isComputedField)
 			{
 	            Bindings bindings = new SimpleBindings();
@@ -553,7 +550,7 @@ public class EbinFormatWriter {
 		int cnt = 0;
 		for (FieldType dataType: _dataTypes)
 		{
-			if (dataType.getfType() == FieldType.MEASURE) 
+			if (!dataType.isSkipped && dataType.getfType() == FieldType.MEASURE) 
 			{
 				measure_index.add(cnt);
 			}

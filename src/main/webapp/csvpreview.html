@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <title>File Preview</title>
+		<link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
+        <link rel="stylesheet" href="slickgrid/slick.grid.css" type="text/css" />
+        <link rel="stylesheet" href="slickgrid/plugins/plugins-common.css" type="text/css" />
+        <link rel="stylesheet" href="slickgrid/plugins/plugins-excel-style.css" type="text/css" />
+        <style>
+#status {
+	position: absolute;
+	bottom: 0;
+	background-color: #217346;
+	color: white;
+	height: 26px;
+	width: 100%;
+}
+
+.excel-grid {
+	position: absolute;
+	top: 55px;
+	left: 0;
+	right: 0;
+	bottom: 26px;
+}
+
+#status-label {
+	margin: 4px;
+}
+
+#grid, #grid div {
+-webkit-box-sizing: content-box;
+-moz-box-sizing: content-box;
+box-sizing: content-box;
+}
+</style>
+    <script type="text/javascript" src="js/jquery-1.10.1.js"></script>
+    <script type="text/javascript" src="js/jquery.event.drag.js"></script>
+    <script type="text/javascript" src="slickgrid/slick.core.js"></script>
+    <script type="text/javascript" src="slickgrid/slick.grid.js"></script>
+    <script type="text/javascript" src="slickgrid/slick.dataview.js"></script>
+    <script type="text/javascript" src="slickgrid/slick.editors.js"></script>
+    <script type="text/javascript" src="slickgrid/plugins/slick.cellrangeselector.js"></script>
+    <script type="text/javascript" src="slickgrid/plugins/slick.cellselectionmodel.js"></script>
+    <script type="text/javascript" src="slickgrid/plugins/slick.cellrangedecorator.js"></script>
+    <script type="text/javascript" src="js/underscore.js"></script>
+    <script type="text/javascript" src="slickgrid/plugins/ext.headerfilter.js"></script>
+    <script type="text/javascript" src="slickgrid/plugins/ext.overlays.js"></script>
+    <script type="text/javascript" src="js/preview.js"></script>
+    
+    <script src="js/vendor/jquery.ui.widget.js"></script>
+	<script src="js/jquery.iframe-transport.js"></script>
+
+	<script src="bootstrap/js/bootstrap.min.js"></script>
+    
+    </head>
+<body>
+<div class="navbar navbar-default navbar-static-top" style="background-color: #00c0b7;">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span class="navbar-brand" style="color: white;">Salesforce Analytics Cloud Dataset Utils</span>
+        </div>
+        <div id="navbar-collapse1" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+             <li>
+                <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i class="glyphicon glyphicon-th-list"></i></a>
+                <ul class="dropdown-menu">
+                <li><a class="navlink" href="csvupload.html" target="_top">CSV Upload</a></li>
+				<li><a class="navlink" href="logs.html" target="_top">Logs</a></li>
+				<li><a class="navlink" href="xmdeditor.html" target="_top">XMD Editor</a></li>
+				<li><a class="navlink" href="datafloweditor.html" tartget="_top">Dataflow Editor</a></li>
+				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
+				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
+                </ul>
+             </li>
+           </ul>
+        </div>    
+     </div>	
+</div>
+
+<div class="container">
+	<div id="header" class="row">&nbsp;</div>
+</div>
+
+ <div id="grid" class="excel-grid">
+ </div>
+ <div id="status">
+     <label id="status-label"></label>
+ </div>
+ 
+<div class="container">
+    <div class="row">
+		<div id="header2" class="spinner">
+			<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
+		</div>
+	</div>
+</div>
+    
+</body>
+</html>

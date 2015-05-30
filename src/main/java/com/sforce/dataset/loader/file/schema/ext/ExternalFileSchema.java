@@ -138,7 +138,7 @@ public class ExternalFileSchema  {
 	{
 		ExternalFileSchema newSchema = null;
 		//try 
-		//{
+		//{				
 			ExternalFileSchema userSchema = ExternalFileSchema.load(csvFile, fileCharset, logger);
 			ExternalFileSchema autoSchema = ExternalFileSchema.createAutoSchema(csvFile, userSchema, fileCharset, logger);
 			
@@ -316,10 +316,26 @@ public class ExternalFileSchema  {
 						}
 					}
 				}
-		
-				if(header != null && header.length > 0 && header.length != userSchema.getObjects().get(0).getFields().size())
+						
+				int SchemaFieldCount = 0;
+				LinkedList<ObjectType> obj = userSchema.objects;
+				if(obj!= null && !obj.isEmpty())
 				{
-					throw new IllegalArgumentException("CSV header count ["+header.length+"] does not match JSON Field count ["+userSchema.getObjects().get(0).getFields().size()+"]");
+					List<FieldType> fields = obj.get(0).getFields();
+					if(fields!= null && !fields.isEmpty())
+					{
+						for(FieldType field:fields)
+						{
+							if(!field.isComputedField)
+								SchemaFieldCount++;
+								
+						}
+					}
+				}
+				
+				if(header != null && header.length > 0 && header.length != SchemaFieldCount)
+				{
+					throw new IllegalArgumentException("CSV header count ["+header.length+"] does not match JSON Field count ["+SchemaFieldCount+"]");
 				}
 				
 			/*

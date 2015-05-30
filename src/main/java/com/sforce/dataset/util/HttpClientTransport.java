@@ -57,6 +57,7 @@ import com.sforce.ws.transport.LimitingOutputStream;
 import com.sforce.ws.transport.MessageHandlerOutputStream;
 import com.sforce.ws.transport.Transport;
 
+@SuppressWarnings("deprecation")
 public class HttpClientTransport implements Transport {
     
     private ConnectorConfig config;
@@ -92,8 +93,7 @@ public class HttpClientTransport implements Transport {
         return connect(url, header);
     }
 
-    @SuppressWarnings("deprecation")
-	@Override
+    @Override
     public InputStream getContent() throws IOException {
         DefaultHttpClient client = new DefaultHttpClient();
               
@@ -154,7 +154,7 @@ public class HttpClientTransport implements Transport {
         } finally {
             post.releaseConnection();
         }
-        
+        client.close();
         return input;
     }
 

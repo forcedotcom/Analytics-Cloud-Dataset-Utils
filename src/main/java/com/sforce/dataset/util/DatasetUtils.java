@@ -35,6 +35,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -56,6 +57,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -117,7 +119,7 @@ public class DatasetUtils {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws Exception {
+	private static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
@@ -151,8 +153,6 @@ public class DatasetUtils {
 		
 		if(emList!=null && !emList.isEmpty())
 		{
-			try 
-			{
 				ObjectMapper mapper = new ObjectMapper();	
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				Map res =  mapper.readValue(emList, Map.class);
@@ -169,15 +169,9 @@ public class DatasetUtils {
 						}
 					}
 				}
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
-
 			//System.out.println(emList);
 		}
-
-		
-	return dataSetMap;
+		return dataSetMap;
 }
 
 
@@ -248,16 +242,16 @@ public class DatasetUtils {
 						}
 						
 						datasetList.add(datasetTemp);
-						
-
 				}else
 				{
-			       throw new IOException(String.format("Dataset  list download failed, invalid server response %s",dataset));
+//			       throw new IOException(String.format("Dataset  list download failed, invalid server response %s",dataset));
+				   System.out.println(String.format("Dataset  list download failed, invalid server response %s",dataset));
 				}
 			} //end for
 		}else
 		{
-	       throw new IOException(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
+//	       throw new IOException(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
+			System.out.println(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
 		}
 		return datasetList;
 	}
@@ -448,11 +442,19 @@ public class DatasetUtils {
 			
 //			PartnerConnection connection = new PartnerConnection(config);
 			PartnerConnection connection = Connector.newConnection(config);
+
 	
 			//Set the clientId
 			CallOptions_element co = new CallOptions_element();
 		    co.setClient(DatasetUtilConstants.clientId);
 		    connection.__setCallOptions(co);
+		    
+//			if(sessionId==null)
+//			{
+//				setSessionRenewer(connection);
+//			}
+//
+//		    loginInternal(connection);
 		        
 			@SuppressWarnings("unused")
 			GetUserInfoResult userInfo = connection.getUserInfo();
@@ -487,6 +489,31 @@ public class DatasetUtils {
 			throw new ConnectionException(e.toString());
 		}
 	}
+	
+//	public static void loginInternal(final PartnerConnection conn) throws ConnectionException {
+//	    final ConnectorConfig cc = conn.getConfig();
+//	    	if(cc.getUsername()!=null && !cc.getUsername().isEmpty())
+//	    	{	
+//		    	LoginResult loginResult =  conn.login(cc.getUsername(), cc.getPassword());
+//		        // if password has expired, throw an exception
+//		        if (loginResult.getPasswordExpired()) { 
+//		        	throw new ConnectionException("Password Expired");
+//		        }
+//		        // update session id and service endpoint based on response
+//		        conn.setSessionHeader(loginResult.getSessionId());
+//	    	}
+//	}
+
+//    private static void setSessionRenewer(final PartnerConnection conn) {
+//        conn.getConfig().setSessionRenewer(new SessionRenewer() {
+//            @Override
+//            public SessionRenewalHeader renewSession(ConnectorConfig connectorConfig) throws ConnectionException {
+//                loginInternal(conn);
+//                return null;
+//            }
+//        });
+//    }
+
 
     protected static ConnectorConfig getConnectorConfig() {
         ConnectorConfig cc = new ConnectorConfig();
@@ -875,6 +902,8 @@ public static byte[] toBytes(String value, CodingErrorAction codingErrorAction) 
 	}
     return null;
 }
+
+
 
 
 }

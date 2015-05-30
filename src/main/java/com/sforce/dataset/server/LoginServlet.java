@@ -141,7 +141,7 @@ public class LoginServlet extends HttpServlet {
 	        
 	        SecurityContextSessionStore scStore = new SecurityContextSessionStore();
 	        scStore.storeSecurityContext(request, sc);
-
+	        
 			ResponseStatus status = new ResponseStatus("success",null);
 			response.setContentType("application/json");
 			ObjectMapper mapper = new ObjectMapper();

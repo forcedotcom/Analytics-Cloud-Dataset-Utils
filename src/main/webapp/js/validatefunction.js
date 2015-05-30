@@ -161,23 +161,24 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr)
                  $('<option></option>')
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
-        })
-        
-        $(selobj).toggleClass("form-control demo-default");
-
-    	$(selobj).selectize({
-    		create: true
-    	});
+        })        
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
         if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        	var err = eval("(" + jqXHR.responseText + ")");
+            $("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
         }
-    });    
+    })
+    .always(function() {
+        $(selobj).toggleClass("form-control demo-default");
+
+    	$(selobj).selectize({
+    		create: true
+    	});
+      });
 }
 
 function loadDiv(selobj,url,nameattr,displayattr)

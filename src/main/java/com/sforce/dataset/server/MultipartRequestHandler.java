@@ -65,7 +65,7 @@ public class MultipartRequestHandler {
 	{	
 		for (FileItem item : items) {
 			if (item.isFormField()) {
-				if (item.getFieldName().equals("DatasetName")) {
+				if (item.getFieldName().equalsIgnoreCase("DatasetName")) {
 					String datasetName = item.getString();
 					String santizedDatasetName = ExternalFileSchema.createDevName(item.getString(), "Dataset", 1, false);
 					if(!datasetName.equals(santizedDatasetName))
@@ -77,8 +77,27 @@ public class MultipartRequestHandler {
 			}
 		}
 		throw new IllegalArgumentException("Parameter 'DatasetName' not found in FileUpload Request");
-
 	}
+	
+	public static boolean isPreview(List<FileItem> items) 
+	{	
+		for (FileItem item : items) 
+		{
+			if (item.isFormField()) 
+			{
+				if (item.getFieldName().equalsIgnoreCase("preview")) 
+				{
+					String preview = item.getString();
+					if(preview.equalsIgnoreCase("true"))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 
 	
 	public static List<FileUploadRequest> uploadByApacheFileUpload(List<FileItem> items,File datadir, Session session) throws IOException
@@ -189,4 +208,39 @@ public class MultipartRequestHandler {
 				}
 		return files;
 	}
+	
+	public static File saveFile(List<FileItem> items,File datadir) throws IOException
+	{
+		File inputFile = null;
+		for (FileItem item : items) 
+		{				    
+		    if (!item.isFormField()) 
+		    {
+		    	if(item.getFieldName().equals("inputCsv") && item.getInputStream() != null)
+		    	{
+						inputFile = new File(datadir,item.getName());
+						FileOutputStream fos = null;
+						BufferedOutputStream bos = null;
+						try
+						{
+							fos = new FileOutputStream(inputFile);
+							bos = new BufferedOutputStream(fos,DatasetUtilConstants.DEFAULT_BUFFER_SIZE);
+							IOUtils.copy(item.getInputStream(),bos);
+						}finally
+						{
+							if(bos!=null)
+								IOUtils.closeQuietly(bos);
+							if(fos!=null)
+								IOUtils.closeQuietly(fos);
+						}
+		    	}
+		    }
+		}
+		if(inputFile != null && inputFile.length()==0)
+		{
+			throw new IllegalArgumentException("Input File {"+inputFile.getName()+"} is of zero length");
+		}				
+		return inputFile;
+	}
+	
 }

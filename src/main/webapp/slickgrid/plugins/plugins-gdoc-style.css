@@ -1,0 +1,97 @@
+﻿
+
+body {
+    margin: 0;
+}
+
+body, BUTTON {
+    font-family: arial, sans-serif;
+    font-size: 8.25pt;
+}
+
+.slick-cell {
+    border-color: transparent #CCCCCC #CCCCCC transparent;
+    border-style: solid solid solid solid;
+    border-width: 0px 1px 1px 0px;
+    padding: 4px 4px 0px 6px;
+    background-color: White;
+    font: 9pt arial, sans-serif;
+}
+
+.slick-header-column {
+    border-color: transparent #CCCCCC #CCCCCC transparent;
+    border-style: solid solid solid solid;
+    border-width: 1px 1px 0 0px;
+}
+
+.slick-header-columns {
+    font: 9pt arial, sans-serif;
+    color: black;
+    background-color: #F3F3F3;
+    border-top: 1px solid #CCCCCC;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+.selected-header {
+    background-color: #C8C8C8;
+}
+
+.slick-column-name {
+    margin-right: 14px;
+    display: block;
+    text-align: center;
+}
+
+.header-overlay {
+    background-color: transparent;
+}
+
+.cell-overlay {
+    background-color: #5292F7;
+}
+
+.selection-cell-overlay {
+    z-index: 998;
+   
+}
+
+.selection-cell-overlay.left {
+    border-right: 1px dashed #808080;
+}
+
+.selection-cell-overlay.right {
+    border-left: 1px dashed #808080;
+}
+
+.selection-cell-overlay.bottom {
+    border-bottom: 1px dashed #808080;
+}
+
+.selection-cell-overlay.top {
+    border-bottom: 1px dashed #808080;
+}
+input.editor-text {
+    font: 9pt arial, sans-serif;
+    background: none;
+    border: 0 none;
+    margin: 0;
+    outline: 0 none;
+    padding: 0;
+    width: 100%;
+}
+
+
+.handle-overlay {
+    border: 1px solid white;
+    padding: 2px;
+    background-color: #5292F7;
+    position: absolute;
+    width: 1px;
+    z-index: 1000;
+    cursor: crosshair;
+}
+
+.overlay-handle-decorator {
+    border: 2px solid #5292F7;
+    z-index: 1000;
+}

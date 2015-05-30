@@ -177,6 +177,9 @@ public class DatasetLoader {
 		{
 			datasetLabel = datasetAlias;
 		}
+		
+		Runtime rt = Runtime.getRuntime();
+		long mb = 1024*1024;
 
 		logger.println("\n*******************************************************************************");					
 		logger.println("Start Timestamp: "+logformat.format(new Date()));
@@ -187,6 +190,9 @@ public class DatasetLoader {
 		logger.println("datasetFolder: "+datasetFolder);
 		logger.println("Operation: "+Operation);
 		logger.println("uploadFormat: "+uploadFormat);
+		logger.println("JVM Max memory: "+nf.format(rt.maxMemory()/mb));
+		logger.println("JVM Total memory: "+nf.format(rt.totalMemory()/mb));
+		logger.println("JVM Free memory: "+nf.format(rt.freeMemory()/mb));
 		logger.println("*******************************************************************************\n");					
 		
 		try {
@@ -500,7 +506,7 @@ public class DatasetLoader {
 								{
 									hasmore = false;
 								}
-							}catch(Throwable t)
+							}catch(Exception t)
 							{
 								errorRowCount++;
 //								if(errorRowCount==0)
@@ -767,6 +773,9 @@ public class DatasetLoader {
 			
 			logger.println("\n*******************************************************************************");					
 			logger.println("End Timestamp: "+logformat.format(new Date()));
+			logger.println("JVM Max memory: "+nf.format(rt.maxMemory()/mb));
+			logger.println("JVM Total memory: "+nf.format(rt.totalMemory()/mb));
+			logger.println("JVM Free memory: "+nf.format(rt.freeMemory()/mb));			
 			logger.println("*******************************************************************************\n");
 		}
 		return status;

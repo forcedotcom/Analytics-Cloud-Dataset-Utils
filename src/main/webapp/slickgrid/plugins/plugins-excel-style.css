@@ -1,0 +1,71 @@
+﻿
+
+body {
+    margin: 0;
+}
+
+body, BUTTON {
+    font-family: 'Segoe UI';
+    font-size: 8.25pt;
+}
+
+.slick-cell {
+    border-color: transparent #D4D4D4 #D4D4D4 transparent;
+    border-style: solid solid solid solid;
+    border-width: 0px 1px 1px 0px;
+    padding: 1px 1px 0px 2px;
+    background-color: White;
+    font: 11pt Calibri, 'Segoe UI',Arial,Verdana,Sans-Serif;
+}
+
+.slick-header-columns {
+    border-bottom: 1px solid #BBBBBB;
+    font: 10pt Calibri,'Segoe UI',Arial,Verdana,Sans-Serif;
+    color: #5E5E5E;
+}
+
+.selected-header {
+    background-color: #E2E2E2;
+    color: #217346;
+    font-weight: bold;
+}
+
+.slick-column-name {
+    text-transform: uppercase;
+    margin-right: 14px;
+    display: block;
+    text-align: center;
+}
+
+.header-overlay {
+    background-color: #217346;
+}
+
+.cell-overlay, .selection-cell-overlay {
+    background-color: #217346;
+}
+
+input.editor-text {
+    font: 11pt Calibri, 'Segoe UI',Arial,Verdana,Sans-Serif;
+    background: none;
+    border: 0 none;
+    margin: 0;
+    outline: 0 none;
+    padding: 0;
+    width: 100%;
+}
+
+.handle-overlay {
+    border: 1px solid white;
+    padding: 2px;
+    background-color: #217346;
+    position: absolute;
+    width: 1px;
+    z-index: 1000;
+    cursor: crosshair;
+}
+
+.overlay-handle-decorator {
+    border: 2px solid #217346;
+    z-index: 1000;
+}

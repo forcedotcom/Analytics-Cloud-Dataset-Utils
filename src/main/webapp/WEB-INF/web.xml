@@ -7,8 +7,7 @@ id="WebApp_ID" version="3.0">
   <display-name>Archetype Created Web Application</display-name>
   <welcome-file-list>
     <welcome-file>csvupload.html</welcome-file>
-  </welcome-file-list>
-  
+  </welcome-file-list>  
   <servlet>
   	<servlet-name>upload</servlet-name>            
   	<servlet-class>com.sforce.dataset.server.FileUploadServlet</servlet-class>
@@ -28,6 +27,10 @@ id="WebApp_ID" version="3.0">
   <servlet>
   	<servlet-name>logout</servlet-name>            
   	<servlet-class>com.sforce.dataset.server.LogoutServlet</servlet-class>
+  </servlet>
+  <servlet>
+  	<servlet-name>preview</servlet-name>            
+  	<servlet-class>com.sforce.dataset.server.PreviewServlet</servlet-class>
   </servlet>
   <servlet-mapping>
   	<servlet-name>upload</servlet-name>
@@ -49,6 +52,10 @@ id="WebApp_ID" version="3.0">
   	<servlet-name>logout</servlet-name>
   	<url-pattern>/logout</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+  	<servlet-name>preview</servlet-name>
+  	<url-pattern>/preview</url-pattern>
+  </servlet-mapping>
   	<filter>
 		<filter-name>AuthFilter</filter-name>
 		<filter-class>com.sforce.dataset.server.auth.AuthFilter</filter-class>
@@ -57,8 +64,11 @@ id="WebApp_ID" version="3.0">
 		<filter-name>AuthFilter</filter-name>
 		<url-pattern>*.html</url-pattern>
 		<url-pattern>/csvupload.html</url-pattern>
+		<url-pattern>/csvupload2.html</url-pattern>
+		<url-pattern>/preview.html</url-pattern>
 		<url-pattern>/logs.html</url-pattern>
 		<url-pattern>/xmdeditor.html</url-pattern>
+		<url-pattern>/datafloweditor.html</url-pattern>
 		<url-pattern>/upload</url-pattern>
 		<url-pattern>/list</url-pattern>
 		<url-pattern>/json</url-pattern>

@@ -88,24 +88,33 @@ public class FileUploadServlet extends HttpServlet {
 		    	return;
 			}
 			
+			String statusMessage  = null;
 			String orgId = conn.getUserInfo().getOrganizationId();
 			File dataDir = DatasetUtilConstants.getDataDir(orgId);
 			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
-			session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
-			List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
-			CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
-			
-		    try
-		    {
-		    	executorPool.execute(worker);
-		    }catch(Throwable t)
-		    {
-		    	Session.removeCurrentSession(session);
-		    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
-		    	return;
-		    }
+			if(!MultipartRequestHandler.isPreview(items))
+			{
+				session = new Session(orgId,MultipartRequestHandler.getDatasetName(items));
+				List<FileUploadRequest> files = (MultipartRequestHandler.uploadByApacheFileUpload(items, dataDir,session));
+				CsvUploadWorker worker = new CsvUploadWorker(files, conn, session);
+				
+			    try
+			    {
+			    	executorPool.execute(worker);
+			    }catch(Throwable t)
+			    {
+			    	Session.removeCurrentSession(session);
+			    	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "There are too many jobs in the queue, please try again later");
+			    	return;
+			    }
+			}else
+			{
+				File savedFile = MultipartRequestHandler.saveFile(items, dataDir);
+				if(savedFile!=null)
+					statusMessage = savedFile.getName();
+			}
 
-			ResponseStatus status = new ResponseStatus("success",null);
+			ResponseStatus status = new ResponseStatus("success",statusMessage);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.writeValue(response.getOutputStream(), status);
 		}catch(Throwable t)

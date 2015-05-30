@@ -51,18 +51,17 @@ import com.sforce.ws.ConnectorConfig;
 		}
 
         @Override
-        public SessionRenewalHeader renewSession(ConnectorConfig config) throws ConnectionException {
-//            PartnerConnection connection = Connector.newConnection(config);
-        	
+        public SessionRenewalHeader renewSession(ConnectorConfig config) throws ConnectionException {        	
         	config.setSessionId(null);
             
 //			ConnectorConfig config1 = new ConnectorConfig();
 //			config1.setUsername(username);
 //			config1.setPassword(password);
 //			config1.setAuthEndpoint(endpoint);
-//			config1.setSessionRenewer(new SessionRenewerImpl(username, password, token, endpoint));
-//			PartnerConnection connection = new PartnerConnection(config1);
-			PartnerConnection connection = Connector.newConnection(config);
+
+        	PartnerConnection connection = Connector.newConnection(config);
+			
+//			DatasetUtils.loginInternal(connection);
 			
 			connection.getUserInfo();
 

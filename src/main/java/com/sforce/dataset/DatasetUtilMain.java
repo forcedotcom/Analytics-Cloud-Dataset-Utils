@@ -403,8 +403,8 @@ public class DatasetUtilMain {
 				boolean status = doAction(action, partnerConnection, params);
 				if(status)
 				{
-//					if(action.equalsIgnoreCase("load"))
-//						createListener(partnerConnection, params);
+					if(action.equalsIgnoreCase("load") && params.debug)
+						createListener(partnerConnection, params);
 				}
 			}
 		}else
@@ -1068,7 +1068,6 @@ public class DatasetUtilMain {
 	}
 	
 
-	@SuppressWarnings("unused")
 	private static void createListener(PartnerConnection partnerConnection,
 			DatasetUtilParams params) {
 		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);

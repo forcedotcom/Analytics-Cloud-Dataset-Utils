@@ -79,7 +79,7 @@ public void run() {
 			{
 					totalRowCount++;
 					ebinWriter.addrow(row);
-			}catch(Throwable t)
+			}catch(Exception t)
 			{
 				if(errorRowCount==0)
 				{
