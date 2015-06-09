@@ -147,7 +147,7 @@ public class DatasetUtils {
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		String emList = IOUtils.toString(emis, "UTF-8");
-//		System.out.println("Response Size:"+emList.length());
+//		System.out.println("Response Size:"+emList);
 		emis.close();
 		httpClient.close();
 		
@@ -179,69 +179,82 @@ public class DatasetUtils {
 	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws Exception 
 	{
 		List<DatasetType> datasetList = new LinkedList<DatasetType>();
+		List<FolderType> apps = listFolders(connection);
 		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
 		if(dataSetMap != null && !dataSetMap.isEmpty())
 		{
 			for(String alias:dataSetMap.keySet())
 			{
-				Map dataset = dataSetMap.get(alias);
+				@SuppressWarnings("unchecked")
+				Map<String,?> dataset = dataSetMap.get(alias);
 				String _type = (String) dataset.get("_type");
 				if(_type != null && _type.equals("edgemart"))
 				{
-						DatasetType datasetTemp = new DatasetType();
-						
-						Object temp = dataset.get("_createdDateTime");
-						if(temp != null && temp instanceof Number)
+//						DatasetType datasetTemp = new DatasetType();
+//						
+//						Object temp = dataset.get("_createdDateTime");
+//						if(temp != null && temp instanceof Number)
+//						{
+//							datasetTemp._createdDateTime = ((Number)temp).longValue();
+//						}
+//
+//						temp = dataset.get("_lastAccessed");
+//						if(temp != null && temp instanceof Number)
+//						{
+//							datasetTemp._lastAccessed = ((Number)temp).longValue();
+//						}
+//
+//						datasetTemp._type  = (String) dataset.get("_type");
+//						
+//						datasetTemp._uid  = (String) dataset.get("_uid");
+//						
+//						datasetTemp.assetIcon = (String) dataset.get("_type");
+//						
+//						datasetTemp.assetIconUrl = (String) dataset.get("assetIconUrl");
+//						
+//						datasetTemp.assetSharingUrl = (String) dataset.get("assetSharingUrl");
+//						
+//						datasetTemp._alias = (String) dataset.get("_alias");
+//
+//						datasetTemp.name = (String) dataset.get("name");
+//						
+//						datasetTemp._url = (String) dataset.get("_url");
+//
+//						temp =  dataset.get("_permissions");
+//						if(temp != null && temp instanceof Map)
+//						{
+//							datasetTemp._permissions = datasetTemp.new PermissionType();
+//							Object var = ((Map)temp).get("modify");
+//							if(var != null && var instanceof Boolean)
+//							{
+//								datasetTemp._permissions.modify = ((Boolean)var).booleanValue();
+//							}
+//
+//							var = ((Map)temp).get("manage");
+//							if(var != null && var instanceof Boolean)
+//							{
+//								datasetTemp._permissions.manage = ((Boolean)var).booleanValue();
+//							}
+//
+//							var = ((Map)temp).get("view");
+//							if(var != null && var instanceof Boolean)
+//							{
+//								datasetTemp._permissions.view = ((Boolean)var).booleanValue();
+//							}
+//						}
+					DatasetType datasetTemp = DatasetType.getDatasetType(dataset);
+					if(datasetTemp.folder != null && datasetTemp.folder._uid != null)
+					{
+						for(FolderType a:apps)
 						{
-							datasetTemp._createdDateTime = ((Number)temp).longValue();
-						}
-
-						temp = dataset.get("_lastAccessed");
-						if(temp != null && temp instanceof Number)
-						{
-							datasetTemp._lastAccessed = ((Number)temp).longValue();
-						}
-
-						datasetTemp._type  = (String) dataset.get("_type");
-						
-						datasetTemp._uid  = (String) dataset.get("_uid");
-						
-						datasetTemp.assetIcon = (String) dataset.get("_type");
-						
-						datasetTemp.assetIconUrl = (String) dataset.get("assetIconUrl");
-						
-						datasetTemp.assetSharingUrl = (String) dataset.get("assetSharingUrl");
-						
-						datasetTemp._alias = (String) dataset.get("_alias");
-
-						datasetTemp.name = (String) dataset.get("name");
-						
-						datasetTemp._url = (String) dataset.get("_url");
-
-						temp =  dataset.get("_permissions");
-						if(temp != null && temp instanceof Map)
-						{
-							datasetTemp._permissions = datasetTemp.new PermissionType();
-							Object var = ((Map)temp).get("modify");
-							if(var != null && var instanceof Boolean)
+							if(a._uid!=null&&a._uid.equals(datasetTemp.folder._uid))
 							{
-								datasetTemp._permissions.modify = ((Boolean)var).booleanValue();
-							}
-
-							var = ((Map)temp).get("manage");
-							if(var != null && var instanceof Boolean)
-							{
-								datasetTemp._permissions.manage = ((Boolean)var).booleanValue();
-							}
-
-							var = ((Map)temp).get("view");
-							if(var != null && var instanceof Boolean)
-							{
-								datasetTemp._permissions.view = ((Boolean)var).booleanValue();
+								datasetTemp.folder.name=a.developerName;
+								datasetTemp.folder.label=a.name;
 							}
 						}
-						
-						datasetList.add(datasetTemp);
+					}
+					datasetList.add(datasetTemp);
 				}else
 				{
 //			       throw new IOException(String.format("Dataset  list download failed, invalid server response %s",dataset));
@@ -253,6 +266,7 @@ public class DatasetUtils {
 //	       throw new IOException(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
 			System.out.println(String.format("Dataset list download failed, invalid server response %s",dataSetMap));
 		}
+		Collections.sort(datasetList, Collections.reverseOrder());
 		return datasetList;
 	}
 	

@@ -36,11 +36,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.metadata.DatasetXmd;
+import com.sforce.dataset.saql.SaqlUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.server.preview.Header;
+import com.sforce.dataset.server.preview.PreviewData;
 import com.sforce.dataset.server.preview.PreviewUtil;
+import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.soap.partner.PartnerConnection;
 
 @MultipartConfig 
@@ -151,10 +156,10 @@ public class PreviewServlet extends HttpServlet {
 						throw new IllegalArgumentException("type is a required param");
 					}
 
-					String file = request.getParameter("file");
-					if(file==null || file.trim().isEmpty())
+					String name = request.getParameter("name");
+					if(name==null || name.trim().isEmpty())
 					{
-						throw new IllegalArgumentException("file is a required param");
+						throw new IllegalArgumentException("name is a required param");
 					}
 
 					PartnerConnection conn = AuthFilter.getConnection(request);
@@ -164,36 +169,60 @@ public class PreviewServlet extends HttpServlet {
 					   	return;
 					}					
 					
-					if(type.equalsIgnoreCase("header"))
+					if(type.equalsIgnoreCase("file"))
 					{
+
+						
 						String orgId = conn.getUserInfo().getOrganizationId();
 						File dataDir = DatasetUtilConstants.getDataDir(orgId);
 
-						File inputFile = new File(dataDir,file);
+						File inputFile = new File(dataDir,name);
 						if(inputFile==null || !inputFile.exists() || inputFile.length()==0)
 						{
-							throw new IllegalArgumentException("file {"+file+"} not found");
+							throw new IllegalArgumentException("file {"+name+"} not found");
 						}
 						
 						List<Header> columns = PreviewUtil.getFileHeader(inputFile);
+						List<Map<String,Object>> data = PreviewUtil.getFileData(inputFile);
+						PreviewData resp = new PreviewData();
+
+						resp.setColumns(columns);
+						resp.setData(data);
 						
 						response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
-				    	mapper.writeValue(response.getOutputStream(), columns);
-					}else if(type.equalsIgnoreCase("data"))
+				    	mapper.writeValue(response.getOutputStream(), resp);
+					}else if(type.equalsIgnoreCase("dataset"))
 					{
-						String orgId = conn.getUserInfo().getOrganizationId();
-						File dataDir = DatasetUtilConstants.getDataDir(orgId);
-
-						File inputFile = new File(dataDir,file);
-						if(inputFile==null || !inputFile.exists() || inputFile.length()==0)
+						Map<String, String> xmd = DatasetDownloader.getXMD(name, conn);
+						if(xmd==null || xmd.isEmpty())
 						{
-							throw new IllegalArgumentException("file {"+file+"} not found");
+							throw new IllegalArgumentException("Internal server error fetching dataset {"+name+"}");
 						}
 
-						List<Map<String,String>> data = PreviewUtil.getFileData(inputFile);
+						String saql = request.getParameter("saql");
+						if(saql==null)
+						{
+							ObjectMapper mapper = new ObjectMapper();	
+							mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+							DatasetXmd xmdValue = mapper.readValue(xmd.get("mainXmd"),DatasetXmd.class);
+							saql = SaqlUtil.generateSaql(conn, xmd.get("datasetId"), xmd.get("datasetVersion"), xmdValue);
+						}
+
+						List<Map<String,Object>> data = SaqlUtil.queryDataset(conn, saql);
+						if(data==null || data.isEmpty())
+						{
+							throw new IllegalArgumentException("could not query dataset {"+name+"}");
+						}
+						
+						PreviewData resp = new PreviewData();
+
+						resp.setColumns(PreviewUtil.getSaqlHeader(data));
+						resp.setData(PreviewUtil.getSaqlData(data));
+						
+						response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
-						mapper.writeValue(response.getOutputStream(), data);
+				    	mapper.writeValue(response.getOutputStream(), resp);
 					}else
 					{
 						response.setContentType("application/json");

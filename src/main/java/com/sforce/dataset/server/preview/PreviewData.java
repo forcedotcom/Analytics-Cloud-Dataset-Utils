@@ -25,57 +25,26 @@
  */
 package com.sforce.dataset.server.preview;
 
+import java.util.List;
+import java.util.Map;
 
-public class Header {
 
-	private String name = null; //Required
-	private  String id = null; //Required
-	private  String field = null; //Required
-	private  int width = 40; //Optional
-	private String headerCssClass = null; 
-	private String cssClass = null;
-	private String type = null;
+public class PreviewData {
+
+	private List<Header> columns = null;
+	private List<Map<String,Object>> data = null;
+
+	public void setData(List<Map<String, Object>> data) {
+		this.data = data;
+	}
+	public List<Header> getColumns() {
+		return columns;
+	}
+	public void setColumns(List<Header> columns) {
+		this.columns = columns;
+	}
+	public List<Map<String, Object>> getData() {
+		return data;
+	}
 	
-	public String getType() {
-		return type;
-	}
-	public void setType(String type) {
-		this.type = type;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getField() {
-		return field;
-	}
-	public void setField(String field) {
-		this.field = field;
-	}
-	public int getWidth() {
-		return width;
-	}
-	public void setWidth(int width) {
-		this.width = width;
-	}
-	public String getHeaderCssClass() {
-		return headerCssClass;
-	}
-	public void setHeaderCssClass(String headerCssClass) {
-		this.headerCssClass = headerCssClass;
-	}
-	public String getCssClass() {
-		return cssClass;
-	}
-	public void setCssClass(String cssClass) {
-		this.cssClass = cssClass;
-	}
 }

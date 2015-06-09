@@ -241,27 +241,27 @@ public class EbinFormatWriter {
 			{
 				try
 				{
-					double v = 0L;
-					double mv = 0L;
+					BigDecimal v = new BigDecimal(0);
+					BigDecimal mv = new BigDecimal(0);
 					if(columnValue!=null)
 					{
 						if(columnValue instanceof Double)
-							v = (Double)columnValue;
+							v = new BigDecimal((Double)columnValue);
 						else
-							v = (new BigDecimal(columnValue.toString())).doubleValue();
+							v = new BigDecimal(columnValue.toString());
 						
 						if (_dataTypes.get(key_value_count).getMeasure_multiplier() > 1)
 						{
-							mv = v*_dataTypes.get(key_value_count).getMeasure_multiplier();
+							mv = v.multiply(_dataTypes.get(key_value_count).getMeasure_multiplier_bd());
 						}else
 						{
 							mv = v;
 						}
-						if(mv>edgeMaxValue || mv<edgeMinValue)
+						if(mv.doubleValue()>edgeMaxValue || mv.doubleValue()<edgeMinValue)
 							throw new ParseException("Value {"+mv+"} out of range ("+edgeMinValue+"-"+edgeMaxValue+")",0);
 					}
-					measure_values.add((long)mv);
-					curr.put(_dataTypes.get(key_value_count).getName(), v);
+					measure_values.add((long)mv.doubleValue());
+					curr.put(_dataTypes.get(key_value_count).getName(), v.doubleValue());
 					key_value_count++;
 				} catch(Throwable t)
 				{

@@ -92,6 +92,9 @@ public class JsonServlet extends HttpServlet {
 				{
 					throw new IllegalArgumentException("datasetAlias is a required param");
 				}
+				String datasetId = request.getParameter("datasetId");
+				String datasetVersion = request.getParameter("datasetVersion");
+
 				File dataDir = DatasetUtilConstants.getDataDir(orgId);
 				File datasetDir = new File(dataDir,datasetAlias);
 				FileUtils.forceMkdir(datasetDir);
@@ -100,7 +103,10 @@ public class JsonServlet extends HttpServlet {
 				Map xmdObject =  mapper.readValue(jsonString, Map.class);
 				File outfile = new File(datasetDir,"user.xmd.json");
 				mapper.writerWithDefaultPrettyPrinter().writeValue(outfile , xmdObject);				
-				XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, conn);
+				if(!XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, datasetId, datasetVersion, conn))
+				{
+					throw new IllegalArgumentException("Failed to uplaod XMD");
+				}
 			}else if(type.equalsIgnoreCase("dataflow"))
 			{
 				String dataflowName = request.getParameter("dataflowName");
@@ -169,11 +175,13 @@ public class JsonServlet extends HttpServlet {
 						{
 							throw new IllegalArgumentException("datasetAlias is a required param");
 						}
-						String xmd = DatasetDownloader.getXMD(datasetAlias, conn);
+						String datasetId = request.getParameter("datasetId");
+						String datasetVersion = request.getParameter("datasetVersion");
+						Map<String,String> xmd = DatasetDownloader.getXMD(datasetAlias,datasetId,datasetVersion, conn);
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 						@SuppressWarnings("rawtypes")
-						Map xmdObject =  mapper.readValue(xmd, Map.class);
+						Map xmdObject =  mapper.readValue(xmd.get("mainXmd"), Map.class);
 				    	mapper.writeValue(response.getOutputStream(), xmdObject);
 					}else if(type.equalsIgnoreCase("dataflow"))
 					{

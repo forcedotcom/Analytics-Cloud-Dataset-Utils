@@ -23,59 +23,10 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.server.preview;
+package com.sforce.dataset.saql;
 
 
-public class Header {
-
-	private String name = null; //Required
-	private  String id = null; //Required
-	private  String field = null; //Required
-	private  int width = 40; //Optional
-	private String headerCssClass = null; 
-	private String cssClass = null;
-	private String type = null;
-	
-	public String getType() {
-		return type;
-	}
-	public void setType(String type) {
-		this.type = type;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getField() {
-		return field;
-	}
-	public void setField(String field) {
-		this.field = field;
-	}
-	public int getWidth() {
-		return width;
-	}
-	public void setWidth(int width) {
-		this.width = width;
-	}
-	public String getHeaderCssClass() {
-		return headerCssClass;
-	}
-	public void setHeaderCssClass(String headerCssClass) {
-		this.headerCssClass = headerCssClass;
-	}
-	public String getCssClass() {
-		return cssClass;
-	}
-	public void setCssClass(String cssClass) {
-		this.cssClass = cssClass;
-	}
+public class SaqlRequest {
+	public String action = "query";
+	public String query = null;
 }

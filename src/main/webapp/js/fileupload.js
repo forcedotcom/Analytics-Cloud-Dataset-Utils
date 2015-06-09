@@ -28,6 +28,6 @@ $(document).ajaxComplete(function(event, request, settings) {
 
 function showPreview(file)
 {
-    var url = "csvpreview.html?file="+file.name;                 
+    var url = "csvpreview.html?type=file&name="+file.name;                 
 	self.location.href = url;
 }

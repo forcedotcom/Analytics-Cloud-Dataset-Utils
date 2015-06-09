@@ -712,7 +712,7 @@ public class DatasetUtilMain {
 
 
 					try {
-						XmdUploader.uploadXmd(params.inputFile, params.dataset, partnerConnection);
+						XmdUploader.uploadXmd(params.inputFile, params.dataset, null, null, partnerConnection);
 					} catch (Exception e) {
 							e.printStackTrace(System.out);
 							return false;

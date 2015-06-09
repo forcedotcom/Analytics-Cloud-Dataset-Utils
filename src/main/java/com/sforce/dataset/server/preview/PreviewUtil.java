@@ -26,6 +26,53 @@ import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetUtils;
 
 public class PreviewUtil {
+
+	
+	public static List<Header> getSaqlHeader(List<Map<String,Object>> data) 
+	{
+		List<Header> columns = null;
+			for(Map<String,Object> rec:data)
+			{
+				if(rec!= null && !rec.isEmpty())
+				{
+					columns = new LinkedList<Header>();
+					for(String field:rec.keySet())
+					{
+						Header temp = new Header();
+						temp.setField(field);
+						temp.setId(field);
+						temp.setName(field);
+						
+						Object val = rec.get(field);
+						if(val instanceof Number)
+							temp.setWidth(120);
+						else
+							temp.setWidth(160);							
+						columns.add(temp);						
+					}
+					break;					
+				}	
+			}	
+			if(columns==null || columns.isEmpty())
+			{
+				throw new IllegalArgumentException("Invalid query, empty resultset");
+			}			
+			return columns;
+	}
+
+	public static List<Map<String,Object>> getSaqlData(List<Map<String,Object>> data)
+	{
+		int totalRowCount = 0;			
+		for(Map<String, Object> rec:data)
+		{
+				if(rec!= null)
+				{
+					totalRowCount++;
+					rec.put("_id",totalRowCount);
+				}	
+		}
+		return data;
+	}
 	
 	public static List<Header> getFileHeader(File inputFile) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
@@ -50,7 +97,7 @@ public class PreviewUtil {
 			return columns;
 	}
 	
-	public static List<Map<String, String>> getFileData(File inputFile) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
+	public static List<Map<String, Object>> getFileData(File inputFile) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
 			Charset tmp = null;
 			try 
@@ -73,7 +120,7 @@ public class PreviewUtil {
 			int totalRowCount = 0;
 			@SuppressWarnings("unused")
 			int errorRowCount = 0;
-			List<Map<String,String>> data = new LinkedList<Map<String,String>>();
+			List<Map<String, Object>> data = new LinkedList<Map<String,Object>>();
 			while (hasmore) 
 			{
 				try
@@ -86,7 +133,7 @@ public class PreviewUtil {
 							continue;
 						if(row.size()!=0 )
 						{
-							Map<String,String> map = new HashMap<String,String>();
+							Map<String,Object> map = new HashMap<String,Object>();
 							int i=0;
 							for(FieldType fld:schema.getObjects().get(0).getFields())
 							{
@@ -99,7 +146,7 @@ public class PreviewUtil {
 								}
 								i++;
 							}
-							map.put("_id",(totalRowCount-1)+"");
+							map.put("_id",(totalRowCount-1));
 							data.add(map);
 						}else
 						{
@@ -113,7 +160,7 @@ public class PreviewUtil {
 				}catch(Exception t)
 				{
 					errorRowCount++;
-					Map<String,String> map = new HashMap<String,String>();
+					Map<String,Object> map = new HashMap<String,Object>();
 					int i=0;
 					for(FieldType fld:schema.getObjects().get(0).getFields())
 					{

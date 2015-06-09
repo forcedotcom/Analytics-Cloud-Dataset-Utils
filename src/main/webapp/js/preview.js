@@ -1,10 +1,17 @@
 $(document).ready(function() {        
-	var file = decodeURIComponent(urlParam('file'));
-	if (file == undefined || isEmpty(file) ) 
+	var type = decodeURIComponent(urlParam('type'));
+	if (type == undefined || isEmpty(type) ) 
 	{
 		self.location.href = 'csvupload2.html';
 	}
-	loadfile(file);	
+	
+	var name = decodeURIComponent(urlParam('name'));
+	if (name == undefined || isEmpty(name) ) 
+	{
+		self.location.href = 'csvupload2.html';
+	}
+
+	preview(type,name);	
 });
 
 
@@ -16,7 +23,17 @@ $(document).ajaxComplete(function(event, request, settings) {
 		  $('#loading-indicator').hide();
 });
 
-
+function uploadFile()
+{
+	var file = decodeURIComponent(urlParam('file'));
+	if (file == undefined || isEmpty(file) ) 
+	{
+		self.location.href = 'csvupload2.html';
+	}else
+	{
+		self.location.href = "csvupload.html?preview=true&file=" + file;		
+	}
+}
 
 function urlParam(name){
     var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -28,24 +45,28 @@ function urlParam(name){
     }
 }
 
-function loadfile(file)
+function preview(type,name)
 {
-	full_url = "/preview?type=header&file=" + file;
+	full_url = "/preview?type="+type+"&name="+name;
 	$.getJSON(full_url, {}, function(data) {
-				var columns = data;
-				full_url = "/preview?type=data&file=" + file;
-				$.getJSON(full_url, {}, function(data){
-						buildGrid(columns,data);
-				})
-		        .fail(function(jqXHR, textStatus, errorThrown) { 
-		            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
-		                self.location.href = 'login.html';
-		            }else
-		            {
-			        	   var err = eval("(" + jqXHR.responseText + ")");
-			            	$('#status-label').text(err.statusMessage);
-		            }
-		        });					
+				var columns = data.columns;
+				var pdata = data.data
+				buildGrid(columns,pdata);
+				/*
+					full_url = "/preview?type=filedata&file=" + file;
+					$.getJSON(full_url, {}, function(data){
+							buildGrid(columns,pdata);
+					})
+			        .fail(function(jqXHR, textStatus, errorThrown) { 
+			            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+			                self.location.href = 'login.html';
+			            }else
+			            {
+				        	   var err = eval("(" + jqXHR.responseText + ")");
+				            	$('#status-label').text(err.statusMessage);
+			            }
+			        });
+		        */					
 		})
         .fail(function(jqXHR, textStatus, errorThrown) { 
             if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
@@ -53,8 +74,8 @@ function loadfile(file)
             }else
             {
 	        	   var err = eval("(" + jqXHR.responseText + ")");
-	            	$('#status-label').text(err.statusMessage);
-            }
+	              	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+	        }
         });
 }
 

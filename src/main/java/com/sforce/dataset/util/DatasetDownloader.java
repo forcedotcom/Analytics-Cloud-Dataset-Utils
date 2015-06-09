@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class DatasetDownloader {
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
-	public static String getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
+	public static Map<String,String> getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
 	{
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
@@ -69,6 +70,8 @@ public class DatasetDownloader {
 		String _alias = null;
 		Date createdDateTime = null;
 		String versionID = null;
+		String id = null;
+		
 		
 		String serviceEndPoint = config.getServiceEndpoint();
 		CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -110,6 +113,7 @@ public class DatasetDownloader {
 					if(resp!=null)
 					{
 						_alias = (String) resp.get("_alias");
+						id = (String) resp.get("_uid");
 						Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
 						//System.out.println("_createdDateTime: "+ _createdDateTime);
 						if(_createdDateTime != null)
@@ -165,7 +169,12 @@ public class DatasetDownloader {
 
 								Map xmdObject =  mapper.readValue(xmd, Map.class);
 								mainXmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(xmdObject);
-								return mainXmd;
+								LinkedHashMap map = new LinkedHashMap();
+								map.put("datasetAlias", _alias);
+								map.put("datasetVersion", versionID);
+								map.put("datasetId", id);
+								map.put("mainXmd", mainXmd);
+								return map;
 							}
 						}else
 						{
@@ -189,6 +198,62 @@ public class DatasetDownloader {
 		
 		throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
 	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Map<String,String> getXMD(String alias, String datasetId,String datasetVersion, PartnerConnection partnerConnection) throws Exception 
+	{
+		if(datasetId == null || datasetVersion == null || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
+			return getXMD(alias,partnerConnection);
+		
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();		
+		
+		String serviceEndPoint = config.getServiceEndpoint();
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		
+		String mainXmd = null;
+
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   
+		URI u = new URI(serviceEndPoint);
+
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format("/insights/internal_api/v1.0/esObject/edgemart/%s/version/%s/file/main.xmd.json",datasetId,datasetVersion),null,null);			
+		HttpGet listEMPost = new HttpGet(listEMURI);
+
+		listEMPost.setConfig(requestConfig);
+		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
+		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
+		
+		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
+	       int statusCode = emresponse.getStatusLine().getStatusCode();
+	       if (statusCode != HttpStatus.SC_OK) {
+	           System.out.println("Method failed: " + reasonPhrase);
+		       throw new IllegalArgumentException(String.format("%s download failed: %d %s", "main.xmd.json",statusCode,reasonPhrase));
+	       }
+
+			HttpEntity emresponseEntity1 = emresponse.getEntity();
+			InputStream emis1 = emresponseEntity1.getContent();
+			String xmd = IOUtils.toString(emis1, "UTF-8");
+			emis1.close();
+			httpClient.close();
+
+			ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map xmdObject =  mapper.readValue(xmd, Map.class);
+			mainXmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(xmdObject);
+			LinkedHashMap map = new LinkedHashMap();
+			map.put("datasetAlias", alias);
+			map.put("datasetVersion", datasetVersion);
+			map.put("datasetId", datasetId);
+			map.put("mainXmd", mainXmd);
+			return map;
+	}
+	
 	
 	/**
 	 * @param EM_NAME

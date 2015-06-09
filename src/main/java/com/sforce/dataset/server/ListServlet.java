@@ -101,6 +101,18 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), datasets);
+					}else if(value.equalsIgnoreCase("datasetAndApps"))
+					{
+						boolean current = false;
+						String tmp = request.getParameter("current");
+						if(tmp!=null && tmp.trim().equalsIgnoreCase("true"))
+						{
+							current = true;
+						}
+						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, current);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), datasets);
 					}else if(value.equalsIgnoreCase("session"))
 					{
 						List<Session> sessions = DatasetUtils.listSessions(conn);

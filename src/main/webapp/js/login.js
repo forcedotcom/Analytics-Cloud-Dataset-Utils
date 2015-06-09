@@ -56,7 +56,7 @@ $(document).ready(function() {
 				processData : false,
 				dataType : 'json',
 				success : function(data) {
-					self.location.href = 'csvupload.html';
+					self.location.href = 'finder.html';
 				},
 		           error: function(jqXHR, status, error) {
 		               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
