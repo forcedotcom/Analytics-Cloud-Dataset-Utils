@@ -113,6 +113,21 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), datasets);
+					}else if(value.equalsIgnoreCase("deleteDataset"))
+					{
+						String datasetAlias = request.getParameter("datasetAlias");
+						if(datasetAlias==null || datasetAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("datasetAlias is required param");
+						}
+						String datasetId = request.getParameter("datasetId");
+						if(!DatasetUtils.deleteDataset(datasetAlias, datasetId, conn))
+						{
+							throw new IllegalArgumentException("Dataset {"+datasetAlias+"} could not be deleted");
+						}
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), datasetAlias);
 					}else if(value.equalsIgnoreCase("session"))
 					{
 						List<Session> sessions = DatasetUtils.listSessions(conn);

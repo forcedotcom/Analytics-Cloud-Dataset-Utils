@@ -1,15 +1,35 @@
 $(document).ready(function() {        
+
+//	$('#saqlContainer').hide();
+//	$('#saqlButton').prop('disabled', true);
+//	$('#uploadButton').prop('disabled', true);
+//	$('#augmentButton').prop('disabled', true);
+
 	var type = decodeURIComponent(urlParam('type'));
 	if (type == undefined || isEmpty(type) ) 
 	{
 		self.location.href = 'csvupload2.html';
 	}
-	
+		
 	var name = decodeURIComponent(urlParam('name'));
 	if (name == undefined || isEmpty(name) ) 
 	{
 		self.location.href = 'csvupload2.html';
 	}
+
+	if(type == 'dataset')
+	{
+		  $('#uploadButton').remove();	
+	}
+	
+	if(type == 'file')
+	{
+		  $('#saqlButton').remove();	
+	}
+	
+	$('#saqlModal').draggable({
+	    handle: ".modal-header"
+	});
 
 	preview(type,name);	
 });
@@ -21,6 +41,12 @@ $(document).ajaxSend(function(event, request, settings) {
 
 $(document).ajaxComplete(function(event, request, settings) {
 		  $('#loading-indicator').hide();
+});
+
+$(document).on("click", "#queryButton", function(event){
+	$("#modal-title2").empty();
+	$("#modal-title2").removeClass("alert alert-danger");
+	sendSaql(event);
 });
 
 function uploadFile()
@@ -45,6 +71,60 @@ function urlParam(name){
     }
 }
 
+
+function sendSaql(event){
+	var request_type = decodeURIComponent(urlParam('type'));
+	var request_name = decodeURIComponent(urlParam('name'));
+	var saql_string = $('#queryText').val();
+	if(isEmpty(saql_string))
+	{
+		alert("Invalid SAQL!");
+		return;
+	}
+
+    var buttonDomElement = event.target;
+    $(buttonDomElement).attr('disabled', true);
+
+//	$('#queryButton').prop('disabled', true);
+		
+	setTimeout(function() {
+		$.ajax({
+		    url: '/preview',
+		    type: 'POST',
+		    data: {	
+		    			saql: saql_string,
+		    			type: request_type,
+		    			name:request_name
+		     		},
+		    contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+		    dataType: 'json',
+		    async: true,
+		    success: function(data) {
+				var columns = data.columns;
+				var pdata = data.data
+				buildGrid(columns,pdata);
+				$('#queryText').val(data.saql);
+                $(buttonDomElement).attr('disabled', false);
+				 $('#saqlModal').modal('hide');
+		    },
+            error: function(jqXHR, status, error) {
+                $(buttonDomElement).attr('disabled', false);
+               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                   self.location.href = 'login.html';
+               }
+               else
+               {
+	        	    var err = eval("(" + jqXHR.responseText + ")");
+	        	    $("#modal-title2").addClass("alert alert-danger");
+	              	$("#modal-title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
+               }
+          	 }
+		});
+	},60);
+	
+}
+
+
 function preview(type,name)
 {
 	full_url = "/preview?type="+type+"&name="+name;
@@ -52,6 +132,7 @@ function preview(type,name)
 				var columns = data.columns;
 				var pdata = data.data
 				buildGrid(columns,pdata);
+				$('#queryText').val(data.saql);
 				/*
 					full_url = "/preview?type=filedata&file=" + file;
 					$.getJSON(full_url, {}, function(data){
@@ -74,7 +155,8 @@ function preview(type,name)
             }else
             {
 	        	   var err = eval("(" + jqXHR.responseText + ")");
-	              	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+	        	    $("#title2").addClass("alert alert-danger");
+	              	$("#title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
 	        }
         });
 }

@@ -73,7 +73,7 @@ $(document).ready(function() {
 	           	   	$("#submit-xmd-btn").prop('disabled', true);
 			        submittedButton();
 			    },
-	            error: function(xhr, status, error) {
+	            error: function(jqXHR, status, error) {
 	           	   $("#submit-xmd-btn").text("Submit XMD");
 	           	   disableButtons(false);
 	           	   $("#submit-xmd-btn").prop('disabled', true);
@@ -82,12 +82,12 @@ $(document).ready(function() {
 	               }
 	               else
 	               {
-		        	    var err = eval("(" + xhr.responseText + ")");
+		        	    var err = eval("(" + jqXHR.responseText + ")");
 		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
 	               }
 	          	 }
 			});
-		},13);
+		},60);
 		
 	}
 

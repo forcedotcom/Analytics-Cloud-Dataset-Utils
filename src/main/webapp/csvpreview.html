@@ -25,6 +25,15 @@
 	bottom: 26px;
 }
 
+.modal
+{
+    overflow: hidden;
+}
+.modal-dialog{
+    margin-right: 0;
+    margin-left: 0;
+}
+
 #status-label {
 	margin: 4px;
 }
@@ -51,6 +60,7 @@ box-sizing: content-box;
     
     <script src="js/vendor/jquery.ui.widget.js"></script>
 	<script src="js/jquery.iframe-transport.js"></script>
+	<script src="jquery-ui/jquery-ui.js"></script>
 
 	<script src="bootstrap/js/bootstrap.min.js"></script>
 
@@ -60,7 +70,7 @@ box-sizing: content-box;
 <body>
 
 <div class="navbar navbar-default navbar-static-top" style="background-color: #00c0b7;">
-      <div class="container">
+      <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -68,22 +78,41 @@ box-sizing: content-box;
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <span class="navbar-brand" style="color: white;">Salesforce Analytics Cloud Dataset Utils</span>
+          <span class="navbar-brand" style="color: white;"><a href="finder.html" style="color: white;"><i style="font-size:1.5em;"  class="glyphicon glyphicon-home"></i></a><span>&nbsp;&nbsp;&nbsp;</span>Salesforce Analytics Cloud Dataset Utils</span>
         </div>
         <div id="navbar-collapse1" class="collapse navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
              <li>
                 <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i style="font-size:1.5em;"  class="glyphicon glyphicon-th-list"></i></a>
                 <ul class="dropdown-menu">
-				<li><a class="navlink" href="finder.html" target="_top">Home</a></li>
-                <li><a class="navlink" href="csvupload.html" target="_top">CSV Upload</a></li>
-				<li><a class="navlink" href="logs.html" target="_top">Logs</a></li>
-				<li><a class="navlink" href="datafloweditor.html" tartget="_top">Dataflow Editor</a></li>
+                <li><a class="navlink" href="csvupload.html" target="_top">File Upload</a></li>
+				<li><a class="navlink" href="logs.html" target="_top">Process Monitor</a></li>
+				<li><a class="navlink" href="datafloweditor.html" target="_top">Dataflow Editor</a></li>
 				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
 				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
                 </ul>
              </li>
-           </ul>
+                <li>
+                  <div class="btn-group navbar-btn">
+                    <button class="btn btn-danger">Action</button>
+                    <button data-toggle="dropdown" class="btn btn-danger dropdown-toggle"><span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                      <li><a id="uploadButton" href="#">Upload File</a></li>
+                      <!-- <li><a id="augmentButton" href="#">Augment Dataset</a></li>  -->
+                      <li><a id="saqlButton" href="#" data-toggle="modal" data-target="#saqlModal">Edit SAQL</a></li>
+                    </ul>
+                  </div>
+                </li>
+<!--             
+             <li>
+				  <div class="btn-group btn-group-xs navbar-btn">
+					  <button id="augmentButton" type="button" class="btn btn-default navbar-btn">Augment</button>
+					  <button id="uploadButton" type="button" class="btn btn-default navbar-btn">Upload</button>
+					  <button id="saqlButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target="#saqlModal">SAQL</button>
+				  </div>
+             </li>
+ -->
+            </ul>
         </div>    
      </div>	
 </div>
@@ -92,9 +121,46 @@ box-sizing: content-box;
 		<div id="header" class="row">&nbsp;</div>
 	</div>
 
+<!-- 
 	<div class="container">
-		<div id="title2" class="row"></div>
+	  <div class="btn-group btn-group-xs pull-right">
+		  <button id="augmentButton" type="button" class="btn btn-default">Augment</button>
+		  <button id="uploadButton" type="button" class="btn btn-default">Upload</button>
+		  <button id="saqlButton" type="button" class="btn btn-default">SAQL</button>
+	  </div>
 	</div>
+-->
+
+	<div class="container">
+		<div id="title2">		  	  
+		</div>
+	</div>
+	
+	
+<div id="saqlModal" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                 <h4 class="modal-title">SAQL</h4>
+            </div>
+            <div class="modal-body">
+					<div class="input-group">
+					    <textarea style="overflow:auto;resize:none" id="queryText" class="form-control" rows="5"></textarea> 
+					    <span id="queryButton" class="input-group-addon btn btn-primary">Query</span>
+					</div>
+            </div>
+             <div class="modal-footer">
+				<div id="modal-title2">		  	  
+				</div>
+             </div>
+  
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->	
 
 	<div id="grid" class="excel-grid">
  </div>

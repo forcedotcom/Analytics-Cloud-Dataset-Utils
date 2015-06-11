@@ -33,6 +33,7 @@ public class PreviewData {
 
 	private List<Header> columns = null;
 	private List<Map<String,Object>> data = null;
+	private String saql = null;
 
 	public void setData(List<Map<String, Object>> data) {
 		this.data = data;
@@ -45,6 +46,12 @@ public class PreviewData {
 	}
 	public List<Map<String, Object>> getData() {
 		return data;
+	}
+	public String getSaql() {
+		return saql;
+	}
+	public void setSaql(String saql) {
+		this.saql = saql;
 	}
 	
 }

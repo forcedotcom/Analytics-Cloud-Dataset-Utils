@@ -24,6 +24,23 @@ function listDatasets(){
     });
   }
 
+function deleteDataset(datasetAlias,datasetId){
+	var url = "list?type=deleteDataset&datasetAlias=" + datasetAlias + "&datasetId=" + datasetId;
+    $.getJSON(url,{},function(data){
+    	$( "#"+datasetAlias).remove();
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+        {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });
+  }
+
     function printTable(data){
        $.each(data, function(i,obj)
        {
@@ -55,15 +72,15 @@ function listDatasets(){
     	   <a href=\"xmdeditor.html?datasetAlias=" + data[i]._alias + "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\">Edit Xmd</a> \
     	   </li> \
     	   <li> \
-    	   <a href=\"#\">Delete</a> \
+    	   <a href=\"#\" onclick='deleteDataset(\""+data[i]._alias+"\",\""+data[i]._uid+"\");'>Delete</a> \
     	   </li> \
     	   </ul> \
     	   </div> \
     	   </td>"
     	   
-            $("#result-body").append(
-            		$('<tr/>').append('').html(tablerow)
-                      );
+    	   var tmp = $('<tr/>').append('').html(tablerow);
+       	   tmp.attr("id",data[i]._alias);
+            $("#result-body").append(tmp);
           })
     }
   

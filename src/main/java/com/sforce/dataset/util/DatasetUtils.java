@@ -60,6 +60,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -92,8 +93,60 @@ public class DatasetUtils {
 	
 	private static boolean hasLoggedIn = false;
 
+	public static boolean deleteDataset(String alias, String datasetId,PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  
+	{		
+		if(datasetId==null || datasetId.trim().isEmpty())
+		{
+			List<DatasetType> temp = listDatasets(partnerConnection, false);
+			for(DatasetType t:temp)
+			{
+				if(t._alias.equals(alias))
+				{
+					datasetId = t._uid;
+				}
+			}
+		}
+		
+		if(datasetId==null || datasetId.trim().isEmpty())
+		{
+			throw new IllegalArgumentException("Dataset {"+alias+"} not found");
+		}
+
+		partnerConnection.getServerTimestamp();
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();
+		String serviceEndPoint = config.getServiceEndpoint();
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   		
+		URI u = new URI(serviceEndPoint);
+		
+		String deleteURI = 	"/insights/internal_api/v1.0/esObject/edgemart/"+datasetId+"/json";
+
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), deleteURI, null,null);			
+		HttpDelete listEMPost = new HttpDelete(listEMURI);
+
+		listEMPost.setConfig(requestConfig);
+		listEMPost.addHeader("Authorization","OAuth "+sessionID);			
+		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
+		HttpEntity emresponseEntity = emresponse.getEntity();
+		InputStream emis = emresponseEntity.getContent();			
+		String deleteResponse = IOUtils.toString(emis, "UTF-8");
+		System.out.println("Delete Response:"+deleteResponse);
+		emis.close();
+		httpClient.close();
+		
+		return true;
+	}
+	
 	@SuppressWarnings("rawtypes")
-	public static Map<String,Map> listPublicDataset(PartnerConnection connection, boolean isCurrent) throws Exception {
+	public static Map<String,Map> listPublicDataset(PartnerConnection connection, boolean isCurrent) throws ConnectionException, ClientProtocolException, URISyntaxException, IOException 
+	{
 		GetUserInfoResult userInfo = connection.getUserInfo();
 		String userID = userInfo.getUserId();
 		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
@@ -124,9 +177,6 @@ public class DatasetUtils {
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
-//		String _alias = null;
-//		Date createdDateTime = null;
-//		String versionID = null;
 		String serviceEndPoint = config.getServiceEndpoint();
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -176,7 +226,7 @@ public class DatasetUtils {
 
 
 	@SuppressWarnings("rawtypes")
-	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws Exception 
+	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException 
 	{
 		List<DatasetType> datasetList = new LinkedList<DatasetType>();
 		List<FolderType> apps = listFolders(connection);
@@ -190,58 +240,6 @@ public class DatasetUtils {
 				String _type = (String) dataset.get("_type");
 				if(_type != null && _type.equals("edgemart"))
 				{
-//						DatasetType datasetTemp = new DatasetType();
-//						
-//						Object temp = dataset.get("_createdDateTime");
-//						if(temp != null && temp instanceof Number)
-//						{
-//							datasetTemp._createdDateTime = ((Number)temp).longValue();
-//						}
-//
-//						temp = dataset.get("_lastAccessed");
-//						if(temp != null && temp instanceof Number)
-//						{
-//							datasetTemp._lastAccessed = ((Number)temp).longValue();
-//						}
-//
-//						datasetTemp._type  = (String) dataset.get("_type");
-//						
-//						datasetTemp._uid  = (String) dataset.get("_uid");
-//						
-//						datasetTemp.assetIcon = (String) dataset.get("_type");
-//						
-//						datasetTemp.assetIconUrl = (String) dataset.get("assetIconUrl");
-//						
-//						datasetTemp.assetSharingUrl = (String) dataset.get("assetSharingUrl");
-//						
-//						datasetTemp._alias = (String) dataset.get("_alias");
-//
-//						datasetTemp.name = (String) dataset.get("name");
-//						
-//						datasetTemp._url = (String) dataset.get("_url");
-//
-//						temp =  dataset.get("_permissions");
-//						if(temp != null && temp instanceof Map)
-//						{
-//							datasetTemp._permissions = datasetTemp.new PermissionType();
-//							Object var = ((Map)temp).get("modify");
-//							if(var != null && var instanceof Boolean)
-//							{
-//								datasetTemp._permissions.modify = ((Boolean)var).booleanValue();
-//							}
-//
-//							var = ((Map)temp).get("manage");
-//							if(var != null && var instanceof Boolean)
-//							{
-//								datasetTemp._permissions.manage = ((Boolean)var).booleanValue();
-//							}
-//
-//							var = ((Map)temp).get("view");
-//							if(var != null && var instanceof Boolean)
-//							{
-//								datasetTemp._permissions.view = ((Boolean)var).booleanValue();
-//							}
-//						}
 					DatasetType datasetTemp = DatasetType.getDatasetType(dataset);
 					if(datasetTemp.folder != null && datasetTemp.folder._uid != null)
 					{
@@ -271,7 +269,7 @@ public class DatasetUtils {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static List<FolderType> listFolders(PartnerConnection partnerConnection) throws Exception {
+	public static List<FolderType> listFolders(PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException {
 		List<FolderType> folderList = new LinkedList<FolderType>();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			

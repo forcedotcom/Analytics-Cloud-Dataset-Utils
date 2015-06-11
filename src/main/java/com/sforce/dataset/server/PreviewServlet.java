@@ -53,9 +53,10 @@ public class PreviewServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
 	
-	/*
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		doGet(request, response);
+		/*
 		// Set standard HTTP/1.1 no-cache headers.
 		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
 		// Set standard HTTP/1.0 no-cache header.
@@ -139,8 +140,8 @@ public class PreviewServlet extends HttpServlet {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.writeValue(response.getOutputStream(), status);
 		}
+		*/
 	}
-	*/
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -219,7 +220,7 @@ public class PreviewServlet extends HttpServlet {
 
 						resp.setColumns(PreviewUtil.getSaqlHeader(data));
 						resp.setData(PreviewUtil.getSaqlData(data));
-						
+						resp.setSaql(saql);
 						response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), resp);

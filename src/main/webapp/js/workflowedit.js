@@ -53,14 +53,7 @@ $(document).ready(function() {
 	}
 
 	function jsonChange(){
-		if($(".ace_error")[0]){
-			$("#submit-xmd-btn").prop('disabled', true);
-		}
-		else{
-			$("#submit-xmd-btn").prop('disabled', false);
-		}
-
-
+		$("#submit-xmd-btn").prop('disabled', false);
 		if ($("#submit-xmd-btn").hasClass("btn-success")){
 			submittedButton();
 		}
@@ -98,7 +91,7 @@ $(document).ready(function() {
 	           	   	$("#submit-xmd-btn").prop('disabled', true);
 			        submittedButton();
 			    },
-	            error: function(xhr, status, error) {
+	            error: function(jqXHR, status, error) {
 	           	   $("#submit-xmd-btn").text("Submit Updated Workflow");
 	           	   disableButtons(false);
 	           	   $("#submit-xmd-btn").prop('disabled', true);
@@ -107,12 +100,12 @@ $(document).ready(function() {
 	               }
 	               else
 	               {
-		        	    var err = eval("(" + xhr.responseText + ")");
+		        	    var err = eval("(" + jqXHR.responseText + ")");
 		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
 	               }
 	          	 }
 			});
-		},13);
+		},60);
 		
 	}
 
