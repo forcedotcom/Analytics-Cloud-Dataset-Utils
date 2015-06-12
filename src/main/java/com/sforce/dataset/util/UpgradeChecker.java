@@ -31,10 +31,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOCase;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
@@ -53,9 +64,13 @@ public class UpgradeChecker {
 	
 	final static String latestReleaseURL = "https://api.github.com/repos/forcedotcom/Analytics-Cloud-Dataset-Utils/releases/latest";
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+	private static final DateFormat lFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	
 	
 	public static void main(String[] args) {
+		
 		try {
+			lFormatter.setTimeZone(TimeZone.getTimeZone("GMT"));
 			UpgradeChecker.getLatestJar();
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
@@ -95,6 +110,24 @@ public class UpgradeChecker {
 				ObjectMapper mapper = new ObjectMapper();	
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				ReleaseType res =  mapper.readValue(releases, ReleaseType.class);
+				if(res.draft || res.prerelease)
+				{
+					System.out.println("latest release is in draft, skipping download");
+					return;
+				}
+				
+				Date releaseDate = lFormatter.parse(res.created_at);
+				IOFileFilter suffixFileFilter = FileFilterUtils.suffixFileFilter(".jar", IOCase.INSENSITIVE);
+				IOFileFilter prefixFileFilter = FileFilterUtils.prefixFileFilter("datasetutils-", IOCase.INSENSITIVE);
+				IOFileFilter andFilter1 = FileFilterUtils.and(suffixFileFilter, prefixFileFilter);
+				File latestJar = getLatestFile(new File("."), andFilter1);
+				
+				if(latestJar != null && (latestJar.lastModified()>=releaseDate.getTime() || latestJar.getName().contains(res.tag_name)))
+				{
+					System.out.println("jar  {"+latestJar.getName()+"} is same or newer than {"+res.tag_name+".jar}, skipping download");
+					return;
+				}
+
 				List<AssetsType> atList = res.getAssetList();
 				if(atList!=null)
 				{
@@ -105,7 +138,7 @@ public class UpgradeChecker {
 							File jar = new File(at.name);
 							if(!jar.exists())
 							{
-								downloadRelease(jar, at.browser_download_url);
+								downloadRelease(jar, at.browser_download_url, releaseDate);
 							}else
 							{
 								System.out.println("jar  {"+jar+"} is current. No newer releases found");
@@ -113,7 +146,6 @@ public class UpgradeChecker {
 						}
 					}
 				}
-//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}
@@ -121,7 +153,7 @@ public class UpgradeChecker {
 		}
 	
 	
-	private static void downloadRelease(File jar,String browser_download_url) throws ClientProtocolException, IOException
+	private static void downloadRelease(File jar,String browser_download_url, Date releaseDate) throws ClientProtocolException, IOException
 	{
 		CloseableHttpClient httpClient1 = HttpClients.createDefault();
 		
@@ -167,7 +199,59 @@ public class UpgradeChecker {
 				emresponse1.close();
 				httpClient1.close();
 			}
+			jar.setLastModified(releaseDate.getTime());
 			System.out.println("file {"+jar+"} downloaded. Size{"+nf.format(jar.length())+"}, Time{"+nf.format(endTime-startTime)+"}\n");
 	}
+	
+	
+	public static File getLatestFile(File directory, IOFileFilter fileFilter) 
+	{
+		Collection<File> list = FileUtils
+				.listFiles(directory, fileFilter, null);
+		File[] files = list.toArray(new File[0]);
+
+		if (files != null && files.length > 0) 
+		{
+			Arrays.sort(files, new Comparator<File>() 
+			{
+				public int compare(File a, File b) 
+				{
+					long diff = (long) (b.lastModified() - a.lastModified());
+					// System.out.println("** File Comparator **");
+					// System.out.println("File a: " + a.getName() );
+					// System.out.println("File b: " + b.getName() );
+					// System.out.println("b.lastModified() - a.lastModified(): "
+					// + diff);
+					if (diff == 0) {
+						diff = b.getName().compareToIgnoreCase(a.getName());
+						// System.out.println("b.getName().compareToIgnoreCase(a.getName()): "
+						// + diff);
+					}
+					if (diff > 0L)
+						return 1;
+					else if (diff < 0L)
+						return -1;
+					else
+						return 0;
+				}
+			});
+
+			// System.out.println("** Sorted File List **");
+			// for (File file : files) {
+			// System.out.println("File: " + file.getName() + ", Date: " +
+			// file.lastModified() + "");
+			// }
+			System.out.println("Picking Latest File {" + files[0].getName()
+					+ "}, lastModified {" + new Date(files[0].lastModified())
+					+ "}");
+			return files[0];
+		} else {
+			System.out.println("No new files found in directory {" + directory
+					+ "}");
+			return null;
+		}
+	}
+	
+	
 	
 }

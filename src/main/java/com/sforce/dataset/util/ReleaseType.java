@@ -68,10 +68,14 @@ public class ReleaseType {
 			for(Map<String, ?> asset:assets)
 			{
 				AssetsType temp = new AssetsType();
+				temp.id = ((Number) asset.get("id")).longValue();
 				temp.browser_download_url = (String) asset.get("browser_download_url");
 				temp.name = (String) asset.get("name");
+				temp.state = (String) asset.get("state");
 				temp.download_count = ((Number) asset.get("download_count")).longValue();
 				temp.size = ((Number) asset.get("size")).longValue();
+				temp.created_at = (String) asset.get("created_at");
+				temp.published_at = (String) asset.get("published_at");
 				list.add(temp);
 			}
 			return list;
