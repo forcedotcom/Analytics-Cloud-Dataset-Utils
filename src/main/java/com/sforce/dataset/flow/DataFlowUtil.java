@@ -49,11 +49,11 @@ import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.util.HttpUtils;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
@@ -89,14 +89,10 @@ public class DataFlowUtil {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
 		URI u = new URI(serviceEndPoint);
 
 		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId), null,null);			
@@ -165,11 +161,8 @@ public class DataFlowUtil {
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 		   
 		URI u = new URI(serviceEndPoint);
 		
@@ -177,14 +170,13 @@ public class DataFlowUtil {
 		
 		File dataFlowFile = new File(dataDir,dataflowAlias+".json");
 
-		CloseableHttpClient httpClient1 = HttpClients.createDefault();
 		URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId), null,null);			
 		HttpGet listEMPost1 = new HttpGet(listEMURI1);
 	
 		listEMPost1.setConfig(requestConfig);
 		listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
 	
-		CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
+		CloseableHttpResponse emresponse1 = httpClient.execute(listEMPost1);
 	
 		String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 		int statusCode = emresponse1.getStatusLine().getStatusCode();
@@ -196,7 +188,7 @@ public class DataFlowUtil {
 		InputStream emis1 = emresponseEntity1.getContent();
 		String dataFlowJson = IOUtils.toString(emis1, "UTF-8");								
 		emis1.close();
-		httpClient1.close();
+		httpClient.close();
 
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -238,14 +230,10 @@ public class DataFlowUtil {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/workflow", null,null);			
@@ -328,14 +316,10 @@ public class DataFlowUtil {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+		
 		URI u = new URI(serviceEndPoint);
 
 		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId).replace("json", "start"), null,null);			

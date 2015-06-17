@@ -44,7 +44,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -359,11 +358,7 @@ public class DatasetAugmenter {
 
 		String serviceEndPoint = config.getServiceEndpoint();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 		   
 		URI u = new URI(serviceEndPoint);
 
@@ -390,7 +385,8 @@ public class DatasetAugmenter {
 				if(!filename.toString().endsWith("json"))
 					continue;
 				
-				CloseableHttpClient httpClient1 = HttpClients.createDefault();
+				CloseableHttpClient httpClient1 = HttpUtils.getHttpClient();
+
 				String url = (String) _files.get(filename);
 				URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 				HttpGet listEMPost1 = new HttpGet(listEMURI1);

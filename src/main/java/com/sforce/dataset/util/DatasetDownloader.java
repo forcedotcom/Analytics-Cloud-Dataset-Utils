@@ -42,7 +42,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,20 +71,13 @@ public class DatasetDownloader {
 		String versionID = null;
 		String id = null;
 		
-		
-		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 		
 		String mainXmd = null;
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		String serviceEndPoint = config.getServiceEndpoint();
 		URI u = new URI(serviceEndPoint);
-
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
@@ -143,7 +135,7 @@ public class DatasetDownloader {
 								if(!filename.toString().equalsIgnoreCase("main.xmd.json"))
 									continue;
 								
-								CloseableHttpClient httpClient1 = HttpClients.createDefault();
+								CloseableHttpClient httpClient1 = HttpUtils.getHttpClient();
 								String url = (String) _files.get(filename);
 								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 								HttpGet listEMPost1 = new HttpGet(listEMURI1);
@@ -209,17 +201,12 @@ public class DatasetDownloader {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();		
 		
-		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 		
 		String mainXmd = null;
-
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
 		   
+		String serviceEndPoint = config.getServiceEndpoint();
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format("/insights/internal_api/v1.0/esObject/edgemart/%s/version/%s/file/main.xmd.json",datasetId,datasetVersion),null,null);			
@@ -273,13 +260,8 @@ public class DatasetDownloader {
 			String versionID = null;
 			
 			String serviceEndPoint = config.getServiceEndpoint();
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-
-			RequestConfig requestConfig = RequestConfig.custom()
-				       .setSocketTimeout(60000)
-				       .setConnectTimeout(60000)
-				       .setConnectionRequestTimeout(60000)
-				       .build();
+			CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+			RequestConfig requestConfig = HttpUtils.getRequestConfig();
 			   
 			URI u = new URI(serviceEndPoint);
 
@@ -346,7 +328,7 @@ public class DatasetDownloader {
 											continue;
 									}
 									
-									CloseableHttpClient httpClient1 = HttpClients.createDefault();
+									CloseableHttpClient httpClient1 = HttpUtils.getHttpClient();
 									String url = (String) _files.get(filename);
 									URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 									HttpGet listEMPost1 = new HttpGet(listEMURI1);
@@ -438,54 +420,6 @@ public class DatasetDownloader {
 			
 		return false;
 	}
-
-	/*
-	public static PartnerConnection login(final String username,
-			String password, String token, String endpoint) throws Exception {
-		
-		if (username == null || username.isEmpty()) {
-			throw new Exception("username is required");
-		}
-
-		if (password == null || password.isEmpty()) {
-			throw new Exception("password is required");
-		}
-
-		if (endpoint == null || endpoint.isEmpty()) {
-			throw new Exception("endpoint is required");
-		}
-
-		if (token == null)
-			token = "";
-
-		password = password + token;
-
-		try {
-			ConnectorConfig config = new ConnectorConfig();
-			config.setUsername(username);
-			config.setPassword(password);
-			config.setAuthEndpoint(endpoint);
-			config.setSessionRenewer(new SessionRenewerImpl(username, password, null, endpoint));
-
-			PartnerConnection connection = new PartnerConnection(config);
-			GetUserInfoResult userInfo = connection.getUserInfo();
-
-			System.out.println("\nLogging in ...\n");
-			//System.out.println("UserID: " + userInfo.getUserId());
-			//System.out.println("User Full Name: " + userInfo.getUserFullName());
-			System.out.println("User Email: " + userInfo.getUserEmail());
-			//System.out.println("SessionID: " + config.getSessionId());
-			//System.out.println("Auth End Point: " + config.getAuthEndpoint());
-			//System.out.println("Service End Point: " + config.getServiceEndpoint());
-			
-			return connection;
-
-		} catch (ConnectionException e) {
-			e.printStackTrace();
-			throw new Exception(e.getLocalizedMessage());
-		}
-	}
-	*/
 	
 	@SuppressWarnings("rawtypes")
 	static Map getAlias(List<Map> emarts, String alias)

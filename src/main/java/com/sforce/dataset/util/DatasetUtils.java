@@ -63,7 +63,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,14 +115,10 @@ public class DatasetUtils {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   		
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
 		URI u = new URI(serviceEndPoint);
 		
 		String deleteURI = 	"/insights/internal_api/v1.0/esObject/edgemart/"+datasetId+"/json";
@@ -178,14 +173,11 @@ public class DatasetUtils {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   		
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
+		
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current="+isCurrent+"&sortOrder=Mru",null);			
@@ -275,14 +267,10 @@ public class DatasetUtils {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   		
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/folder", null,null);			

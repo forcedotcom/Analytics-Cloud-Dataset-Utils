@@ -36,13 +36,13 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,7 +104,9 @@ public class XmdUploader {
 			String folderID = null;
 			String userXmdUri = null;
 			String serviceEndPoint = config.getServiceEndpoint();
-			CloseableHttpClient httpClient = HttpClients.createDefault();
+
+			CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+			RequestConfig requestConfig = HttpUtils.getRequestConfig();
 			
 			URI u = new URI(serviceEndPoint);
 
@@ -113,7 +115,8 @@ public class XmdUploader {
 
 			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
 			HttpGet listEMPost = new HttpGet(listEMURI);
-
+			listEMPost.setConfig(requestConfig);
+			
 			listEMPost.addHeader("Authorization","OAuth "+sessionID);			
 			CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
 			HttpEntity emresponseEntity = emresponse.getEntity();

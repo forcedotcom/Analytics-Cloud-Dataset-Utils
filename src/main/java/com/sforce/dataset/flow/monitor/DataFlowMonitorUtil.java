@@ -46,11 +46,11 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.util.HttpUtils;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
@@ -84,14 +84,10 @@ public class DataFlowMonitorUtil {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/jobs", null,null);			
@@ -202,14 +198,10 @@ public class DataFlowMonitorUtil {
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+		
 		URI u = new URI(serviceEndPoint);
 
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), nodeUrl, null,null);			
@@ -319,14 +311,10 @@ public class DataFlowMonitorUtil {
 
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
-		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
-		   
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+		
 		URI u = new URI(serviceEndPoint);
 		
 		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/jobTrackerHeartbeat/{0}/nodes/digest/nodeerrorlog".replace("{0}", jobTrackerid), null,null);			

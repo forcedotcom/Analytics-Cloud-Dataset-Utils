@@ -53,7 +53,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -83,13 +82,8 @@ public class UpgradeChecker {
 
 	public static void getLatestJar() throws URISyntaxException, ClientProtocolException, IOException
 	{
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-		
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 		   
 		URI u = new URI(latestReleaseURL);
 
@@ -155,13 +149,8 @@ public class UpgradeChecker {
 	
 	private static void downloadRelease(File jar,String browser_download_url, Date releaseDate) throws ClientProtocolException, IOException
 	{
-		CloseableHttpClient httpClient1 = HttpClients.createDefault();
-		
-		RequestConfig requestConfig = RequestConfig.custom()
-			       .setSocketTimeout(60000)
-			       .setConnectTimeout(60000)
-			       .setConnectionRequestTimeout(60000)
-			       .build();
+		CloseableHttpClient httpClient = HttpUtils.getHttpClient();
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
 
 		HttpGet listEMPost1 = new HttpGet(browser_download_url);
 
@@ -170,7 +159,7 @@ public class UpgradeChecker {
 
 		long startTime = System.currentTimeMillis();
 		long endTime = 0L;
-		CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
+		CloseableHttpResponse emresponse1 = httpClient.execute(listEMPost1);
 
 	   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
        int statusCode = emresponse1.getStatusLine().getStatusCode();
@@ -197,7 +186,7 @@ public class UpgradeChecker {
 				out.close();
 				emis1.close();
 				emresponse1.close();
-				httpClient1.close();
+				httpClient.close();
 			}
 			jar.setLastModified(releaseDate.getTime());
 			System.out.println("file {"+jar+"} downloaded. Size{"+nf.format(jar.length())+"}, Time{"+nf.format(endTime-startTime)+"}\n");
