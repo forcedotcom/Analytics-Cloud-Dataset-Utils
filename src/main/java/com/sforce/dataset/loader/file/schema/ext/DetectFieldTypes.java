@@ -228,12 +228,17 @@ public class DetectFieldTypes {
 						newField = FieldType.GetMeasureKeyDataType(devNames[i], 0, bd.scale(), 0L);
 						if(df!=null)
 						{
+							if(bd.scale()==0)
+							{
+								df = (DecimalFormat) NumberFormat.getIntegerInstance();
+							}
 							newField.setDecimalSeparator(df.getDecimalFormatSymbols().getDecimalSeparator()+"");
 							String format = df.toPattern().replace("¤", df.getDecimalFormatSymbols().getCurrencySymbol());
 							if(isPercent(columnValues))
 							{
-								format = format + df.getDecimalFormatSymbols().getPercent();
+								format = format + df.getDecimalFormatSymbols().getPercent(); //TODO In Some locales percent be a prefix than suffix
 							}
+							
 							newField.setFormat(format);
 						}
 						logger.println("Type: Numeric, Scale: "+ bd.scale());
