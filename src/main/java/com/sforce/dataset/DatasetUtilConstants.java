@@ -63,6 +63,7 @@ public class DatasetUtilConstants {
 	public static final String configDirName = "config";
 	public static final String configFileName = "settings.json";
 	public static final String debugFileName = "debug.log";
+	public static final String dataflowDirName = "dataflow";
 	
 
 	
@@ -151,6 +152,19 @@ public class DatasetUtilConstants {
 			e.printStackTrace();
 		}
 		return logsDir;
+	}
+
+	public static final File getDataflowDir(String orgId)
+	{
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File dataflowDir = new File(getOrgDir(orgId),dataflowDirName);
+		try {
+			FileUtils.forceMkdir(dataflowDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return dataflowDir;
 	}
 
 	public static final File getDebugFile()

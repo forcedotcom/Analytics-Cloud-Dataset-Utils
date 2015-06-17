@@ -27,23 +27,58 @@ package com.sforce.dataset.flow;
 
 import java.util.Map;
 
+
 public class DataFlow {
 	
 	public String _type = null;
-	public Map<String,String> _lastModifiedBy;
-//    {
-//      String "_type"
-//      String "profilePhotoUrl"
-//      String "name" 
-//      String "_uid" 
-//    },
+	public UserType _lastModifiedBy;
 	public String nextRun;
+	public long nextRunTime = 0L;
 	public String _url;
 	public String name;
 	public String MasterLabel;
-	public int RefreshFrequencySec;
+	public int RefreshFrequencySec = 0;
 	public String _uid;
 	public String WorkflowType;
     @SuppressWarnings("rawtypes")
 	public Map workflowDefinition;
+
+	@Override
+	public String toString() {
+		return "DataFlow [_type=" + _type + ", _lastModifiedBy="
+				+ _lastModifiedBy + ", nextRun=" + nextRun + ", nextRunTime="
+				+ nextRunTime + ", _url=" + _url + ", name=" + name
+				+ ", MasterLabel=" + MasterLabel + ", RefreshFrequencySec="
+				+ RefreshFrequencySec + ", _uid=" + _uid + ", WorkflowType="
+				+ WorkflowType + ", workflowDefinition=" + workflowDefinition
+				+ "]";
+	}
+
+	class UserType {
+        public String _type = null;
+        public String profilePhotoUrl = null;
+        public String name = null;
+        public String _uid = null;
+		@Override
+		public String toString() {
+			return "UserType [_type=" + _type + ", profilePhotoUrl="
+					+ profilePhotoUrl + ", name=" + name + ", _uid=" + _uid
+					+ "]";
+		}
+    }
+    
+	public static UserType getUserType(DataFlow obj,Map<String,String> input)
+	{
+		if(input!=null && !input.isEmpty())
+		{
+			UserType ret =  obj.new UserType();
+			ret._type = (String) input.get("_type");
+			ret._uid = (String) input.get("_uid");
+			ret.name = (String) input.get("name");
+			ret.profilePhotoUrl = (String) input.get("profilePhotoUrl");
+			return ret;
+		}
+		return null;
+	}
+
 }

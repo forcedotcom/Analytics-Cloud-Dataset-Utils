@@ -6,8 +6,7 @@ $(document).ready(function() {
 	var options = {
 		mode: 'code',
 		modes: ['code', 'tree'],
-		change: jsonChange,
-		error: jsonError
+		change: jsonChange
 	};
 	var editor = new JSONEditor(container, options);
 

@@ -31,13 +31,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -53,6 +53,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
@@ -60,24 +61,30 @@ import com.sforce.ws.ConnectorConfig;
 public class DataFlowUtil {
 	
 	public static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+	public static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("EEEE MMMM d HH:mm:ss z yyyy"); //Mon Jun 15 00:12:03 GMT 2015
+	public static final String dataflowURL = "/insights/internal_api/v1.0/esObject/workflow/%s/json";
+	
+	
+//	public static final  SimpleDateFormat defaultDateFormat = (SimpleDateFormat) DateFormat.getDateTimeInstance(
+//            DateFormat.FULL, 
+//            DateFormat.FULL, 
+//            Locale.getDefault());
 	
 	
 	@SuppressWarnings("rawtypes")
 	public static void uploadAndStartDataFlow(PartnerConnection partnerConnection, Map wfdef, String workflowName) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
-		DataFlow df = getDataFlow(partnerConnection, workflowName);
+		DataFlow df = getDataFlow(partnerConnection, workflowName, null);
 		if(df!=null)
 		{
-			df.workflowDefinition = wfdef;
-			uploadDataFlow(partnerConnection, df);
-			startDataFlow(partnerConnection, df);
+			uploadDataFlow(partnerConnection, df.name, df._uid, wfdef);
+			startDataFlow(partnerConnection, df.name, df._uid);
 		}
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void uploadDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
+	public static void uploadDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId, Map dataflowObject) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
-		System.out.println();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
@@ -92,12 +99,12 @@ public class DataFlowUtil {
 		   
 		URI u = new URI(serviceEndPoint);
 
-		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url, null,null);			
+		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId), null,null);			
 		
         HttpPatch httpPatch = new HttpPatch(patchURI);
         
 		Map map = new LinkedHashMap();
-		map.put("workflowDefinition", df.workflowDefinition);
+		map.put("workflowDefinition", dataflowObject);
 		ObjectMapper mapper = new ObjectMapper();			
         StringEntity entity = new StringEntity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map), "UTF-8");        
         entity.setContentType("application/json");
@@ -108,7 +115,7 @@ public class DataFlowUtil {
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
        if (statusCode != HttpStatus.SC_OK) {
-	       throw new IOException(String.format("Dataflow {%s} upload failed: %d %s", df.name,statusCode,reasonPhrase));
+	       throw new IOException(String.format("Dataflow {%s} upload failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
        }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
@@ -117,14 +124,116 @@ public class DataFlowUtil {
 //		System.out.println(emList);
 		emis.close();
 		httpClient.close();
-		System.out.println("Dataflow {"+df.name+"} successfully uploaded");
+		System.out.println("Dataflow {"+dataflowAlias+"} successfully uploaded");
 
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static DataFlow getDataFlow(PartnerConnection partnerConnection, String workflowName) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	public static DataFlow getDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
-		System.out.println();
+		DataFlow df = null;
+		partnerConnection.getServerTimestamp();
+		
+		if(dataflowId==null)
+		{
+			List<DataFlow> dfList = listDataFlow(partnerConnection);
+			for(DataFlow _df:dfList)
+			{
+				if(_df.name.equals(dataflowAlias))
+				{
+					dataflowId = _df._uid;
+					df = _df;
+				}
+			}
+		}
+
+		if(dataflowId== null)
+		{
+			throw new IllegalArgumentException("dataflowAlias {"+dataflowAlias+"} not found");
+		}
+		
+		if(df == null)
+		{
+			df = new DataFlow();
+			df.name = dataflowAlias;
+			df._uid = dataflowId;
+		}
+		
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+
+		ConnectorConfig config = partnerConnection.getConfig();			
+		String sessionID = config.getSessionId();
+		String serviceEndPoint = config.getServiceEndpoint();
+
+		RequestConfig requestConfig = RequestConfig.custom()
+			       .setSocketTimeout(60000)
+			       .setConnectTimeout(60000)
+			       .setConnectionRequestTimeout(60000)
+			       .build();
+		   
+		URI u = new URI(serviceEndPoint);
+		
+		File dataDir = DatasetUtilConstants.getDataflowDir(orgId);
+		
+		File dataFlowFile = new File(dataDir,dataflowAlias+".json");
+
+		CloseableHttpClient httpClient1 = HttpClients.createDefault();
+		URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId), null,null);			
+		HttpGet listEMPost1 = new HttpGet(listEMURI1);
+	
+		listEMPost1.setConfig(requestConfig);
+		listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
+	
+		CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
+	
+		String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
+		int statusCode = emresponse1.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			throw new IOException(String.format("Dataflow %s download failed: %d %s", dataFlowFile,statusCode,reasonPhrase));
+		}
+	
+		HttpEntity emresponseEntity1 = emresponse1.getEntity();
+		InputStream emis1 = emresponseEntity1.getContent();
+		String dataFlowJson = IOUtils.toString(emis1, "UTF-8");								
+		emis1.close();
+		httpClient1.close();
+
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		if(dataFlowJson!=null && !dataFlowJson.isEmpty())
+		{
+				Map res2 =  mapper.readValue(dataFlowJson, Map.class);
+				List<Map> flows2 = (List<Map>) res2.get("result");
+				if(flows2 != null && !flows2.isEmpty())
+				{
+					Map flow2 = flows2.get(0);
+					if(flow2!=null)
+					{
+						Map wfdef = (Map) flow2.get("workflowDefinition");
+						mapper.writerWithDefaultPrettyPrinter().writeValue(dataFlowFile, wfdef);
+						df.workflowDefinition = wfdef;
+						System.out.println("file {"+dataFlowFile+"} downloaded. Size{"+dataFlowFile.length()+"}");
+					}else
+					{
+					       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
+					}
+				}else
+				{
+				       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
+				}
+		}else
+		{
+		       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
+		}
+		return df;
+	}
+	
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List<DataFlow> listDataFlow(PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	{
+		List<DataFlow> dfList = new LinkedList<DataFlow>();
 		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
@@ -148,7 +257,7 @@ public class DataFlowUtil {
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
 	       if (statusCode != HttpStatus.SC_OK) {
-		       throw new IOException(String.format("Dataflow {%s} download failed: %d %s", workflowName,statusCode,reasonPhrase));
+		       throw new IOException(String.format("List Dataflow failed: %d %s", statusCode,reasonPhrase));
 	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
@@ -161,7 +270,6 @@ public class DataFlowUtil {
 				ObjectMapper mapper = new ObjectMapper();	
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 				Map res =  mapper.readValue(emList, Map.class);
-//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
 				List<Map> flows = (List<Map>) res.get("result");
 				if(flows != null && !flows.isEmpty())
 				{
@@ -169,84 +277,36 @@ public class DataFlowUtil {
 					{
 						String workflowType = (String) flow.get("WorkflowType");
 						String name = (String) flow.get("name");
-						if(name != null && workflowType != null && workflowType.equals("User") && name.equals(workflowName))
+						if(name != null && workflowType != null)
 						{
 							DataFlow df = new DataFlow();
 							df.name = name;
-							df._type = workflowType;
 							df._uid = (String) flow.get("_uid");
 							df._url = (String) flow.get("_url");
 							df._type = (String) flow.get("_type");
-							df.RefreshFrequencySec = (Integer) flow.get("RefreshFrequencySec");
-							df.nextRun = (String) flow.get("nextRun");
-							df.MasterLabel = (String) flow.get("MasterLabel");
-							
-							if(df._url!=null)
-							{				
-								File dataDir = new File(df.name);
-								try
-								{
-									FileUtils.forceMkdir(dataDir);
-								}catch(Throwable t)
-								{
-									t.printStackTrace();
-								}
-								File dataFlowFile = new File(dataDir,df.name+"_"+sdf.format(new Date())+".json");
-								CloseableHttpClient httpClient1 = HttpClients.createDefault();
-								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url, null,null);			
-								HttpGet listEMPost1 = new HttpGet(listEMURI1);
-	
-//								System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
-//								System.out.println("Downloading file {"+dataFlowFile+"}");
-								listEMPost1.setConfig(requestConfig);
-								listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
-	
-								CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
-	
-							   reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
-						        statusCode = emresponse1.getStatusLine().getStatusCode();
-						       if (statusCode != HttpStatus.SC_OK) {
-							       throw new IOException(String.format("Dataflow %s download failed: %d %s", dataFlowFile,statusCode,reasonPhrase));
-						       }
-	
-								HttpEntity emresponseEntity1 = emresponse1.getEntity();
-								InputStream emis1 = emresponseEntity1.getContent();
-//								System.out.println("file {"+dataFlowFile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
-								String dataFlowJson = IOUtils.toString(emis1, "UTF-8");								
-								emis1.close();
-								httpClient1.close();
-								
-								if(dataFlowJson!=null && !dataFlowJson.isEmpty())
-								{
-										Map res2 =  mapper.readValue(dataFlowJson, Map.class);
-//										mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
-										List<Map> flows2 = (List<Map>) res2.get("result");
-										if(flows != null && !flows.isEmpty())
-										{
-											Map flow2 = flows2.get(0);
-											if(flow2!=null)
-											{
-												Map wfdef = (Map) flow2.get("workflowDefinition");
-												mapper.writerWithDefaultPrettyPrinter().writeValue(dataFlowFile, wfdef);
-												df.workflowDefinition = wfdef;
-												System.out.println("file {"+dataFlowFile+"} downloaded. Size{"+dataFlowFile.length()+"}");
-											}else
-											{
-											       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
-											}
-										}else
-										{
-										       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
-										}
-								}else
-								{
-								       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
-								}
-							}else
+
+							Object temp = flow.get("RefreshFrequencySec");
+							if(temp != null && temp instanceof Number)
 							{
-						       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
+								df.RefreshFrequencySec = ((Number)temp).intValue();
 							}
-							return df;
+
+							df.nextRun = (String) flow.get("nextRun");
+							if(df.nextRun != null)
+							{
+								try {
+//									System.out.println(defaultDateFormat.toPattern() + " : " + df.nextRun);
+									df.nextRunTime = defaultDateFormat.parse(df.nextRun).getTime();
+								} catch (ParseException e) {
+									e.printStackTrace();
+								}
+							}
+							df.MasterLabel = (String) flow.get("MasterLabel");
+							df.WorkflowType = workflowType; 
+
+							Map<String,String> temp1 = (Map<String, String>) flow.get("_lastModifiedBy");
+							df._lastModifiedBy = DataFlow.getUserType(df, temp1);
+							dfList.add(df);						
 						}else
 						{
 					       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
@@ -257,11 +317,11 @@ public class DataFlowUtil {
 			       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
 				}
 		}
-		System.out.println("Dataflow {"+workflowName+"} not found");
-		return null;
+
+		return dfList;
 	}
-	
-	public static void startDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
+
+	public static void startDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		System.out.println();
 		partnerConnection.getServerTimestamp();
@@ -278,7 +338,7 @@ public class DataFlowUtil {
 		   
 		URI u = new URI(serviceEndPoint);
 
-		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), df._url.replace("json", "start"), null,null);			
+		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId).replace("json", "start"), null,null);			
 		
         HttpPut httput = new HttpPut(patchURI);
         httput.setConfig(requestConfig);
@@ -287,13 +347,13 @@ public class DataFlowUtil {
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
        if (statusCode != HttpStatus.SC_OK) {
-	       throw new IOException(String.format("Dataflow %s start failed: %d %s", df.name,statusCode,reasonPhrase));
+	       throw new IOException(String.format("Dataflow %s start failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
        }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		@SuppressWarnings("unused")
 		String emList = IOUtils.toString(emis, "UTF-8");
-		System.out.println("Dataflow {"+df.name+"} succesfully started");
+		System.out.println("Dataflow {"+dataflowAlias+"} succesfully started");
 		emis.close();
 		httpClient.close();
 

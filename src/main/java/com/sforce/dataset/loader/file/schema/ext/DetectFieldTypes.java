@@ -33,6 +33,8 @@ import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -202,7 +204,20 @@ public class DetectFieldTypes {
 				logger.print(", ");
 				FieldType newField = null;
 				int prec = detectTextPrecision(uniqueColumnValues);
-				BigDecimal bd = detectNumeric(columnValues);
+				DecimalFormat df = null;
+				BigDecimal bd = detectNumeric(columnValues, null);
+				if(bd==null)
+				{
+					 df = (DecimalFormat) NumberFormat.getInstance(Locale.getDefault());
+					 df.setParseBigDecimal(true);
+					 bd = detectNumeric(columnValues, df);
+				}
+				if(bd==null)
+				{
+					 df = (DecimalFormat) NumberFormat.getCurrencyInstance();
+					 df.setParseBigDecimal(true);
+					 bd = detectNumeric(columnValues, df);
+				}
 				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0 && !uniqueColumnFound)
 				{	
 					bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
@@ -211,6 +226,16 @@ public class DetectFieldTypes {
 				if(bd!=null)
 				{
 						newField = FieldType.GetMeasureKeyDataType(devNames[i], 0, bd.scale(), 0L);
+						if(df!=null)
+						{
+							newField.setDecimalSeparator(df.getDecimalFormatSymbols().getDecimalSeparator()+"");
+							String format = df.toPattern().replace("¤", df.getDecimalFormatSymbols().getCurrencySymbol());
+							if(isPercent(columnValues))
+							{
+								format = format + df.getDecimalFormatSymbols().getPercent();
+							}
+							newField.setFormat(format);
+						}
 						logger.println("Type: Numeric, Scale: "+ bd.scale());
 				}else
 				{
@@ -263,7 +288,7 @@ public class DetectFieldTypes {
 		return types;
 	}
 	
-	public BigDecimal detectNumeric(LinkedList<String> columnValues) 
+	public BigDecimal detectNumeric(LinkedList<String> columnValues, DecimalFormat df) 
 	{
         BigDecimal maxScale  = null;
         BigDecimal maxPrecision  = null;
@@ -286,8 +311,11 @@ public class DetectFieldTypes {
 	        BigDecimal bd = null;
 	    	try
 	         {
-	    		 bd = new BigDecimal(columnValue);
-	    		 
+	    		if(df==null)
+	    			bd = new BigDecimal(columnValue);
+	    		else
+	    			bd = (BigDecimal) df.parse(columnValue);
+	    		
 	    		 if(bd.scale()>absoluteMaxScale)
 	    			 absoluteMaxScaleExceededCount++;
 	    		 
@@ -309,7 +337,10 @@ public class DetectFieldTypes {
 	         }
 	    	
 	    	if(consectiveFailures>=1000)
+	    	{
+	    		
 	    		return null;
+	    	}
 	    }
 	    
 	    if(maxScale==null || maxPrecision==null)
@@ -483,6 +514,25 @@ public class DetectFieldTypes {
 	    }
 	    return dateFormats;
     }
+	
+	public boolean isPercent(LinkedList<String> columnValues) 
+	{
+	    int success = 0;
+	    for(int j=0;j<columnValues.size();j++)
+	    {	
+	    	if(columnValues.get(j).contains("%"))
+	    	{
+	    		success++;
+	    	}
+	    }
+	    if((1.0*success/columnValues.size()) > 0.95)
+	    {
+	    	return true;
+	    }
+	    return false;
+	}
+	
+
 
 	    
 

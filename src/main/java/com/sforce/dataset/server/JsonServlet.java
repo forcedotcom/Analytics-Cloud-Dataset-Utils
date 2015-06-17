@@ -27,7 +27,6 @@ package com.sforce.dataset.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -52,7 +51,6 @@ public class JsonServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private HashMap<String, DataFlow> dfMap = new HashMap<String,DataFlow>();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -109,21 +107,22 @@ public class JsonServlet extends HttpServlet {
 				}
 			}else if(type.equalsIgnoreCase("dataflow"))
 			{
-				String dataflowName = request.getParameter("dataflowName");
-				if(dataflowName==null || dataflowName.trim().isEmpty())
+				String dataflowAlias = request.getParameter("dataflowAlias");
+				if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
 				{
-					throw new IllegalArgumentException("dataflowName is a required param");
+					throw new IllegalArgumentException("dataflowAlias is a required param");
 				}
-				DataFlow df = dfMap.get(dataflowName);
-				if(df != null)
-				{
-					ObjectMapper mapper = new ObjectMapper();	
-					df.workflowDefinition = mapper.readValue(jsonString, Map.class);
-					DataFlowUtil.uploadDataFlow(conn, df);
-				}else
-				{
-					throw new IllegalArgumentException("dataflowName {"+dataflowName+"} not found");
-				}
+				String dataflowId = request.getParameter("dataflowId");
+
+				File dataDir = DatasetUtilConstants.getDataflowDir(orgId);				
+				File dataFlowFile = new File(dataDir,dataflowAlias+".json");
+
+				ObjectMapper mapper = new ObjectMapper();	
+				@SuppressWarnings("rawtypes")
+				Map dataflowObject =  mapper.readValue(jsonString, Map.class);
+				mapper.writerWithDefaultPrettyPrinter().writeValue(dataFlowFile , dataflowObject);				
+
+				DataFlowUtil.uploadDataFlow(conn, dataflowAlias,dataflowId,dataflowObject);
 			}else
 			{
 				response.setContentType("application/json");
@@ -185,13 +184,13 @@ public class JsonServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), xmdObject);
 					}else if(type.equalsIgnoreCase("dataflow"))
 					{
-						String dataflowName = request.getParameter("dataflowName");
-						if(dataflowName==null || dataflowName.trim().isEmpty())
+						String dataflowAlias = request.getParameter("dataflowAlias");
+						if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
 						{
-							throw new IllegalArgumentException("dataflowName is a required param");
+							throw new IllegalArgumentException("dataflowAlias is a required param");
 						}
-						DataFlow df = DataFlowUtil.getDataFlow(conn, dataflowName);
-						dfMap.put(dataflowName, df);
+						String dataflowId = request.getParameter("dataflowId");
+						DataFlow df = DataFlowUtil.getDataFlow(conn, dataflowAlias, dataflowId);
 				    	ObjectMapper mapper = new ObjectMapper();
 						mapper.writeValue(response.getOutputStream(), df.workflowDefinition);
 					}else

@@ -10,7 +10,15 @@ $(document).ready(function() {
 
 function listDatasets(){
     $.getJSON('list?type=datasetAndApps&current=true',{},function(data){
-    	printTable(data);
+    	if (typeof data !== 'undefined' && data.length > 0) {
+        	printTable(data);
+    	}else
+    	{
+     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">No Datasets found</td>");
+       	   tmp.attr("id","ErrorRow");
+       	   tmp.addClass("alert alert-danger");
+            $("#result-body").append(tmp)            
+    	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
         if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
@@ -42,6 +50,7 @@ function deleteDataset(datasetAlias,datasetId){
   }
 
     function printTable(data){
+       $("#result-body").empty();
        $.each(data, function(i,obj)
        {
     	   var app = data[i].folder.label;
@@ -49,6 +58,12 @@ function deleteDataset(datasetAlias,datasetId){
     	   {
     		   app = "Users Private App";
     	   }
+    	   var buttonClass = "btn btn-xs dropdown-toggle";
+    	   if(!data[i]._permissions.modify && !data[i]._permissions.manage)
+    	   {
+    		   buttonClass = buttonClass + " disabled";
+    	   }
+    	   
     	   var tablerow =  "<td> \
     	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+"\"><span class=\"name\">"+data[i].name+"</span></a> \
     	   </td> \
@@ -62,7 +77,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   </td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
-    	   <button data-toggle=\"dropdown\" class=\"btn btn-xs dropdown-toggle\" data-original-title=\"\" title=\"\"> \
+    	   <button data-toggle=\"dropdown\" class=\""+buttonClass+"\" data-original-title=\"\" title=\"\"> \
     	   Action \
     	   <span class=\"caret\"> \
     	   </span> \
@@ -81,7 +96,10 @@ function deleteDataset(datasetAlias,datasetId){
     	   var tmp = $('<tr/>').append('').html(tablerow);
        	   tmp.attr("id",data[i]._alias);
             $("#result-body").append(tmp);
-          })
+          });
+       $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));
+       $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));
+       $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));
     }
   
 

@@ -247,8 +247,14 @@ public class EbinFormatWriter {
 					{
 						if(columnValue instanceof Double)
 							v = new BigDecimal((Double)columnValue);
+						else if(_dataTypes.get(key_value_count).getCompiledNumberFormat()!=null)
+						{
+							DecimalFormat indf = _dataTypes.get(key_value_count).getCompiledNumberFormat();
+							indf.setParseBigDecimal(true);
+							v = (BigDecimal) indf.parse(columnValue.toString().trim());
+						}
 						else
-							v = new BigDecimal(columnValue.toString());
+							v = new BigDecimal(columnValue.toString().trim());
 						
 						if (_dataTypes.get(key_value_count).getMeasure_multiplier() > 1)
 						{

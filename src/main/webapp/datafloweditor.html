@@ -1,4 +1,4 @@
- 	<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
 <meta charset="utf-8">
@@ -10,23 +10,19 @@
 <title>Dataflow Editor</title>
 <script src="js/jquery.1.9.1.min.js"></script>
 
+<!--  
 <script src="js/vendor/jquery.ui.widget.js"></script>
 <script src="js/jquery.iframe-transport.js"></script>
 <script src="js/jquery.fileupload.js"></script>
+-->
 
 <!-- bootstrap just to have good looking page -->
 <script src="bootstrap/js/bootstrap.min.js"></script>
 <link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
-<link rel="stylesheet" type="text/css" href="css/jsoneditor/jsoneditor.min.css" />
-<!-- link href="css/selectize.bootstrap3.css" rel="stylesheet"/-->
-
-
-<link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
 
 <link rel="stylesheet" type="text/css" href="jsoneditor/jsoneditor.min.css" />
 <script type="text/javascript" src="jsoneditor/jsoneditor.min.js"></script>
 
-<!-- script src="js/selectize.min.js"></script-->
 <script src="js/workflowedit.js"></script>
 
 <link rel="shortcut icon" href="img/favicon.ico">
@@ -51,9 +47,10 @@
              <li>
                 <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i style="font-size:1.5em;"  class="glyphicon glyphicon-th-list"></i></a>
                 <ul class="dropdown-menu">
+				<li><a class="navlink" href="finder.html" target="_top">Dataset List</a></li>
+				<li><a class="navlink" href="dataflows.html" target="_top">Dataflow List</a></li>
                 <li><a class="navlink" href="csvupload.html" target="_top">File Upload</a></li>
 				<li><a class="navlink" href="logs.html" target="_top">Process Monitor</a></li>
-				<li class="disabled"><a class="navlink" href="#" target="_top">Dataflow Editor</a></li>
 				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
 				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
                 </ul>
@@ -62,34 +59,32 @@
         </div>    
      </div>	
 </div>
+	
+	<div class="container">
 
-<div class="container">
-	<div id="header" class="row">&nbsp;</div>
-</div>
+		<div id="header" class="row">&nbsp;</div>
 
-<div class="container xmd-container" style="display: none;">
-		<div class="input-group-xmd">
-			<label for="DatasetName">Dataflow Name</label> <select
-				class="form-control xmd-dataset-select" name="DatasetName"
-				id="DatasetName-xmd" required placeholder="Select a Dataflow...">
-				<option value="">Select a Dataflow...</option>
-			</select>
-			<div class="row" id="xmd-button-row">
-				<button class="btn btn-primary col-lg-4" id="dl-xmd-btn"
-					name="getjson">Download Dataflow</button>
-				<button class="btn btn-danger col-lg-4" id="submit-xmd-btn"
-					name="postjson">Submit Updated Dataflow</button>
-			</div>
+		<div id="header2" class="spinner">
+			<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
 		</div>
-		<div id="jsoncontainer" style="width: 800px; height: 800px; margin-top:100px"></div>	
-</div>
-
-	<div id="header2" class="spinner">
-		<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
+	
+		<div id="title2" class="row">
+		</div>
 	</div>
 
-	<div id="title2" class="row">
+	<div class="container">
+
+		<div class="row" id="xmd-button-row">
+			<button class="btn btn-danger col-lg-2" id="submit-xmd-btn"
+				name="postjson">Save Dataflow</button>
+		</div>
+
+		<div class="row">
+			<div id="jsoncontainer" style="width: 800px; height: 800px"></div>
+		</div>	
+
 	</div>
+	
 
 </body> 
 </html>

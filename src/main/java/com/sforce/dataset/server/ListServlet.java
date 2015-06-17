@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.flow.DataFlow;
+import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.JobEntry;
 import com.sforce.dataset.flow.monitor.NodeEntry;
@@ -73,7 +75,13 @@ public class ListServlet extends HttpServlet {
 					   	return;
 					}
 
-					if(value.equalsIgnoreCase("folder"))
+					if(value.equalsIgnoreCase("dataflow"))
+					{
+						List<DataFlow> flowList = DataFlowUtil.listDataFlow(conn);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), flowList);
+					} else if(value.equalsIgnoreCase("folder"))
 					{
 						List<FolderType> folders = DatasetUtils.listFolders(conn);
 						FolderType def = new FolderType();

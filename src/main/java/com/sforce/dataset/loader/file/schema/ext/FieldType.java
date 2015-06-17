@@ -26,9 +26,12 @@
 package com.sforce.dataset.loader.file.schema.ext;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.script.Compilable;
@@ -84,6 +87,7 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 	private transient CompiledScript compiledScript = null;
 	
 	private transient SimpleDateFormat compiledDateFormat = null;
+	private transient DecimalFormat compiledNumberFormat = null;
 	private transient Date defaultDate = null;
 	
 
@@ -321,6 +325,24 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 		}
 		this.format = format;
 	}
+
+	@JsonIgnore
+	public DecimalFormat getCompiledNumberFormat() {
+		if(compiledNumberFormat==null)
+		{
+			if(this.type != null && this.type.equals(FieldType.NUMERIC_TYPE) && format != null && !format.isEmpty())
+			{
+				DecimalFormat indf = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.getDefault());
+				if(!format.contains(indf.getDecimalFormatSymbols().getCurrencySymbol()))
+				{
+					indf = (DecimalFormat) NumberFormat.getInstance();
+				}
+				compiledNumberFormat = indf;
+			}
+		}
+		return compiledNumberFormat;
+	}
+	
 	
 	@JsonIgnore
 	public SimpleDateFormat getCompiledDateFormat() {
