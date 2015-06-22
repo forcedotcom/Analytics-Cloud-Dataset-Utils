@@ -4,7 +4,7 @@ Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the
 
 ## Downloading DatasetUtils
 
-Download the latest jar from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
+Download the latest datasetutils.zip from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
 
 ## Running DatasetUtils
 
@@ -21,9 +21,12 @@ After installation is complete. open a console and check that the java version i
 
 ### Server mode with Web UI
 
-To start the jar in server mode and use the web UI to upload open a console and enter the following command:
- 
-    java -jar datasetutil-<version>.jar --server true
+Unzip datasetutils.zip to a local folder. the To start the jar in server mode:
+
+**Windows**: Double click on run.bat
+
+**Mac**: Press CTRL+Click on run.command, for more info refer to  https://support.apple.com/kb/PH14369?locale=en_US
+	 	 
 
 ### Console Mode
 

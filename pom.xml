@@ -6,7 +6,7 @@
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>32.0.25-SNAPSHOT</version>
+	<version>32.0.26-SNAPSHOT</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
@@ -294,9 +294,9 @@
 						<configuration>
 							<tasks>
 								<mkdir dir="${project.build.directory}/archive/${project.artifactId}" />
-								<copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}" todir="${project.build.directory}/archive/${project.artifactId}"/>
-								<copy file="${basedir}/run.bat" todir="${project.build.directory}/archive/${project.artifactId}"/>
-								<copy file="${basedir}/run.command" todir="${project.build.directory}/archive/${project.artifactId}"/>
+								<copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}" todir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${basedir}/run.bat" todir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${basedir}/run.command" todir="${project.build.directory}/archive/${project.artifactId}" />
 								<zip basedir="${project.build.directory}/archive" destfile="${project.build.directory}/${project.artifactId}.zip" update="true" />
 							</tasks>
 						</configuration>
