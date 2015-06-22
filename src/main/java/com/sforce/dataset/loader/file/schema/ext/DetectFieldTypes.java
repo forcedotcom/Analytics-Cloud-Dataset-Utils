@@ -205,19 +205,31 @@ public class DetectFieldTypes {
 				FieldType newField = null;
 				int prec = detectTextPrecision(uniqueColumnValues);
 				DecimalFormat df = null;
-				BigDecimal bd = detectNumeric(columnValues, null);
+				boolean isPercent = isPercent(columnValues);
+				BigDecimal bd = detectNumeric(columnValues, null, isPercent);
 				if(bd==null)
 				{
 					 df = (DecimalFormat) NumberFormat.getInstance(Locale.getDefault());
 					 df.setParseBigDecimal(true);
-					 bd = detectNumeric(columnValues, df);
+					 bd = detectNumeric(columnValues, df, isPercent);
+				}else
+				{
+					if(isPercent)
+					 df = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
 				}
 				if(bd==null)
 				{
-					 df = (DecimalFormat) NumberFormat.getCurrencyInstance();
+					 df = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.getDefault());
 					 df.setParseBigDecimal(true);
-					 bd = detectNumeric(columnValues, df);
+					 bd = detectNumeric(columnValues, df, isPercent);
 				}
+				if(bd==null)
+				{
+					 df = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
+					 df.setParseBigDecimal(true);
+					 bd = detectNumeric(columnValues, df, isPercent);
+				}
+
 				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0 && !uniqueColumnFound)
 				{	
 					bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
@@ -226,22 +238,18 @@ public class DetectFieldTypes {
 				if(bd!=null)
 				{
 						newField = FieldType.GetMeasureKeyDataType(devNames[i], 0, bd.scale(), 0L);
+						String format = "n/a";
 						if(df!=null)
 						{
-							if(bd.scale()==0)
+							if(!isPercent && bd.scale()==0)
 							{
 								df = (DecimalFormat) NumberFormat.getIntegerInstance();
 							}
 							newField.setDecimalSeparator(df.getDecimalFormatSymbols().getDecimalSeparator()+"");
-							String format = df.toPattern().replace("¤", df.getDecimalFormatSymbols().getCurrencySymbol());
-							if(isPercent(columnValues))
-							{
-								format = format + df.getDecimalFormatSymbols().getPercent(); //TODO In Some locales percent be a prefix than suffix
-							}
-							
+							format = df.toPattern().replace("¤", df.getDecimalFormatSymbols().getCurrencySymbol());
 							newField.setFormat(format);
 						}
-						logger.println("Type: Numeric, Scale: "+ bd.scale());
+						logger.println("Type: Numeric, Scale: "+ bd.scale() + " Format: "+ format);
 				}else
 				{
 					SimpleDateFormat sdf = null;
@@ -293,9 +301,10 @@ public class DetectFieldTypes {
 		return types;
 	}
 	
-	public BigDecimal detectNumeric(LinkedList<String> columnValues, DecimalFormat df) 
+	public BigDecimal detectNumeric(LinkedList<String> columnValues, DecimalFormat df, boolean isPercent) 
 	{
-        BigDecimal maxScale  = null;
+
+		BigDecimal maxScale  = null;
         BigDecimal maxPrecision  = null;
 	    int consectiveFailures = 0;
 	    int success = 0;
@@ -317,9 +326,43 @@ public class DetectFieldTypes {
 	    	try
 	         {
 	    		if(df==null)
-	    			bd = new BigDecimal(columnValue);
+	    		{
+	    			if(isPercent)
+	    			{
+	    				bd = new BigDecimal(columnValue.substring(0, columnValue.length()-1).trim());
+	    				bd = bd.divide(new BigDecimal(100));
+	    			}else
+	    			{
+	    				bd = new BigDecimal(columnValue);
+	    			}
+	    		}
 	    		else
+	    		{
 	    			bd = (BigDecimal) df.parse(columnValue);
+	    			String tmp = df.format(bd);	    			
+	    			if(!tmp.equals(columnValue))
+	    			{
+	    				int decimalIndex =  columnValue.indexOf(df.getDecimalFormatSymbols().getDecimalSeparator());
+	    				if(decimalIndex!=-1)
+	    				{	  
+	    					int compareLength = columnValue.length();
+		    				for(int cnt = columnValue.length()-1;cnt>decimalIndex;cnt--)
+		    				{
+		    					if(columnValue.charAt(cnt)=='0')
+		    					{
+		    						compareLength--;
+		    					}
+		    				}
+		    				if(!tmp.equalsIgnoreCase(columnValue.substring(0, compareLength)))
+		    				{
+		    					throw new ParseException("Invalid numeric value {" + columnValue + "}", 0);
+		    				}
+	    				}else
+	    				{
+	    					throw new ParseException("Invalid numeric value {" + columnValue + "}", 0);
+	    				}
+	    			}
+	    		}
 	    		
 	    		 if(bd.scale()>absoluteMaxScale)
 	    			 absoluteMaxScaleExceededCount++;
@@ -525,7 +568,7 @@ public class DetectFieldTypes {
 	    int success = 0;
 	    for(int j=0;j<columnValues.size();j++)
 	    {	
-	    	if(columnValues.get(j).contains("%"))
+	    	if(columnValues.get(j).endsWith("%"))
 	    	{
 	    		success++;
 	    	}
@@ -536,10 +579,5 @@ public class DetectFieldTypes {
 	    }
 	    return false;
 	}
-	
-
-
-	    
-
 
 }

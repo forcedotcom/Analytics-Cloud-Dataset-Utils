@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,42 +57,47 @@ public class PreviewUtil {
 	public static List<Header> getSaqlHeader(List<Map<String,Object>> data) 
 	{
 		List<Header> columns = null;
+		List<String> hdrList = null;
 			for(Map<String,Object> rec:data)
 			{
 				if(rec!= null && !rec.isEmpty())
 				{
-					columns = new LinkedList<Header>();
+					hdrList = new LinkedList<String>();
 					for(String field:rec.keySet())
 					{
-						Header temp = new Header();
-						temp.setField(field);
-						temp.setId(field);
-						temp.setName(field);
-						
-						Object val = rec.get(field);
-						if(val instanceof Number)
-							temp.setWidth(120);
-						else
-							temp.setWidth(160);							
-						columns.add(temp);						
+						hdrList.add(field);						
 					}
-					break;					
-				}	
-			}	
-			if(columns==null || columns.isEmpty())
+				}
+			}			
+			if(hdrList==null || hdrList.isEmpty())
 			{
 				throw new IllegalArgumentException("Invalid query, empty resultset");
-			}			
+			}
+			String[] hdrs = ExternalFileSchema.createUniqueDevName(hdrList.toArray(new String[0]));
+			columns = new LinkedList<Header>();
+			for(int i = 0; i < hdrs.length ; i++)
+			{
+				Header temp = new Header();
+				temp.setField(hdrs[i]);
+				temp.setId(hdrs[i]);
+				temp.setName(hdrList.get(i)); //label
+				temp.setWidth(160);							
+				columns.add(temp);						
+			}
 			return columns;
 	}
 
-	public static List<Map<String,Object>> getSaqlData(List<Map<String,Object>> data)
+	public static List<Map<String,Object>> getSaqlData(List<Map<String,Object>> data, List<Header> hdrList)
 	{
 		int totalRowCount = 0;			
 		for(Map<String, Object> rec:data)
 		{
 				if(rec!= null)
 				{
+					for(Header hdr:hdrList)
+					{
+						rec.put(hdr.getId(), rec.remove(hdr.getName()));
+					}
 					totalRowCount++;
 					rec.put("_id",totalRowCount);
 				}	

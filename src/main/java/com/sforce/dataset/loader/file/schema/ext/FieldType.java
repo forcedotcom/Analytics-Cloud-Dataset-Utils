@@ -337,6 +337,11 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 				{
 					indf = (DecimalFormat) NumberFormat.getInstance();
 				}
+				
+				if(format.contains(indf.getDecimalFormatSymbols().getPercent()+""))
+				{
+					indf = (DecimalFormat) NumberFormat.getPercentInstance();
+				}
 				compiledNumberFormat = indf;
 			}
 		}

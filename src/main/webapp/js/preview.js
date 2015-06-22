@@ -5,6 +5,9 @@ $(document).ready(function() {
 //	$('#uploadButton').prop('disabled', true);
 //	$('#augmentButton').prop('disabled', true);
 
+	$('#exportButton').click(exportToCsv);
+
+	
 	var type = decodeURIComponent(urlParam('type'));
 	if (type == undefined || isEmpty(type) ) 
 	{
@@ -250,6 +253,9 @@ function buildGrid(columns,data) {
     grid.registerPlugin(overlayPlugin);
 
     grid.init();
+    
+    $("#grid").data("gridInstance", grid);
+
 
     function filter(item) {
         var columns = grid.getColumns();
@@ -268,6 +274,76 @@ function buildGrid(columns,data) {
     }
 }
 
+function exportToCsv() {
+	var type = decodeURIComponent(urlParam('type'));		
+	var name = decodeURIComponent(urlParam('name'));
+	var filename = name;
+	if(type == 'dataset')
+	{
+		filename = name + ".csv";
+	}
+	
+	var data = $("#grid").data("gridInstance").getData().getItems();
+	var columns = $("#grid").data("gridInstance").getColumns();
+	
+    var processRow = function (row,columns) {
+        var finalVal = '';
+        var j = 0;
+        for (var i = 0; i < columns.length; i++) 
+        {
+        	var value = '';
+            if(row.hasOwnProperty(columns[i].field)) {
+                value = row[columns[i].field];
+            }
+ 
+            var innerValue = value === null ? '' : value.toString();
+            if (value instanceof Date) {
+                innerValue = value.toLocaleString();
+            }
+            var result = innerValue.replace(/"/g, '""');
+            if (result.search(/("|,|\n)/g) >= 0)
+                result = '"' + result + '"';
+ 
+    		if (i > 0)
+                finalVal += ',';
+            finalVal += result;
+        }
+        return finalVal + '\n';
+    };
+
+    var csvFile = '';
+    var headerVal = '';
+    for (var i = 0; i < columns.length; i++) 
+    {
+		if (i > 0)
+			headerVal += ',';
+		headerVal += columns[i].name;
+    }
+	headerVal += '\n'; 
+	csvFile += headerVal;
+    
+    for (var i = 0; i < data.length; i++) 
+    {
+    	csvFile += processRow(data[i],columns);
+    }
+
+    var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
 
 function isEmpty(str) {
     return (!str || 0 === str.length);

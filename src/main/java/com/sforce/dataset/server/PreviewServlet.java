@@ -218,8 +218,9 @@ public class PreviewServlet extends HttpServlet {
 						
 						PreviewData resp = new PreviewData();
 
-						resp.setColumns(PreviewUtil.getSaqlHeader(data));
-						resp.setData(PreviewUtil.getSaqlData(data));
+						List<Header> hdr = PreviewUtil.getSaqlHeader(data);
+						resp.setColumns(hdr);
+						resp.setData(PreviewUtil.getSaqlData(data,hdr));
 						resp.setSaql(saql);
 						response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();

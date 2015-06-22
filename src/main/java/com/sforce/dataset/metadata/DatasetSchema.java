@@ -89,5 +89,25 @@ public class DatasetSchema {
 		throw new IOException("No dimensions found in {"+getSchemaFile(emDir)+"} ");
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Map<String,Map> getFields(File emDir) throws JsonParseException, JsonMappingException, IOException
+	{
+		Map temp = load(emDir);
+		if(temp!=null)
+		{
+			Map<String,Map> dims = (Map<String,Map>) temp.get("dimensions");
+			if(dims!=null)
+			{
+				Map<String,Map> meas = (Map<String,Map>) temp.get("measures");
+				if(meas!=null)
+				{
+					dims.putAll(meas);
+				}
+				return dims;
+			}
+		}
+		throw new IOException("No dimensions found in {"+getSchemaFile(emDir)+"} ");
+	}
+
 	
 }

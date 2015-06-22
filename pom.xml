@@ -280,6 +280,27 @@
 					<forkMode>always</forkMode>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>createzip</id>
+						<phase>install</phase>
+						<configuration>
+							<tasks>
+								<mkdir dir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}" todir="${project.build.directory}/archive/${project.artifactId}"/>
+								<copy file="${basedir}/run.bat" todir="${project.build.directory}/archive/${project.artifactId}"/>
+								<copy file="${basedir}/run.command" todir="${project.build.directory}/archive/${project.artifactId}"/>
+								<zip basedir="${project.build.directory}/archive" destfile="${project.build.directory}/${project.artifactId}.zip" update="true" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin> 			
 		</plugins>
 	</build>
 </project>

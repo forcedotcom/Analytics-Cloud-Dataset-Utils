@@ -135,6 +135,21 @@ public class DatasetUtils {
 		System.out.println("Delete Response:"+deleteResponse);
 		emis.close();
 		httpClient.close();
+
+		
+		if(deleteResponse!=null && !deleteResponse.isEmpty())
+		{
+				ObjectMapper mapper = new ObjectMapper();	
+				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				Map res =  mapper.readValue(deleteResponse, Map.class);
+//				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
+				String errorCode = (String) res.get("errorCode");
+				String errorMsg = (String) res.get("errorMsg");
+				if(errorMsg != null && !errorMsg.isEmpty())
+				{
+				       throw new IOException(errorMsg);
+				}
+		}
 		
 		return true;
 	}

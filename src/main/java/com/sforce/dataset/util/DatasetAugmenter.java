@@ -237,19 +237,28 @@ public class DatasetAugmenter {
 			}
 		}
 
+		Map<String,Map> rightFields = DatasetSchema.getFields(new File(rightDataSet));		
+		for(String dim:rightFields.keySet())
+		{
+			if(cnt==1)
+				System.out.println("Found {"+rightDims.size()+"} Fields in Dataset {"+rightDataSet+"}...");
+			System.out.println(cnt+". "+dim);
+			cnt++;
+		}
+
 		LinkedList<String> rightKeys = new LinkedList<String>();
 		while(true)
 		{
 			try
 			{
-				String tmp = DatasetUtils.readInputFromConsole("Enter the Dimensions to select from right Dataset (Comma seperated numbers): ");
+				String tmp = DatasetUtils.readInputFromConsole("Enter the Field to select from right Dataset (Comma seperated numbers): ");
 				String[] tmpArray = tmp.trim().split(",");
 				for(String tmp2:tmpArray)
 				{
 					String tempKey = null;
 					long left = Long.parseLong(tmp2);
 					cnt = 1;
-					for(String dim:rightDims.keySet())
+					for(String dim:rightFields.keySet())
 					{
 						if(cnt==left)
 						{
