@@ -26,7 +26,8 @@ Unzip datasetutils.zip to a local folder. the To start the jar in server mode:
 **Windows**: Double click on run.bat
 
 **Mac**: Press CTRL+Click on run.command, for more info refer to  https://support.apple.com/kb/PH14369?locale=en_US
-	 	 
+
+If you are running datasetutils for the first time you will be prompted to accept the license in the console terminal. type Yes and press enter. 	 	 
 
 ### Console Mode
 
