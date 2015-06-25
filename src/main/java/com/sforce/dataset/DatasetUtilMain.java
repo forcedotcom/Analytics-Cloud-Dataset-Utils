@@ -70,18 +70,31 @@ import com.sforce.ws.ConnectionException;
 @SuppressWarnings("deprecation")
 public class DatasetUtilMain {
 	
+	@SuppressWarnings("unused")
+	private static final boolean isJdk14LoggerConfigured = DatasetUtils.configureLog4j();	
 	
 	public static final String[][] validActions = {{"load","Load CSV"}, {"defineExtractFlow","Define SFDC Extract Data Flow"}, {"defineAugmentFlow","Define Dataset Augment Data Flow"},{"downloadXMD","Download All XMD Json Files"}, {"uploadXMD","Upload User XMD Json File"}, {"detectEncoding","Detect file encoding"}, {"downloadErrorFile","Fetch CSV Upload Error Report"}};
 
 	public static void main(String[] args) {
+
+		DatasetUtilParams params = new DatasetUtilParams();
+		if (args.length >= 2) 
+		{
+			for (int i=1; i< args.length; i=i+2){
+				if(args[i-1].equalsIgnoreCase("--server"))
+				{
+					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
+						params.server = true;
+				}
+			}
+		}
 		
-		if(!printlneula())
+		if(!printlneula(params.server))
 		{
 			System.out.println("You do not have permission to use this jar. Please delete it from this computer");
 			System.exit(-1);
 		}
 
-		DatasetUtilParams params = new DatasetUtilParams();
 		String action = null;
 				
 		if (args.length >= 2) 
@@ -459,7 +472,7 @@ public class DatasetUtilMain {
 		System.out.println("");
 	}
 	
-	static boolean printlneula()
+	static boolean printlneula(boolean server)
 	{
 		try
 		{
@@ -467,19 +480,26 @@ public class DatasetUtilMain {
 			File lic = new File(userHome, ".ac.datautils.lic");
 			if(!lic.exists())
 			{
-				System.out.println(eula);
-				System.out.println();
-				while(true)
+				if(!server)
 				{
-					String response = DatasetUtils.readInputFromConsole("Do you agree to the above license agreement (Yes/No): ");
-					if(response!=null && (response.equalsIgnoreCase("yes") || response.equalsIgnoreCase("y")))
+					System.out.println(eula);
+					System.out.println();
+					while(true)
 					{
-						FileUtils.writeStringToFile(lic, eula);
-						return true;
-					}else if(response!=null && (response.equalsIgnoreCase("no") || response.equalsIgnoreCase("n")))
-					{
-						return false;
+						String response = DatasetUtils.readInputFromConsole("Do you agree to the above license agreement (Yes/No): ");
+						if(response!=null && (response.equalsIgnoreCase("yes") || response.equalsIgnoreCase("y")))
+						{
+							FileUtils.writeStringToFile(lic, eula);
+							return true;
+						}else if(response!=null && (response.equalsIgnoreCase("no") || response.equalsIgnoreCase("n")))
+						{
+							return false;
+						}
 					}
+				}else
+				{
+					FileUtils.writeStringToFile(lic, eula);
+					return true;
 				}
 			}else
 			{

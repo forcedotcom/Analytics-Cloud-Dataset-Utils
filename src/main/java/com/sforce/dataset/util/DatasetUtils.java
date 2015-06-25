@@ -27,6 +27,7 @@ package com.sforce.dataset.util;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,16 +46,22 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.sql.RowId;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
@@ -63,6 +70,10 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -141,9 +152,10 @@ public class DatasetUtils {
 		{
 				ObjectMapper mapper = new ObjectMapper();	
 				mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				@SuppressWarnings("rawtypes")
 				Map res =  mapper.readValue(deleteResponse, Map.class);
 //				mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
-				String errorCode = (String) res.get("errorCode");
+//				String errorCode = (String) res.get("errorCode");
 				String errorMsg = (String) res.get("errorMsg");
 				if(errorMsg != null && !errorMsg.isEmpty())
 				{
@@ -916,6 +928,82 @@ public static byte[] toBytes(String value, CodingErrorAction codingErrorAction) 
 	    }
 	}
     return null;
+}
+
+
+public synchronized static boolean configureLog4j() 
+{
+	try
+	{
+    	if (!isLog4jConfigured()) 
+        {
+            BasicConfigurator.configure();
+            Logger log = LogManager.getRootLogger();
+            if(log!=null)
+            	log.setLevel(Level.INFO);
+	        else 
+	        {
+	            Enumeration<?> loggers = LogManager.getCurrentLoggers() ;
+	            while (loggers.hasMoreElements()) {
+	                Logger c = (Logger) loggers.nextElement();
+	            	c.setLevel(Level.INFO);
+	            }
+	        }
+        }
+	}catch(Throwable t){
+		t.printStackTrace();
+	}    
+	return true;
+}
+
+public synchronized static void shutdownLog4j() {
+    if (isLog4jConfigured()) {
+        LogManager.shutdown();
+    }
+}
+
+private static boolean isLog4jConfigured() {
+try
+{
+    Enumeration<?> appenders =  LogManager.getRootLogger().getAllAppenders();
+    if (appenders.hasMoreElements()) {
+        return true;
+    }
+    else {
+        Enumeration<?> loggers = LogManager.getCurrentLoggers() ;
+        while (loggers.hasMoreElements()) {
+            Logger c = (Logger) loggers.nextElement();
+            if (c.getAllAppenders().hasMoreElements())
+                return true;
+        }
+    }
+}catch(Throwable t){
+	t.printStackTrace();
+}    
+return false;
+}				  
+
+
+public static File[] getFiles(File directory, IOFileFilter fileFilter) {
+	Collection<File> list = FileUtils.listFiles(directory, fileFilter,
+			TrueFileFilter.INSTANCE);
+	File[] files = list.toArray(new File[0]);
+	if (files != null && files.length > 0) {
+		Arrays.sort(files, new Comparator<File>() {
+			public int compare(File a, File b) {
+				long diff = (a.lastModified() - b.lastModified());
+				if(diff>0L)
+					return 1;
+				else if(diff<0L)
+					return -1;
+				else
+					return 0;
+			}
+		});
+		return files;
+	} else {
+		return null;
+	}
 }
 
 

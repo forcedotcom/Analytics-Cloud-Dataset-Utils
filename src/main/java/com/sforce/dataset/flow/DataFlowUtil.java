@@ -50,7 +50,9 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.util.HttpUtils;
@@ -130,8 +132,8 @@ public class DataFlowUtil {
 		DataFlow df = null;
 		partnerConnection.getServerTimestamp();
 		
-		if(dataflowId==null)
-		{
+//		if(dataflowId==null)
+//		{
 			List<DataFlow> dfList = listDataFlow(partnerConnection);
 			for(DataFlow _df:dfList)
 			{
@@ -141,19 +143,20 @@ public class DataFlowUtil {
 					df = _df;
 				}
 			}
-		}
+//		}
 
-		if(dataflowId== null)
+		if(dataflowId== null || df == null)
 		{
 			throw new IllegalArgumentException("dataflowAlias {"+dataflowAlias+"} not found");
 		}
 		
-		if(df == null)
-		{
-			df = new DataFlow();
-			df.name = dataflowAlias;
-			df._uid = dataflowId;
-		}
+//		if(df == null)
+//		{
+//			df = new DataFlow();
+//			df.name = dataflowAlias;
+//			df._uid = dataflowId;
+//			df.WorkflowType = "User";
+//		}
 		
 		String orgId = partnerConnection.getUserInfo().getOrganizationId();
 
@@ -166,7 +169,7 @@ public class DataFlowUtil {
 		   
 		URI u = new URI(serviceEndPoint);
 		
-		File dataDir = DatasetUtilConstants.getDataflowDir(orgId);
+		File dataDir = DatasetUtilConstants.getDataDir(orgId);
 		
 		File dataFlowFile = new File(dataDir,dataflowAlias+".json");
 
@@ -218,6 +221,10 @@ public class DataFlowUtil {
 		{
 		       throw new IOException(String.format("Dataflow download failed, invalid server response %s",dataFlowJson));
 		}
+		if(df!=null)
+		{
+			saveDataFlow(partnerConnection, df);
+		}		
 		return df;
 	}
 	
@@ -297,19 +304,19 @@ public class DataFlowUtil {
 							dfList.add(df);						
 						}else
 						{
-					       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
+					       throw new IOException(String.format("List Dataflow failed, invalid server response %s",emList));
 						}
 					} //end for
 				}else
 				{
-			       throw new IOException(String.format("Dataflow download failed, invalid server response %s",emList));
+			       throw new IOException(String.format("List Dataflow failed, invalid server response %s",emList));
 				}
 		}
 
 		return dfList;
 	}
 
-	public static void startDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
+	public static boolean startDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		System.out.println();
 		partnerConnection.getServerTimestamp();
@@ -335,14 +342,73 @@ public class DataFlowUtil {
        }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
-		@SuppressWarnings("unused")
 		String emList = IOUtils.toString(emis, "UTF-8");
-		System.out.println("Dataflow {"+dataflowAlias+"} succesfully started");
 		emis.close();
 		httpClient.close();
 
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		@SuppressWarnings("rawtypes")
+		Map res =  mapper.readValue(emList, Map.class);
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		List<Map> resList = (List<Map>) res.get("result");
+		if(resList!=null && !resList.isEmpty())
+		{
+			if((boolean) resList.get(0).get("success"))
+			{
+				System.out.println("Dataflow {"+dataflowAlias+"} succesfully started");	
+				return true;
+			}
+		}
+	    throw new IOException(String.format("Dataflow %s start failed: %s", dataflowAlias,emList));
+	}
+	
+	public static void saveDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, JsonGenerationException, JsonMappingException, IOException
+	{
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File dataflowDir = DatasetUtilConstants.getDataflowDir(orgId);
+		File dataflowFile = new File(dataflowDir,df.name);
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		mapper.writerWithDefaultPrettyPrinter().writeValue(dataflowFile, df);		
 	}
 
+
+	public static void createDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, JsonGenerationException, JsonMappingException, IOException
+	{
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File dataflowDir = DatasetUtilConstants.getDataflowDir(orgId);
+		File dataflowFile = new File(dataflowDir,df.name);
+		if(dataflowFile.exists())
+		{
+			throw new IllegalArgumentException("Dataflow {"+df.name+"} already exists in the system");
+		}
+		saveDataFlow(partnerConnection, df);
+	}
+
+
+	public static void deleteDataFlow(PartnerConnection partnerConnection, DataFlow df) throws ConnectionException, JsonGenerationException, JsonMappingException, IOException
+	{
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File dataflowDir = DatasetUtilConstants.getDataflowDir(orgId);
+		File dataflowFile = new File(dataflowDir,df.name);
+		if(dataflowFile.exists())
+		{
+			ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			DataFlow _df = mapper.readValue(dataflowFile, DataFlow.class);
+			if(_df.WorkflowType.equalsIgnoreCase("local"))
+			{
+				dataflowFile.delete();
+			}else
+			{
+				throw new IllegalArgumentException("Cannot delete Dataflow {"+df.name+"} of type {"+df.WorkflowType+"}");
+			}
+		}else
+		{
+			throw new IllegalArgumentException("Dataflow {"+df.name+"} does not exist in the system");
+		}
+	}
 
 
 }

@@ -60,7 +60,7 @@ public class DataFlowMonitorUtil {
 	
 	public static void getJobsAndErrorFiles(PartnerConnection partnerConnection, String datasetName) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
-		List<JobEntry> jobs = getDataFlowJobs(partnerConnection, datasetName);
+		List<JobEntry> jobs = getDataFlowJobs(partnerConnection, datasetName, null);
 		if(jobs!=null)
 		{
 			int cnt = 0;
@@ -76,7 +76,7 @@ public class DataFlowMonitorUtil {
 
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static List<JobEntry> getDataFlowJobs(PartnerConnection partnerConnection, String datasetName) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	public static List<JobEntry> getDataFlowJobs(PartnerConnection partnerConnection, String datasetName, String dataflowId) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		List<JobEntry> jobsList = new LinkedList<JobEntry>(); 
 //		System.out.println();
@@ -90,7 +90,12 @@ public class DataFlowMonitorUtil {
 
 		URI u = new URI(serviceEndPoint);
 
-		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/jobs", null,null);			
+		String url = "/insights/internal_api/v1.0/esObject/jobs";
+		if(dataflowId!=null)
+		{
+			 url = String.format("/insights/internal_api/v1.0/esObject/workflow/%s/jobs",dataflowId);
+		}
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
 		listEMPost.setConfig(requestConfig);

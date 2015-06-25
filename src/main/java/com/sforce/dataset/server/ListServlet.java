@@ -169,7 +169,7 @@ public class ListServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), sessions);
 					}else if(value.equalsIgnoreCase("sessionHistory"))
 					{
-						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(conn, null);
+						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(conn, null, null);
 						String orgId = conn.getUserInfo().getOrganizationId();
 						long twoDayAgo = System.currentTimeMillis() - 2*24*60*60*1000;
 						for(JobEntry job:jobs)

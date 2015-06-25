@@ -79,4 +79,14 @@ public class JobEntry {
 	public String getNodeUrl() {
 		return nodeUrl;
 	}
+	@Override
+	public String toString() {
+		return "JobEntry [errorMessage=" + errorMessage + ", startTimeEpoch="
+				+ startTimeEpoch + ", status=" + status + ", endTimeEpoch="
+				+ endTimeEpoch + ", _uid=" + _uid + ", type=" + type
+				+ ", endTime=" + endTime + ", startTime=" + startTime
+				+ ", _type=" + _type + ", duration=" + duration
+				+ ", _createdDateTime=" + _createdDateTime + ", workflowName="
+				+ workflowName + ", nodeUrl=" + nodeUrl + "]";
+	}
 }
