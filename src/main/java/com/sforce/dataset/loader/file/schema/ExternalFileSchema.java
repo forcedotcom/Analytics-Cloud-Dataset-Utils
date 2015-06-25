@@ -27,6 +27,7 @@ package com.sforce.dataset.loader.file.schema;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sforce.dataset.loader.file.schema.ext.FileFormat;
 
 public class ExternalFileSchema {
 
@@ -37,9 +38,17 @@ public class ExternalFileSchema {
 	private LinkedList<ObjectType> objects;
 	
 	public FileFormat getFileFormat() {
+		if(fileFormat == null)
+		{
+			fileFormat = new FileFormat();
+		}
 		return fileFormat;
 	}
 	public void setFileFormat(FileFormat fileFormat) {
+		if(fileFormat == null)
+		{
+			fileFormat = new FileFormat();
+		}
 		this.fileFormat = fileFormat;
 	}
 	public LinkedList<ObjectType> getObjects() {

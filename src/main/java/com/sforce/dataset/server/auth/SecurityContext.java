@@ -47,7 +47,7 @@ public final class SecurityContext implements Serializable {
     private String locale;
     private String timeZone;
     private String role;
-    private PartnerConnection connection;
+    private transient PartnerConnection connection;
     private Calendar lastRefreshTimestamp;
     
     public void init(GetUserInfoResult userInfo) {

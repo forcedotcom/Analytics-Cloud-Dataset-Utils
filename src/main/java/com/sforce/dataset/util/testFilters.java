@@ -25,8 +25,6 @@
  */
 package com.sforce.dataset.util;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,8 +37,8 @@ public class testFilters {
 		
 		FilterExpression exp = null;
 		
-		BigDecimal bd = new BigDecimal(2);
-		bd.setScale(10, RoundingMode.HALF_EVEN);
+//		BigDecimal bd = new BigDecimal(2);
+//		bd.setScale(10, RoundingMode.HALF_EVEN);
 
 		LinkedList<FilterExpression> subconditions = new LinkedList<FilterExpression>();
 

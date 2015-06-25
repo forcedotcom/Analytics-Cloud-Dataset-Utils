@@ -120,6 +120,10 @@ function sendSaql(event){
 	        	    var err = eval("(" + jqXHR.responseText + ")");
 	        	    $("#modal-title2").addClass("alert alert-danger");
 	              	$("#modal-title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
+	              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
+	              	{
+	              		$('#queryText').val(err.statusData.saql);
+	              	}
                }
           	 }
 		});
@@ -160,6 +164,10 @@ function preview(type,name)
 	        	   var err = eval("(" + jqXHR.responseText + ")");
 	        	    $("#title2").addClass("alert alert-danger");
 	              	$("#title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
+	              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
+	              	{
+	              		$('#queryText').val(err.statusData.saql);
+	              	}
 	        }
         });
 }

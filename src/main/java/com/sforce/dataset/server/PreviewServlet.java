@@ -27,6 +27,7 @@ package com.sforce.dataset.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -149,6 +150,7 @@ public class PreviewServlet extends HttpServlet {
 		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
 		// Set standard HTTP/1.0 no-cache header.
 		response.setHeader("Pragma", "no-cache");
+		String saql = null;
 		try 
 		{		
 					String type = request.getParameter("type");
@@ -201,7 +203,7 @@ public class PreviewServlet extends HttpServlet {
 							throw new IllegalArgumentException("Internal server error fetching dataset {"+name+"}");
 						}
 
-						String saql = request.getParameter("saql");
+						saql = request.getParameter("saql");
 						if(saql==null)
 						{
 							ObjectMapper mapper = new ObjectMapper();	
@@ -237,6 +239,12 @@ public class PreviewServlet extends HttpServlet {
 				response.setContentType("application/json");
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				ResponseStatus status = new ResponseStatus("error",t.getMessage());
+				if(saql!=null)
+				{
+					Map<String,String> statusData = new LinkedHashMap<String,String>();
+					statusData.put("saql", saql);
+					status.setStatusData(statusData);
+				}
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.writeValue(response.getOutputStream(), status);
 		 }

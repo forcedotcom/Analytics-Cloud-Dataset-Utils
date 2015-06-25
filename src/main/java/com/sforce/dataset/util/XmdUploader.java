@@ -155,16 +155,17 @@ public class XmdUploader {
 							{
 								datasetVersion = (String) edgemartData.get("_uid");
 							}
-						}
-						Map _files = (Map) resp.get("_files");
-						if(_files != null)
-						{
-							for(Object filename:_files.keySet())
+						
+							Map _files = (Map) resp.get("_files");
+							if(_files != null)
 							{
-								if(filename!=null && filename.toString().equals("user.xmd.json"))
+								for(Object filename:_files.keySet())
 								{
-										userXmdUri = (String) _files.get(filename);
-										break;
+									if(filename!=null && filename.toString().equals("user.xmd.json"))
+									{
+											userXmdUri = (String) _files.get(filename);
+											break;
+									}
 								}
 							}
 						}

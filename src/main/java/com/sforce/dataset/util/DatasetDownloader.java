@@ -106,12 +106,12 @@ public class DatasetDownloader {
 					{
 						_alias = (String) resp.get("_alias");
 						id = (String) resp.get("_uid");
-						Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-						//System.out.println("_createdDateTime: "+ _createdDateTime);
-						if(_createdDateTime != null)
-						{
-							createdDateTime = new Date(1000L*_createdDateTime);
-						}
+//						Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
+//						//System.out.println("_createdDateTime: "+ _createdDateTime);
+//						if(_createdDateTime != null)
+//						{
+//							createdDateTime = new Date(1000L*_createdDateTime);
+//						}
 //						Map folder = (Map) resp.get("folder");
 //						if(folder != null)
 //						{

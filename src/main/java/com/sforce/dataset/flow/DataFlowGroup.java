@@ -23,48 +23,33 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.server;
+package com.sforce.dataset.flow;
 
-import java.util.Map;
+import java.util.List;
 
-public class ResponseStatus {
-
-	public String statusCode = null;
-	public String statusMessage = null;
-	public Map<String,String> statusData = null;
-
-	public ResponseStatus() {
-		super();
-	}
-
-	public ResponseStatus(String statusCode, String statusMessage) {
-		super();
-		this.statusCode = statusCode;
-		this.statusMessage = statusMessage;
-	}
+public class DataFlowGroup {
 	
-	public String getStatusCode() {
-		return statusCode;
-	}
+	private String devName;
+	private String masterLabel;
+	private List<String> dataflowList;
 
-	public void setStatusCode(String statusCode) {
-		this.statusCode = statusCode;
+	public String getDevName() {
+		return devName;
 	}
-
-	public String getStatusMessage() {
-		return statusMessage;
+	public void setDevName(String name) {
+		this.devName = name;
 	}
-
-	public void setStatusMessage(String statusMessage) {
-		this.statusMessage = statusMessage;
+	public String getMasterLabel() {
+		return masterLabel;
 	}
-
-	public Map<String, String> getStatusData() {
-		return statusData;
+	public void setMasterLabel(String masterLabel) {
+		this.masterLabel = masterLabel;
 	}
-
-	public void setStatusData(Map<String, String> statusData) {
-		this.statusData = statusData;
+	public List<String> getDataflowList() {
+		return dataflowList;
+	}
+	public void setDataflowList(List<String> dataflowList) {
+		this.dataflowList = dataflowList;
 	}
 	
 }

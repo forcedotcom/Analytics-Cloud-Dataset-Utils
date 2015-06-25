@@ -23,48 +23,61 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.server;
+package com.sforce.dataset.scheduler;
 
 import java.util.Map;
 
-public class ResponseStatus {
-
-	public String statusCode = null;
-	public String statusMessage = null;
-	public Map<String,String> statusData = null;
-
-	public ResponseStatus() {
-		super();
-	}
-
-	public ResponseStatus(String statusCode, String statusMessage) {
-		super();
-		this.statusCode = statusCode;
-		this.statusMessage = statusMessage;
-	}
+public class Schedule {
 	
-	public String getStatusCode() {
-		return statusCode;
-	}
+	private String devName;
+	private String masterLabel;
+	private String cronSchedule;
+	private boolean disabled = false;
 
-	public void setStatusCode(String statusCode) {
-		this.statusCode = statusCode;
-	}
+	private String jobType;
+	private String jobId;
+	private Map<?,?> jobDataMap;
 
-	public String getStatusMessage() {
-		return statusMessage;
+	public String getDevName() {
+		return devName;
 	}
-
-	public void setStatusMessage(String statusMessage) {
-		this.statusMessage = statusMessage;
+	public void setDevName(String devName) {
+		this.devName = devName;
 	}
-
-	public Map<String, String> getStatusData() {
-		return statusData;
+	public String getMasterLabel() {
+		return masterLabel;
 	}
-
-	public void setStatusData(Map<String, String> statusData) {
-		this.statusData = statusData;
+	public void setMasterLabel(String masterLabel) {
+		this.masterLabel = masterLabel;
 	}
-	
+	public String getCronSchedule() {
+		return cronSchedule;
+	}
+	public void setCronSchedule(String cronSchedule) {
+		this.cronSchedule = cronSchedule;
+	}
+	public boolean isDisabled() {
+		return disabled;
+	}
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+	public Map<?,?> getJobDataMap() {
+		return jobDataMap;
+	}
+	public void setJobDataMap(Map<?,?> jobDataMap) {
+		this.jobDataMap = jobDataMap;
+	}		
+	public String getJobType() {
+		return jobType;
+	}
+	public void setJobType(String jobType) {
+		this.jobType = jobType;
+	}
+	public String getJobId() {
+		return jobId;
+	}
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
+	}	
 }

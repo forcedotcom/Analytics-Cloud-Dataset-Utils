@@ -42,6 +42,8 @@ import com.sforce.dataset.util.DatasetUtils;
 
 public class DatasetUtilConstants {
 	
+	@SuppressWarnings("unused")
+	private static final boolean isJdk14LoggerConfigured = DatasetUtils.configureLog4j();	
 	public static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
 	
 //	public static boolean createNewDateParts = false;
@@ -64,9 +66,12 @@ public class DatasetUtilConstants {
 	public static final String configFileName = "settings.json";
 	public static final String debugFileName = "debug.log";
 	public static final String dataflowDirName = "dataflow";
+	public static final String dataflowGroupDirName = "dataflowgroup";
+	public static final String scheduleDirName = "schedule";
 	
 
 	
+
 	public static final String errorCsvParam = "ERROR_CSV";
 	public static final String metadataJsonParam = "METADATA_JSON";
 	public static final String hdrIdParam = "HEADER_ID";
@@ -166,6 +171,31 @@ public class DatasetUtilConstants {
 		}
 		return dataflowDir;
 	}
+	
+	public static File getDataflowGroupDir(String orgId) {
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File dataflowDir = new File(getOrgDir(orgId),dataflowGroupDirName);
+		try {
+			FileUtils.forceMkdir(dataflowDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return dataflowDir;
+	}
+
+	public static File getScheduleDir(String orgId) {
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File dataflowDir = new File(getOrgDir(orgId),scheduleDirName);
+		try {
+			FileUtils.forceMkdir(dataflowDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return dataflowDir;
+	}
+
 
 	public static final File getDebugFile()
 	{

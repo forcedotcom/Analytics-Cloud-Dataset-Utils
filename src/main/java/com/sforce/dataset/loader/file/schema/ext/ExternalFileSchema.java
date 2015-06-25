@@ -80,10 +80,18 @@ public class ExternalFileSchema  {
 
 	
 	public FileFormat getFileFormat() {
+		if(fileFormat == null)
+		{
+			fileFormat = new FileFormat();
+		}
 		return fileFormat;
 	}
 
 	public void setFileFormat(FileFormat fileFormat) {
+		if(fileFormat == null)
+		{
+			fileFormat = new FileFormat();
+		}
 		this.fileFormat = fileFormat;
 	}
 
@@ -440,6 +448,8 @@ public class ExternalFileSchema  {
 							for(FieldType user_field:user_fields)
 							{
 								fieldCount++;
+								if(user_field!=null)
+								{
 								if(user_field != null && user_field.getName()!=null && !user_field.getName().isEmpty())
 								{
 									if(user_field.getName().length()>40)
@@ -581,6 +591,10 @@ public class ExternalFileSchema  {
 									{
 										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
 									}
+								}
+								}else
+								{
+									message.append("[objects["+objectCount+"].fields["+fieldCount+"]] in schema cannot be null\n");
 								}
 
 							} //End for
