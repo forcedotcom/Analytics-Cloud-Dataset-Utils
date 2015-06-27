@@ -45,6 +45,6 @@ public class DatasetUtilParams {
 	int rowLimit = 0;
 	boolean useBulkAPI = false;
 	boolean debug = false;
-	boolean server = false;
+	boolean server = true;
 	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 }

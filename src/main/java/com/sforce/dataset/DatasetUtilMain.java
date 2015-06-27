@@ -77,21 +77,42 @@ public class DatasetUtilMain {
 
 	public static void main(String[] args) {
 
+		printBanner();
+
 		DatasetUtilParams params = new DatasetUtilParams();
-		if (args.length >= 2) 
+
+		if(args.length>0)
+			params.server = false;
+
+		System.out.println("");
+		System.out.println("DatsetUtils called with {"+args.length+"} Params:");
+		
+		
+		for (int i=0; i< args.length; i++)
 		{
-			for (int i=1; i< args.length; i=i+2){
-				if(args[i-1].equalsIgnoreCase("--server"))
-				{
-					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
-						params.server = true;
-				}
+			if((i & 1) == 0)
+			{
+				System.out.print("{"+args[i]+"}");
+			}else
+			{
+				if(i>0 && args[i-1].equalsIgnoreCase("--p"))
+					System.out.println(":{*******}");					
+				else
+					System.out.println(":{"+args[i]+"}");
+			}
+			
+			if(i>0 && args[i-1].equalsIgnoreCase("--server"))
+			{
+				if(args[i]!=null && args[i].trim().equalsIgnoreCase("false"))
+					params.server = false;
+				else if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
+					params.server = true;
 			}
 		}
 		
 		if(!printlneula(params.server))
 		{
-			System.out.println("You do not have permission to use this jar. Please delete it from this computer");
+			System.out.println("You do not have permission to use this software. Please delete it from this computer");
 			System.exit(-1);
 		}
 
@@ -205,19 +226,10 @@ public class DatasetUtilMain {
 					if(args[i]!=null && !args[i].trim().isEmpty())
 						params.rowLimit = (new BigDecimal(args[i].trim())).intValue();
 				}
-//				else if(args[i-1].equalsIgnoreCase("--json"))
-//				{
-//					jsonConfig = args[i];
-//				}
 				else if(args[i-1].equalsIgnoreCase("--rootObject"))
 				{
 					params.rootObject = args[i];
 				}
-//				else if(args[i-1].equalsIgnoreCase("--createNewDateParts"))
-//				{
-//					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
-//						DatasetUtilConstants.createNewDateParts = true;
-//				}
 				else if(args[i-1].equalsIgnoreCase("--fileEncoding"))
 				{
 					params.fileEncoding = args[i];
@@ -226,6 +238,8 @@ public class DatasetUtilMain {
 				{
 					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
 						params.server = true;
+					else if(args[i]!=null && args[i].trim().equalsIgnoreCase("false"))
+						params.server = false;
 				}
 				else if(args[i-1].equalsIgnoreCase("--codingErrorAction"))
 				{
@@ -255,7 +269,6 @@ public class DatasetUtilMain {
 				}
 		}
 		
-		printBanner();
 
 		if(params.server)
 		{
