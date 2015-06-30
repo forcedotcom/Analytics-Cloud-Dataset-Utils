@@ -91,9 +91,9 @@ public class DataflowJob  implements Job {
 		String tempId = null;
 		for(DataFlow df:dfList)
 		{
-			if(df.name.equals("SalesEdgeEltWorkflow"))
+			if(df.getName().equals("SalesEdgeEltWorkflow"))
 			{
-				tempId = df._uid;
+				tempId = df.get_uid();
 				found = true;
 				break;
 			}
@@ -112,7 +112,7 @@ public class DataflowJob  implements Job {
 		{
 			if(tasks.size()==1)
 			{
-				if(task.WorkflowType.equalsIgnoreCase("user"))
+				if(task.getWorkflowType().equalsIgnoreCase("user"))
 				{
 					try {
 						runDataflow(task);
@@ -130,7 +130,7 @@ public class DataflowJob  implements Job {
 		if(!isRunning(dataflowId, 0))
 		{
 			long startTime = System.currentTimeMillis();
-			DataFlowUtil.startDataFlow(partnerConnection, task.name, task._uid);			
+			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), task.get_uid());			
 			while(true)
 			{
 				if(isRunning(dataflowId, startTime))

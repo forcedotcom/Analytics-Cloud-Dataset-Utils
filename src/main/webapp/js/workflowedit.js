@@ -1,43 +1,87 @@
-$(document).ready(function() {
-	
-	$("#submit-xmd-btn").prop('disabled', true);
+$(document).ready(function() {	
 
+	$('.input-group input[required], .input-group textarea[required], .input-group select[required]').on('keyup change', function() {
+		var $form = $(this).closest('form'),
+            $group = $(this).closest('.input-group'),
+			$addon = $group.find('.input-group-addon'),
+			$icon = $addon.find('span'),
+			$cont = $(this).closest('.container'),
+			state = false;
+            
+    	if (!$group.data('validate')) {
+			state = $(this).val() ? true : false;
+		}else if ($group.data('validate') == "email") {
+			state = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/.test($(this).val())
+		}else if($group.data('validate') == 'phone') {
+			state = /^[(]{0,1}[0-9]{3}[)]{0,1}[-\s\.]{0,1}[0-9]{3}[-\s\.]{0,1}[0-9]{4}$/.test($(this).val())
+		}else if ($group.data('validate') == "length") {
+			state = $(this).val().length >= $group.data('length') ? true : false;
+		}else if ($group.data('validate') == "number") {
+			state = !isNaN(parseFloat($(this).val())) && isFinite($(this).val());
+		}
+
+		if (state) {
+				$addon.removeClass('danger');
+				$addon.addClass('success');
+				$icon.attr('class', 'glyphicon glyphicon-ok');
+		}else{
+				$addon.removeClass('success');
+				$addon.addClass('danger');
+				$icon.attr('class', 'glyphicon glyphicon-remove');
+		}
+        
+        if ($cont.find('.input-group-addon.danger').length == 0) {
+            $('#submit-xmd-btn').prop('disabled', false);
+            $('#submit-xmd-btn').removeClass('disabled')
+        }else{
+            $('#submit-xmd-btn').prop('disabled', true);
+            $('#submit-xmd-btn').addClass('disabled');
+        }
+	});
+    
+    $('.input-group input[required], .input-group textarea[required], .input-group select[required]').trigger('change');
+ 	
 	var container = $('#jsoncontainer')[0];
 	var options = {
 		mode: 'code',
-		modes: ['code', 'tree'],
-		change: jsonChange
+		modes: ['code', 'tree']
 	};
 	var editor = new JSONEditor(container, options);
 
 	var dataflowAlias = decodeURIComponent(urlParam('dataflowAlias'));
+	var create = decodeURIComponent(urlParam('create'));
+	var dataflowId = decodeURIComponent(urlParam('dataflowId'));
+	
+	if (create == undefined || isEmpty(create) )
+	{
+		create = false;
+	}else
+	{
+		if(create == 'true')
+			create = true;
+		else
+			create = false;
+	}
+		
 	if (dataflowAlias == undefined || isEmpty(dataflowAlias) ) 
 	{
-		self.location.href = 'dataflows.html';
+		if(create)
+		{
+			$("#dataflowAlias").prop("disabled", false);
+			$("#dataflowAlias").change();
+		}else
+		{
+			self.location.href = 'dataflows.html';
+		}
+	}else
+	{
+		$("#dataflowAlias").val(dataflowAlias);
+		$("#dataflowAlias").change();
+		$("#dataflowAlias").prop("disabled", true);
+		getJson(editor,dataflowAlias,dataflowId);	
 	}
-	
-	var dataflowId = decodeURIComponent(urlParam('dataflowId'));
-
-	getJson(editor,dataflowAlias,dataflowId);	
 
 	$("button[name=postjson]").click(sendJson);
-
-
-	function jsonChange()
-	{
-		$("#submit-xmd-btn").prop('disabled', false);
-		if ($("#submit-xmd-btn").hasClass("btn-success")){
-			submittedButton();
-		}
-	}
-
-	function jsonError(err)
-	{
-		$("#submit-xmd-btn").prop('disabled', true);
-		if ($("#submit-xmd-btn").hasClass("btn-success")){
-			submittedButton();
-		}
-	}
 
 	function sendJson(event){
 		var json_string;
@@ -50,8 +94,20 @@ $(document).ready(function() {
 			return;
 		}
 
-		$("#submit-xmd-btn").text("Saving Dataflow...");
-		disableButtons(true);
+		dataflowAlias = $("#dataflowAlias").val();
+		if(isEmpty(dataflowAlias))
+		{
+			alert("You must enter a valid data flow Name!");
+			return;
+		}
+
+		
+		$("#dataflowAlias").prop("disabled", true);		 
+		$('#submit-xmd-btn').button('loading');
+		editor.setMode('view');
+
+		dataflowAlias = $("#dataflowAlias").val();
+				
 		setTimeout(function() {
 			$.ajax({
 			    url: '/json',
@@ -60,20 +116,19 @@ $(document).ready(function() {
 			    			jsonString: json_string,
 			    			type:'dataflow',
 			    			dataflowAlias:dataflowAlias,
-			    			dataflowId: dataflowId
+			    			dataflowId: dataflowId,
+			    			create: create
 			     		},
 			    contentType: 'application/x-www-form-urlencoded; charset=utf-8',
 			    dataType: 'json',
 			    async: false,
 			    success: function() {
-			    	disableButtons(false);
-	           	   	$("#submit-xmd-btn").prop('disabled', true);
-			        submittedButton();
+					$('#submit-xmd-btn').button('reset');
+					editor.setMode('code');
 			    },
 	            error: function(jqXHR, status, error) {
-	           	   $("#submit-xmd-btn").text("Save Dataflow");
-	           	   disableButtons(false);
-	           	   $("#submit-xmd-btn").prop('disabled', true);
+					$('#submit-xmd-btn').button('reset');
+					editor.setMode('code');
 	               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
 	                   self.location.href = 'login.html';
 	               }
@@ -88,42 +143,18 @@ $(document).ready(function() {
 		
 	}
 
-	function disableButtons(disEn){
-		if(disEn){
-			$("#submit-xmd-btn").prop('disabled', true);
-			editor.setMode('view');
-		}
-		else{
-			$("#submit-xmd-btn").prop('disabled', false);
-			editor.setMode('code');
-		}
-	}
-
-
-	function submittedButton(){
-		$("#submit-xmd-btn").toggleClass("btn-danger");
-		$("#submit-xmd-btn").toggleClass("btn-success");
-
-		if ($("#submit-xmd-btn").hasClass("btn-danger")){
-			$("#submit-xmd-btn").text("Save Dataflow");
-		}
-		else{
-			$("#submit-xmd-btn").text("Dataflow Saved!");
-		}
-	}
-
 });
 
 $(document).ajaxSend(function(event, request, settings) {
 	  $('#loading-indicator').show();
-	});
+});
 
 $(document).ajaxComplete(function(event, request, settings) {
-		  $('#loading-indicator').hide();
+	$('#loading-indicator').hide();
 });
 
 function isEmpty(str) {
-    return (!str || 0 === str.length);
+    return (!str || 0 === str.length || str === 'null');
 }
 
 function urlParam(name){

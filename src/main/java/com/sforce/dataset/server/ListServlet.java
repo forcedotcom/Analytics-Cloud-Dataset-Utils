@@ -81,6 +81,14 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), flowList);
+					}
+					else if(value.equalsIgnoreCase("dataflowDelete"))
+					{
+						String dataflowAlias = request.getParameter("dataflowAlias");
+						DataFlowUtil.deleteDataFlow(conn, dataflowAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), dataflowAlias);
 					} else if(value.equalsIgnoreCase("folder"))
 					{
 						List<FolderType> folders = DatasetUtils.listFolders(conn);

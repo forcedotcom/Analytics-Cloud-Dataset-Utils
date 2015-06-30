@@ -10,18 +10,14 @@
 <title>Dataflow Editor</title>
 <script src="js/jquery.1.9.1.min.js"></script>
 
-<!--  
-<script src="js/vendor/jquery.ui.widget.js"></script>
-<script src="js/jquery.iframe-transport.js"></script>
-<script src="js/jquery.fileupload.js"></script>
--->
-
 <!-- bootstrap just to have good looking page -->
 <script src="bootstrap/js/bootstrap.min.js"></script>
 <link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
 
 <link rel="stylesheet" type="text/css" href="jsoneditor/jsoneditor.min.css" />
 <script type="text/javascript" src="jsoneditor/jsoneditor.min.js"></script>
+
+<link href="css/requiredstyle.css" type="text/css" rel="stylesheet">
 
 <script src="js/workflowedit.js"></script>
 
@@ -73,16 +69,18 @@
 	</div>
 
 	<div class="container">
-
-		<div class="row" id="xmd-button-row">
-			<button class="btn btn-danger col-lg-2" id="submit-xmd-btn"
-				name="postjson">Save Dataflow</button>
-		</div>
-
 		<div class="row">
-			<div id="jsoncontainer" style="width: 800px; height: 800px"></div>
-		</div>	
-
+			<div class="col-sm-offset-2 col-sm-8">			
+				<div class="input-group">
+					<input type="text" maxlength="40" class="form-control" name="dataflowAlias"
+						id="dataflowAlias" required placeholder="Enter Dataflow name..." /> <span
+						class="input-group-addon danger"><span
+						class="glyphicon glyphicon-remove"></span></span>
+				</div>
+				<div id="jsoncontainer" style="height: 600px"></div>
+				<button class="btn btn-danger btn-block disabled" id="submit-xmd-btn" name="postjson" disabled data-loading-text="Saving Dataflow...">Save Dataflow</button>						
+			</div>
+		</div>
 	</div>
 	
 
