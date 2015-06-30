@@ -26,7 +26,6 @@
  */
 package com.sforce.dataset.metadata;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -37,68 +36,43 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DatasetSchema {
 
-	private static final String filename = "main.json";
-	
-	public static void save(File schemaFile,DatasetSchema emd)
+	@SuppressWarnings({ "unchecked" })
+	public static Map<String,String> getDimensions(Map<String,String> xmd) throws JsonParseException, JsonMappingException, IOException
 	{
-		ObjectMapper mapper = new ObjectMapper();	
-		try 
+		if(xmd!=null)
 		{
-			mapper.writerWithDefaultPrettyPrinter().writeValue(schemaFile, emd);
-		} catch (Throwable t) {
-			t.printStackTrace();
+			ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			DatasetXmd datasetXmd = mapper.readValue(xmd.get("mainXmd"),DatasetXmd.class);
+			Map<String,String> dims = (Map<String,String>) datasetXmd.labels.get("dimensions");
+			return dims;
 		}
-	}
-	
-	@SuppressWarnings("rawtypes")
-	public static Map load(File emDir) throws JsonParseException, JsonMappingException, IOException
-	{
-		File schemaFile = getSchemaFile(emDir);
-		ObjectMapper mapper = new ObjectMapper();	
-		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		Map userSchema = null;
-		if(schemaFile.exists())
-		{
-//			System.out.println("Loading em schema from file {"+ schemaFile +"}");
-			userSchema  =  mapper.readValue(schemaFile,Map.class);			
-		}
-		return userSchema;
+		return null;
 	}
 
-	public static File getSchemaFile(File emDir) throws IOException {
-				emDir = new File(emDir,filename);
-				if(emDir.exists())
-					return emDir;
-				else
-					throw new IOException("File {"+emDir+"} not found");
-	}
-	
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Map<String,Map> getDimensions(File emDir) throws JsonParseException, JsonMappingException, IOException
+	@SuppressWarnings({ "unchecked" })
+	public static Map<String,String> getMeasures(Map<String,String> xmd) throws JsonParseException, JsonMappingException, IOException
 	{
-		Map temp = load(emDir);
+		if(xmd!=null)
+		{
+			ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			DatasetXmd datasetXmd = mapper.readValue(xmd.get("mainXmd"),DatasetXmd.class);
+			Map<String,String> meas = (Map<String,String>) datasetXmd.labels.get("measures");
+			return meas;
+		}
+		return null;
+	}
+
+	
+	public static Map<String,String> getFields(Map<String,String> temp) throws JsonParseException, JsonMappingException, IOException
+	{
 		if(temp!=null)
 		{
-			Map<String,Map> dims = (Map<String,Map>) temp.get("dimensions");
+			Map<String, String> dims = getDimensions(temp);
 			if(dims!=null)
 			{
-				return dims;
-			}
-		}
-		throw new IOException("No dimensions found in {"+getSchemaFile(emDir)+"} ");
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Map<String,Map> getFields(File emDir) throws JsonParseException, JsonMappingException, IOException
-	{
-		Map temp = load(emDir);
-		if(temp!=null)
-		{
-			Map<String,Map> dims = (Map<String,Map>) temp.get("dimensions");
-			if(dims!=null)
-			{
-				Map<String,Map> meas = (Map<String,Map>) temp.get("measures");
+				Map<String, String> meas = getMeasures(temp);
 				if(meas!=null)
 				{
 					dims.putAll(meas);
@@ -106,8 +80,7 @@ public class DatasetSchema {
 				return dims;
 			}
 		}
-		throw new IOException("No dimensions found in {"+getSchemaFile(emDir)+"} ");
+		return null;
 	}
-
 	
 }

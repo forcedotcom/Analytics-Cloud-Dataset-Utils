@@ -109,7 +109,8 @@ public class DatasetUtilMain {
 					params.server = true;
 			}
 		}
-		
+		System.out.println("");
+
 		if(!printlneula(params.server))
 		{
 			System.out.println("You do not have permission to use this software. Please delete it from this computer");
@@ -263,10 +264,14 @@ public class DatasetUtilMain {
 					System.exit(-1);
 				}
 			}//end for
+			
+			if(params.username != null)
+			{
 				if(params.endpoint == null || params.endpoint.isEmpty())
 				{
 						params.endpoint = DatasetUtilConstants.defaultEndpoint;
 				}
+			}
 		}
 		
 

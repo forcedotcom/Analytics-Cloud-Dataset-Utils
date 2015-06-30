@@ -25,25 +25,12 @@
  */
 package com.sforce.dataset.util;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -53,54 +40,41 @@ import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.node.AugmentNode;
 import com.sforce.dataset.flow.node.EdgemartNode;
 import com.sforce.dataset.flow.node.RegisterNode;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.metadata.DatasetSchema;
 import com.sforce.soap.partner.PartnerConnection;
-import com.sforce.ws.ConnectionException;
-import com.sforce.ws.ConnectorConfig;
 
 public class DatasetAugmenter {
 	
-//	String username = null;
-//	String password = null;
-//	String endpoint = null;
-//	String token = null;
-//	String sessionId = null;
-
-/*
-	public DatasetAugmenter(String username,String password, String token, String endpoint,String sessionId) throws Exception 
-	{
-		super();
-		this.username = username;
-		this.password = password;
-		this.token = token;
-		this.endpoint = endpoint;
-		this.sessionId = sessionId;
-	}
-*/
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void augmentEM(PartnerConnection partnerConnection) throws Exception
 	{
-		Map<String, Map> map = DatasetUtils.listPublicDataset(partnerConnection, true);
+		List<DatasetType> list = DatasetUtils.listDatasets(partnerConnection, true);
 		System.out.println("\n");
-		if(map==null || map.size()==0)
+		if(list==null || list.size()==0)
 		{
 			System.out.println("No dataset found in org");
 			return;
 		}
 		int cnt = 1;
-		for(String alias:map.keySet())
+		for(DatasetType ds:list)
 		{
 			if(cnt==1)
-				System.out.println("Found {"+map.size()+"} Datasets...");
-			System.out.println(cnt+". "+alias);
+				System.out.println("Found {"+list.size()+"} Datasets...");
+			System.out.println(cnt+". "+ds._alias);
 			cnt++;
 		}
 		System.out.println("\n");
 
 		String leftDataSet = null;
 		String rightDataSet = null;
-		
+
+		String leftDataSetId = null;
+		String rightDataSetId = null;
+
+		String leftDataSetVersion = null;
+		String rightDataSetVersion = null;
+
 		while(true)
 		{
 			try
@@ -108,11 +82,13 @@ public class DatasetAugmenter {
 				String tmp = DatasetUtils.readInputFromConsole("Enter left Dataset Number: ");
 				long left = Long.parseLong(tmp.trim());
 				cnt = 1;
-				for(String alias:map.keySet())
+				for(DatasetType ds:list)
 				{
 					if(cnt==left)
 					{
-						leftDataSet = alias;
+						leftDataSet = ds._alias;
+						leftDataSetId = ds._uid;
+						leftDataSetVersion = ds.edgemartData._uid;
 						break;
 					}
 					cnt++;
@@ -132,11 +108,13 @@ public class DatasetAugmenter {
 				String tmp = DatasetUtils.readInputFromConsole("Enter Right Dataset Number: ");
 				long left = Long.parseLong(tmp.trim());
 				cnt = 1;
-				for(String alias:map.keySet())
+				for(DatasetType ds:list)
 				{
 					if(cnt==left)
 					{
-						rightDataSet = alias;
+						rightDataSet = ds._alias;
+						rightDataSetId = ds._uid;
+						rightDataSetVersion = ds.edgemartData._uid;
 						break;
 					}
 					cnt++;
@@ -150,14 +128,17 @@ public class DatasetAugmenter {
 		}
 		System.out.println("\n");
 		System.out.println("Getting dimensions in dataset {"+leftDataSet+"}");
-		downloadEMJson(map.get(leftDataSet), partnerConnection);
+		Map<String, String> rightXmd = null;
+		Map<String, String> leftXmd = DatasetDownloader.getXMD(leftDataSet, leftDataSetId, leftDataSetVersion, partnerConnection);
 		if(!leftDataSet.equals(rightDataSet))
 		{
 			System.out.println("Getting dimensions in dataset {"+rightDataSet+"}");
-			downloadEMJson(map.get(rightDataSet), partnerConnection);
+			rightXmd = DatasetDownloader.getXMD(rightDataSet, rightDataSetId, rightDataSetVersion, partnerConnection);
+		}else
+		{
+			rightXmd = leftXmd;
 		}
-//		Map lmj = DatasetSchema.load(new File(leftDataSet));
-		Map<String,Map> leftDims = DatasetSchema.getDimensions(new File(leftDataSet));
+		Map<String, String> leftDims = removeDateParts(DatasetSchema.getDimensions(leftXmd));
 		System.out.println("\n");
 		if(leftDims==null || leftDims.size()==0)
 		{
@@ -197,7 +178,7 @@ public class DatasetAugmenter {
 			}
 		}
 
-		Map<String,Map> rightDims = DatasetSchema.getDimensions(new File(rightDataSet));
+		Map<String, String> rightDims = removeDateParts(DatasetSchema.getDimensions(rightXmd));
 		System.out.println("\n");
 		if(rightDims==null || rightDims.size()==0)
 		{
@@ -237,7 +218,9 @@ public class DatasetAugmenter {
 			}
 		}
 
-		Map<String,Map> rightFields = DatasetSchema.getFields(new File(rightDataSet));		
+		Map<String, String> rightFields = removeDateParts(DatasetSchema.getFields(rightXmd));		
+		System.out.println("\n");
+		cnt = 1;
 		for(String dim:rightFields.keySet())
 		{
 			if(cnt==1)
@@ -299,12 +282,11 @@ public class DatasetAugmenter {
 			}
 		}
 		
-		String newDataSetAlias = DatasetUtils.replaceSpecialCharacters(newDataSetName);
+//		String newDataSetAlias = DatasetUtils.replaceSpecialCharacters(newDataSetName);
+		String newDataSetAlias = ExternalFileSchema.createDevName(newDataSetName, "Dataset", 1, false);
 
-//		String joinCondition = leftDataSet+"."+leftKey+"="+rightDataSet+"."+rightKey;
-//		System.out.println("\n");
-//		System.out.println("Join Condition: "+ joinCondition);
-		String workflowName = "SalesEdgeEltWorkflow";
+		String workflowName = leftDataSet+"2"+rightDataSet;//"SalesEdgeEltWorkflow"
+		
 		File dataflowFile = new File(workflowName+".json");
 
 		LinkedHashMap wfdef = new LinkedHashMap();
@@ -352,83 +334,27 @@ public class DatasetAugmenter {
 		
 		if(uploadAndStart)
 		{
-			DataFlowUtil.uploadAndStartDataFlow(partnerConnection, wfdef, workflowName);
+			DataFlowUtil.uploadAndStartDataFlow(partnerConnection, wfdef, "SalesEdgeEltWorkflow");
 		}
 		
 	}
-
-	@SuppressWarnings({ "rawtypes" })
-	public static void downloadEMJson(Map resp, PartnerConnection partnerConnection) throws URISyntaxException, IOException, ConnectionException
+	
+	public static Map<String,String> removeDateParts(Map<String,String> dims)
 	{
-		String _alias = null;
-		partnerConnection.getServerTimestamp();
-		ConnectorConfig config = partnerConnection.getConfig();			
-		String sessionID = config.getSessionId();
-
-		String serviceEndPoint = config.getServiceEndpoint();
-
-		RequestConfig requestConfig = HttpUtils.getRequestConfig();
-		   
-		URI u = new URI(serviceEndPoint);
-
-		
-	if(resp!=null)
-	{
-		_alias = (String) resp.get("_alias");
-		Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-		if(_createdDateTime != null)
+		LinkedHashMap<String,String> out = new LinkedHashMap<String,String>();
+		for(String dim:dims.keySet())
 		{
-		}
-		Map edgemartData = (Map) resp.get("edgemartData");
-		if(edgemartData != null)
-		{
-		}
-		Map _files = (Map) resp.get("_files");
-		if(_files != null)
-		{
-			File edgemartDir = new File(_alias);
-			FileUtils.forceMkdir(edgemartDir);
-			for(Object filename:_files.keySet())
+			if(dim.endsWith("_Day") || dim.endsWith("_Month") || dim.endsWith("_Year") || dim.endsWith("_Quarter") || dim.endsWith("_Week") || dim.endsWith("_Hour")|| dim.endsWith("_Minute")|| dim.endsWith("_Second")|| dim.endsWith("_Month_Fiscal")|| dim.endsWith("_Year_Fiscal")|| dim.endsWith("_Quarter_Fiscal") || dim.endsWith("_Week_Fiscal"))
 			{
-				
-				if(!filename.toString().endsWith("json"))
-					continue;
-				
-				CloseableHttpClient httpClient1 = HttpUtils.getHttpClient();
-
-				String url = (String) _files.get(filename);
-				URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
-				HttpGet listEMPost1 = new HttpGet(listEMURI1);
-
-//				System.out.println("Downloading file {"+filename+"} from url {"+listEMURI1+"}");
-				listEMPost1.setConfig(requestConfig);
-				listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
-
-				CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
-
-			   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
-		       int statusCode = emresponse1.getStatusLine().getStatusCode();
-		       if (statusCode != HttpStatus.SC_OK) {
-		           System.out.println("Method failed: " + reasonPhrase);
-		           continue;
-		       }
-//		       System.out.println(String.format("statusCode: %d", statusCode));
-//		       System.out.println(String.format("reasonPhrase: %s", reasonPhrase));
-
-				HttpEntity emresponseEntity1 = emresponse1.getEntity();
-				InputStream emis1 = emresponseEntity1.getContent();
-				File outfile = new File(edgemartDir,(String) filename);
-//				System.out.println("file {"+outfile+"}. Content-length {"+emresponseEntity1.getContentLength()+"}");
-				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
-				IOUtils.copy(emis1, out);
-				out.close();
-				emis1.close();
-				httpClient1.close();
-//				System.out.println("file {"+outfile+"} downloaded. Size{"+outfile.length()+"}");
+				continue;
 			}
+			if(dim.endsWith("_sec_epoch") || dim.endsWith("_day_epoch"))
+			{
+				continue;
+			}
+			out.put(dim, dims.get(dim));
 		}
-//		System.out.println("\n Completed downloading EM Files..");							
-	}
+		return out;	
 	}
 	
 }
