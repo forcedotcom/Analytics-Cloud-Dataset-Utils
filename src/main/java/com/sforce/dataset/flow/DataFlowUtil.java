@@ -324,6 +324,8 @@ public class DataFlowUtil {
 				{
 					df.setMasterLabel(df.getMasterLabel() + " (Defunct: Do not use)");
 					df.setStatus("Defunct");
+					df.setNextRunTime(0);
+					df.setRefreshFrequencySec(0);
 				}
 			}
 			dfList.addAll(dfList2);

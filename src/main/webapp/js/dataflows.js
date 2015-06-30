@@ -60,13 +60,23 @@ function deleteDataflow(id){
 	    $("#result-body").empty();
 	    $.each(data, function(i,obj)
 	    {
-    	   var frequency = "Every " + (data[i].refreshFrequencySec/3600) + " Hour";
+	    	var frequency = "n/a";
+	    	if(data[i].refreshFrequencySec>0)
+	    	{
+	    		frequency = "Every " + (data[i].refreshFrequencySec/3600) + " Hour";
+	    	}
+	    	
+	    	var runTime = "n/a";
+	    	if(data[i].nextRunTime>0)
+	    	{	    	
+	    		runTime = new Date(data[i].nextRunTime).toLocaleString();
+	    	}
     	   
-    	   var statusLabel = "class=\"label label-success\">Active</span>";
+    	   var statusLabel = "<span class=\"label label-success\">Active</span>";
     	   var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
     	   if(data[i].status != "Active") 
     	   { 
-    		   statusLabel = "class=\"label label-danger\">Defunct</span>";
+    		   statusLabel = "<span class=\"label label-danger\">Defunct</span>";
     		   linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
     	   }
     	   
@@ -76,17 +86,13 @@ function deleteDataflow(id){
     		   deleteText = "";
     	   }
     	  
-    	   var tablerow =  "<td> \
-    	   " + linkText + " \
-    	   </td> \
-    	   <td> \
-    	   <span class=\"name\">"+data[i]._lastModifiedBy.name+"</span> \
-    	   </td> \
+    	   var tablerow =  " \
+    	   <td class=\"hidden-phone\">"+linkText+"</td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i]._lastModifiedBy.name+"</span> </td> \
     	   <td class=\"hidden-phone\">"+frequency+"</td> \
-    	   <td class=\"hidden-phone\">"+new Date(data[i].nextRunTime).toLocaleString()+"</td> \
-    	   <td class=\"hidden-phone\"> \
-    	   <span " + statusLabel + " \
-    	   </td> \
+    	   <td class=\"hidden-phone\">"+runTime+"</td> \
+    	   <td class=\"hidden-phone\">"+data[i].workflowType+"</td> \
+    	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
     	   <button data-toggle=\"dropdown\" class=\"btn btn-xs dropdown-toggle\" data-original-title=\"\" title=\"\"> \
