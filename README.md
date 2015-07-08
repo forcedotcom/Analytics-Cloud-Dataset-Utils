@@ -33,7 +33,7 @@ If you are running datasetutils for the first time you will be prompted to accep
 
 Best is to run in interactive mode. open a terminal and type in the following command and follow the prompts on the console: 
 
-    java -jar datasetutil-<version>.jar
+    java -jar datasetutil-<version>.jar --server false
 
 Or you can pass in all the param in the command line and let it run uninterrupted.
  
@@ -63,7 +63,7 @@ Input Parameter
 
 --token   : (Optional) Salesforce.com token
 
---endpoint: (Optional) The Salesforce soap api endpoint (test/prod) Default: https://login.salesforce.com/services/Soap/u/31.0
+--endpoint: (Optional) The Salesforce soap api endpoint (test/prod) Default: https://login.salesforce.com
 
 --dataset : (Optional) the dataset alias. required if action=load
 
