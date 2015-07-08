@@ -96,7 +96,7 @@ public class XmdUploader {
 
 
 			System.out.println();
-			partnerConnection.getServerTimestamp();			
+//			partnerConnection.getServerTimestamp();			
 			ConnectorConfig config = partnerConnection.getConfig();			
 			String sessionID = config.getSessionId();
 			String _alias = null;

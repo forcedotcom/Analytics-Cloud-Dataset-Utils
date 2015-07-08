@@ -16,7 +16,7 @@ function listDatasets(){
     	{
      	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">No Datasets found</td>");
        	   tmp.attr("id","ErrorRow");
-       	   tmp.addClass("alert alert-danger");
+       	   tmp.addClass("alert-danger");
             $("#result-body").append(tmp)            
     	}
     })
@@ -83,6 +83,9 @@ function deleteDataset(datasetAlias,datasetId){
     	   </span> \
     	   </button> \
     	   <ul class=\"dropdown-menu pull-right\"> \
+    	   <li> \
+    	   <a href=\"list?datasetAlias=" + data[i]._alias + "&type=metadataJson"+"\">Download Metadata Json</a> \
+    	   </li> \
     	   <li> \
     	   <a href=\"xmdeditor.html?datasetAlias=" + data[i]._alias + "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\">Edit Xmd</a> \
     	   </li> \

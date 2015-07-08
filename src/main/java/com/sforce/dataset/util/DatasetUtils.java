@@ -122,7 +122,7 @@ public class DatasetUtils {
 			throw new IllegalArgumentException("Dataset {"+alias+"} not found");
 		}
 
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -196,7 +196,7 @@ public class DatasetUtils {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -290,7 +290,7 @@ public class DatasetUtils {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<FolderType> listFolders(PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException {
 		List<FolderType> folderList = new LinkedList<FolderType>();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();

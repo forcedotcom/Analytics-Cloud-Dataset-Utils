@@ -308,29 +308,25 @@ public class AuthFilter implements Filter {
 				if (sc.getConnection()!= null && sc.getSessionId() != null && sc.getEndPoint() != null && sc.getLastRefreshTimestamp() != null) 
 				{
 					conn = sc.getConnection();
-					if(sc.getLastRefreshTimestamp().getTimeInMillis() < (System.currentTimeMillis() - 60*000))
-					{
-//						ConnectorConfig config = new ConnectorConfig();
-//						config.setServiceEndpoint(sc.getEndPoint());
-//						config.setSessionId(sc.getSessionId());
-//						conn = Connector.newConnection(config);
-						if (conn != null) {
-							GetUserInfoResult userInfoResult = conn.getUserInfo();
-							if(userInfoResult == null)
-							{
-								conn = null;
-							}else
-							{
-								GetServerTimestampResult serverTimestampResult = conn.getServerTimestamp();							
-								if (serverTimestampResult.getTimestamp() != null) {
-									sc.setLastRefreshTimestamp(serverTimestampResult.getTimestamp());
-								}else
-								{
-									conn = null;
-								}
-							}
-						}
-					}
+//					if(sc.getLastRefreshTimestamp().getTimeInMillis() < (System.currentTimeMillis() - 60*000))
+//					{
+//						if (conn != null) {
+//							GetUserInfoResult userInfoResult = conn.getUserInfo();
+//							if(userInfoResult == null)
+//							{
+//								conn = null;
+//							}else
+//							{
+//								GetServerTimestampResult serverTimestampResult = conn.getServerTimestamp();							
+//								if (serverTimestampResult.getTimestamp() != null) {
+//									sc.setLastRefreshTimestamp(serverTimestampResult.getTimestamp());
+//								}else
+//								{
+//									conn = null;
+//								}
+//							}
+//						}
+//					}
 				}
 			} else {
 				conn = null;

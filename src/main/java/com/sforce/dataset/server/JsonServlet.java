@@ -108,30 +108,36 @@ public class JsonServlet extends HttpServlet {
 				}
 			}else if(type.equalsIgnoreCase("dataflow"))
 			{
-				String dataflowAlias = request.getParameter("dataflowAlias");
-				if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
-				{
-					throw new IllegalArgumentException("dataflowAlias is a required param");
-				}
-				
-				String dataflowId = request.getParameter("dataflowId");
 				String temp = request.getParameter("create");
 				boolean create = false;
 				if(temp!=null && temp.trim().equalsIgnoreCase("true"))
 					create = true;
 
-				String dataflowMasterLabel = dataflowAlias;
-				String devName = ExternalFileSchema.createDevName(dataflowAlias, "dataFlow", 1, false);
+				String dataflowAlias = request.getParameter("dataflowAlias");
+				String dataflowLabel = request.getParameter("dataflowLabel");
+				if(dataflowLabel==null || dataflowLabel.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("dataflowLabel is a required param");
+				}
+				
+				if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
+				{
+					if(create)
+					{
+						dataflowAlias = ExternalFileSchema.createDevName(dataflowLabel, "dataFlow", 1, false);						
+					}else
+					{
+						throw new IllegalArgumentException("dataflowAlias is a required param");
+					}
 
-//				File dataDir = DatasetUtilConstants.getDataflowDir(orgId);				
-//				File dataFlowFile = new File(dataDir,devName+".json");
-//
+				}
+				
+				String dataflowId = request.getParameter("dataflowId");
+
 				ObjectMapper mapper = new ObjectMapper();	
 				@SuppressWarnings("rawtypes")
 				Map dataflowObject =  mapper.readValue(jsonString, Map.class);
-//				mapper.writerWithDefaultPrettyPrinter().writeValue(dataFlowFile , dataflowObject);				
-				DataFlowUtil.upsertDataFlow(conn, devName, dataflowId, dataflowObject, create, dataflowMasterLabel);
-//				DataFlowUtil.uploadDataFlow(conn, dataflowAlias,dataflowId,dataflowObject);
+				DataFlowUtil.upsertDataFlow(conn, dataflowAlias, dataflowId, dataflowObject, create, dataflowLabel);
 			}else
 			{
 				response.setContentType("application/json");
@@ -201,7 +207,7 @@ public class JsonServlet extends HttpServlet {
 						String dataflowId = request.getParameter("dataflowId");
 						DataFlow df = DataFlowUtil.getDataFlow(conn, dataflowAlias, dataflowId);
 				    	ObjectMapper mapper = new ObjectMapper();
-						mapper.writeValue(response.getOutputStream(), df.getWorkflowDefinition());
+						mapper.writeValue(response.getOutputStream(), df);
 					}else
 					{
 						response.setContentType("application/json");

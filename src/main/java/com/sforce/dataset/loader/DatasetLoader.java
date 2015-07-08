@@ -1860,7 +1860,7 @@ public class DatasetLoader {
 	}
 	
 	
-	private static ExternalFileSchema getLastUploadedJson(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
+	public static ExternalFileSchema getLastUploadedJson(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
 	{
 		String json = null;
 		ExternalFileSchema schema = null;

@@ -7,7 +7,7 @@
 <meta http-equiv="expires" content="0" />
 <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
 <meta http-equiv="pragma" content="no-cache" />	
-<title>Dataflow Editor</title>
+<title>Schedule Editor</title>
 <script src="js/jquery.1.9.1.min.js"></script>
 
 <!-- bootstrap just to have good looking page -->
@@ -45,6 +45,7 @@
                 <ul class="dropdown-menu">
 				<li><a class="navlink" href="finder.html" target="_top">Dataset List</a></li>
 				<li><a class="navlink" href="dataflows.html" target="_top">Dataflow List</a></li>
+				<li><a class="navlink" href="schedules.html" target="_top">Schedule List</a></li>
                 <li><a class="navlink" href="csvupload.html" target="_top">File Upload</a></li>
 				<li><a class="navlink" href="logs.html" target="_top">Process Monitor</a></li>
 				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
@@ -72,8 +73,11 @@
 		<div class="row">
 			<div class="col-sm-offset-2 col-sm-8">			
 				<div class="input-group">
-					<input type="text" maxlength="40" class="form-control" name="dataflowAlias"
-						id="dataflowAlias" required placeholder="Enter Dataflow name..." /> <span
+					<input type="hidden" class="form-control" name="dataflowAlias" id="dataflowAlias"/>
+				</div>
+				<div class="input-group">
+					<input type="text" maxlength="40" class="form-control" name="dataflowLabel"
+						id="dataflowLabel" required placeholder="Enter Dataflow name..." /> <span
 						class="input-group-addon danger"><span
 						class="glyphicon glyphicon-remove"></span></span>
 				</div>

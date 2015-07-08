@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.scheduler.SchedulerUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.server.auth.SecurityContext;
 import com.sforce.dataset.server.auth.SecurityContextSessionStore;
@@ -141,6 +142,14 @@ public class LoginServlet extends HttpServlet {
 	        
 	        SecurityContextSessionStore scStore = new SecurityContextSessionStore();
 	        scStore.storeSecurityContext(request, sc);
+	        
+	        try
+	        {
+	        	SchedulerUtil.startAllSchedules(conn);
+	        }catch(Exception e)
+	        {
+	        	e.printStackTrace();
+	        }
 	        
 			ResponseStatus status = new ResponseStatus("success",null);
 			response.setContentType("application/json");

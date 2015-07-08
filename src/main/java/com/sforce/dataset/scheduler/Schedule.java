@@ -27,17 +27,57 @@ package com.sforce.dataset.scheduler;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sforce.soap.partner.GetUserInfoResult;
+import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.ws.ConnectionException;
+
 public class Schedule {
 	
 	private String devName;
 	private String masterLabel;
 	private String cronSchedule;
-	private boolean disabled = false;
+	private boolean disabled = true;
 
-	private String jobType;
-	private String jobId;
+	private String jobType = "dataflow";
 	private Map<?,?> jobDataMap;
+	private UserType lastModifiedBy;
+	private long scheduleStartDate = 0;
+	private long nextRunTime = 0;
+	private String frequency;
+	private long interval = 0;
 
+	private static class UserType {
+        public String _type = null;
+        public String profilePhotoUrl = null;
+        public String name = null;
+        public String _uid = null;
+		@Override
+		public String toString() {
+			return "UserType [_type=" + _type + ", profilePhotoUrl="
+					+ profilePhotoUrl + ", name=" + name + ", _uid=" + _uid
+					+ "]";
+		}
+    }
+
+	public long getScheduleStartDate() {
+		return scheduleStartDate;
+	}
+	public void setScheduleStartDate(long scheduleStartDate) {
+		this.scheduleStartDate = scheduleStartDate;
+	}
+	public String getFrequency() {
+		return frequency;
+	}
+	public void setFrequency(String frequency) {
+		this.frequency = frequency;
+	}
+	public long getInterval() {
+		return interval;
+	}
+	public void setInterval(long interval) {
+		this.interval = interval;
+	}
 	public String getDevName() {
 		return devName;
 	}
@@ -69,15 +109,32 @@ public class Schedule {
 		this.jobDataMap = jobDataMap;
 	}		
 	public String getJobType() {
+		if(jobType==null)
+			jobType = "dataflow";
 		return jobType;
 	}
 	public void setJobType(String jobType) {
 		this.jobType = jobType;
 	}
-	public String getJobId() {
-		return jobId;
+	public UserType getLastModifiedBy() {
+		return lastModifiedBy;
 	}
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
+	public void setLastModifiedBy(UserType lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+	public long getNextRunTime() {
+		return nextRunTime;
+	}
+	public void setNextRunTime(long nextRunTime) {
+		this.nextRunTime = nextRunTime;
+	}
+	@JsonIgnore
+	void set_LastModifiedBy(PartnerConnection partnerConnection) throws ConnectionException {
+		UserType ut = new UserType();
+		GetUserInfoResult ui = partnerConnection.getUserInfo();
+		ut._uid = ui.getUserId();
+		ut.name = ui.getUserFullName();
+		ut._type = "user";
+		this.setLastModifiedBy(ut);
 	}	
 }

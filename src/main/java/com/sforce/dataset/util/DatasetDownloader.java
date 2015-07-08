@@ -63,7 +63,7 @@ public class DatasetDownloader {
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	public static Map<String,String> getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
 	{
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String _alias = null;
@@ -197,7 +197,7 @@ public class DatasetDownloader {
 		if(datasetId == null || datasetVersion == null || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
 			return getXMD(alias,partnerConnection);
 		
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();		
 		
@@ -251,7 +251,7 @@ public class DatasetDownloader {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static boolean downloadEM(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
 	{
-			partnerConnection.getServerTimestamp();
+//			partnerConnection.getServerTimestamp();
 			ConnectorConfig config = partnerConnection.getConfig();			
 			String sessionID = config.getSessionId();
 			String orgId = partnerConnection.getUserInfo().getOrganizationId();

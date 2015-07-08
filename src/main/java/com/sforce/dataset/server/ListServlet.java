@@ -26,6 +26,9 @@
 package com.sforce.dataset.server;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -43,6 +46,9 @@ import com.sforce.dataset.flow.monitor.NodeEntry;
 import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.SessionHistory;
 import com.sforce.dataset.loader.DatasetLoader;
+import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
+import com.sforce.dataset.scheduler.Schedule;
+import com.sforce.dataset.scheduler.SchedulerUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.util.DatasetType;
 import com.sforce.dataset.util.DatasetUtils;
@@ -82,9 +88,66 @@ public class ListServlet extends HttpServlet {
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), flowList);
 					}
+					else if(value.equalsIgnoreCase("schedule"))
+					{
+						String scheduleAlias = request.getParameter("scheduleAlias");
+						if(scheduleAlias!=null && !scheduleAlias.trim().isEmpty())
+						{
+							Schedule sched = SchedulerUtil.readSchedule(conn, scheduleAlias);
+						    response.setContentType("application/json");
+					    	ObjectMapper mapper = new ObjectMapper();
+					    	mapper.writeValue(response.getOutputStream(), sched);
+						}else
+						{
+							List<Schedule> list = SchedulerUtil.listSchedules(conn);
+						    response.setContentType("application/json");
+					    	ObjectMapper mapper = new ObjectMapper();
+					    	mapper.writeValue(response.getOutputStream(), list);
+						}
+					}
+					else if(value.equalsIgnoreCase("scheduleDelete"))
+					{
+						String scheduleAlias = request.getParameter("scheduleAlias");
+						if(scheduleAlias==null || scheduleAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("scheduleAlias is required param");
+						}
+						SchedulerUtil.deleteSchedule(conn, scheduleAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), scheduleAlias);
+					}
+					else if(value.equalsIgnoreCase("scheduleEnable"))
+					{
+						String scheduleAlias = request.getParameter("scheduleAlias");
+						if(scheduleAlias==null || scheduleAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("scheduleAlias is required param");
+						}
+						SchedulerUtil.enableSchedule(conn, scheduleAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), scheduleAlias);
+					}
+					else if(value.equalsIgnoreCase("scheduleDisable"))
+					{
+						String scheduleAlias = request.getParameter("scheduleAlias");
+						if(scheduleAlias==null || scheduleAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("scheduleAlias is required param");
+						}
+						SchedulerUtil.disableSchedule(conn, scheduleAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), scheduleAlias);
+					}
 					else if(value.equalsIgnoreCase("dataflowDelete"))
 					{
 						String dataflowAlias = request.getParameter("dataflowAlias");
+						if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("dataflowAlias is required param");
+						}
 						DataFlowUtil.deleteDataFlow(conn, dataflowAlias);
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
@@ -218,6 +281,33 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), SessionHistory.listSessions(orgId));
+				
+					}else if(value.equalsIgnoreCase("metadataJson"))
+					{
+						String datasetAlias = request.getParameter("datasetAlias");
+						if(datasetAlias==null || datasetAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("datasetAlias is required param");
+						}
+						
+						ExternalFileSchema schema = DatasetLoader.getLastUploadedJson(conn, datasetAlias, System.out);
+				    	ObjectMapper mapper = new ObjectMapper();
+						if(schema!=null)
+						{
+							response.setContentType("application/json");
+							response.setHeader("Content-disposition", "attachment; filename=\""+datasetAlias+"_schema.json"+"\"");
+					        OutputStream output = response.getOutputStream();
+					    	mapper.writerWithDefaultPrettyPrinter().writeValue(response.getOutputStream(), schema);
+					        output.close();
+						}else
+						{
+							response.setContentType("application/json");
+							response.setHeader("Content-disposition", "attachment; filename=\""+datasetAlias+"_schema.json"+"\"");
+							ResponseStatus status = new ResponseStatus("error","Matadata json for Dataset {"+datasetAlias+"} not found");
+					        OutputStream output = response.getOutputStream();
+					    	mapper.writerWithDefaultPrettyPrinter().writeValue(response.getOutputStream(), status);
+					        output.close();
+						}
 					}else
 					{
 						response.setContentType("application/json");
@@ -232,7 +322,105 @@ public class ListServlet extends HttpServlet {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				ResponseStatus status = new ResponseStatus("error",t.getMessage());
 				ObjectMapper mapper = new ObjectMapper();
-				mapper.writeValue(response.getOutputStream(), status);
+				mapper.writerWithDefaultPrettyPrinter().writeValue(response.getOutputStream(), status);
 		 }
 	}
+	
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+	{
+		// Set standard HTTP/1.1 no-cache headers.
+		response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+		// Set standard HTTP/1.0 no-cache header.
+		response.setHeader("Pragma", "no-cache");
+
+		try
+		{
+			String type = request.getParameter("type");
+				    
+			if(type==null || type.trim().isEmpty())
+			{
+				throw new IllegalArgumentException("type is a required param");
+			}
+			
+			PartnerConnection conn = AuthFilter.getConnection(request);
+			if(conn==null)
+			{
+			   	response.sendRedirect(request.getContextPath() + "/login.html");
+			   	return;
+			}
+			
+			if(type.equalsIgnoreCase("schedule"))
+			{
+				String scheduleAlias = request.getParameter("scheduleAlias");
+				if(scheduleAlias==null || scheduleAlias.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("scheduleAlias is a required param");
+				}
+
+				String temp = request.getParameter("startDateTime");
+				if(temp==null || temp.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("startDateTime is a required param");
+				}
+				long startDateTime = (new BigDecimal(temp.trim())).longValue();
+
+				String frequency = request.getParameter("frequency");
+				if(frequency==null || frequency.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("frequency is a required param");
+				}
+				
+				temp = request.getParameter("interval");
+				if(temp==null || temp.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("interval is a required param");
+				}
+				
+				long interval = (new BigDecimal(temp.trim())).longValue();
+				
+				String jobs[] = request.getParameterValues("jobs[]");
+				if(jobs==null || jobs.length==0)
+				{
+					throw new IllegalArgumentException("jobs is a required param");
+				}
+
+				temp = request.getParameter("create");
+				boolean isCreate = false;
+				if(temp!=null && !temp.trim().isEmpty() && temp.equalsIgnoreCase("true"))
+				{
+					isCreate = true;
+				}
+
+				
+				LinkedHashMap<String,String> jobDataMap = new LinkedHashMap<String,String>();
+				for(String job:jobs)
+				{
+					jobDataMap.put(job, "DataFlow");
+				}
+				
+				SchedulerUtil.saveSchedule(conn, scheduleAlias, null, frequency, interval, jobDataMap, startDateTime, isCreate);
+			}else
+			{
+				response.setContentType("application/json");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				ResponseStatus status = new ResponseStatus("error","Invalid Request {"+type+"}");
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
+			}
+			
+			ResponseStatus status = new ResponseStatus("success",null);
+			response.setContentType("application/json");
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
+		}catch(Throwable t)
+		{
+			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			ResponseStatus status = new ResponseStatus("error",t.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.writeValue(response.getOutputStream(), status);
+		}
+	}
+	
 }

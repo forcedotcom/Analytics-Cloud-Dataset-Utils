@@ -33,6 +33,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -85,7 +86,17 @@ public class DataFlowUtil {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void uploadDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId, Map dataflowObject) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
-		partnerConnection.getServerTimestamp();
+		if(dataflowId==null|| dataflowId.trim().isEmpty())
+		{
+        	throw new IllegalArgumentException("dataflowId is required param");
+		}
+		
+		if(dataflowObject==null)
+		{
+        	throw new IllegalArgumentException("dataflowObject is required param");
+		}
+		
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -110,16 +121,41 @@ public class DataFlowUtil {
 		CloseableHttpResponse emresponse = httpClient.execute(httpPatch);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
-       if (statusCode != HttpStatus.SC_OK) {
-	       throw new IOException(String.format("Dataflow {%s} upload failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
-       }
+//       if (statusCode != HttpStatus.SC_OK) {
+//	       throw new IOException(String.format("Dataflow {%s} upload failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
+//       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
-		@SuppressWarnings("unused")
 		String emList = IOUtils.toString(emis, "UTF-8");
 //		System.out.println(emList);
 		emis.close();
 		httpClient.close();
+
+		if (statusCode != HttpStatus.SC_OK) 
+	    {
+			String errorCode = statusCode+"";
+	    	try
+	    	{
+	   		ObjectMapper mapper1 = new ObjectMapper();	
+			mapper1.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map res =  mapper1.readValue(emList, Map.class);
+			String temp = (String) res.get("errorMsg");
+			String temp1 = (String) res.get("errorCode");
+			
+			if(temp != null && !temp.trim().isEmpty())
+			{
+				reasonPhrase = temp;
+				errorCode = temp1;
+			}
+	    	}catch(Exception e)
+	    	{
+	    		e.printStackTrace();
+	    		System.out.println("Server response:"+emList);
+	    	}
+		       throw new IOException(String.format("Dataflow %s upload failed: %s - %s", dataflowAlias,errorCode,reasonPhrase));
+	       }
+
+		
 		System.out.println("Dataflow {"+dataflowAlias+"} successfully uploaded");
 
 	}
@@ -128,7 +164,7 @@ public class DataFlowUtil {
 	public static DataFlow getDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		DataFlow df = null;
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		
 //		if(dataflowId==null)
 //		{
@@ -186,9 +222,9 @@ public class DataFlowUtil {
 	
 		String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
 		int statusCode = emresponse1.getStatusLine().getStatusCode();
-		if (statusCode != HttpStatus.SC_OK) {
-			throw new IOException(String.format("Dataflow %s download failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
-		}
+//		if (statusCode != HttpStatus.SC_OK) {
+//			throw new IOException(String.format("Dataflow %s download failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
+//		}
 	
 		HttpEntity emresponseEntity1 = emresponse1.getEntity();
 		InputStream emis1 = emresponseEntity1.getContent();
@@ -198,6 +234,33 @@ public class DataFlowUtil {
 
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		
+		
+		if (statusCode != HttpStatus.SC_OK) 
+	    {
+			String errorCode = statusCode+"";
+	    	try
+	    	{
+	   		ObjectMapper mapper1 = new ObjectMapper();	
+			mapper1.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map res =  mapper1.readValue(dataFlowJson, Map.class);
+			String temp = (String) res.get("errorMsg");
+			String temp1 = (String) res.get("errorCode");
+			
+			if(temp != null && !temp.trim().isEmpty())
+			{
+				reasonPhrase = temp;
+				errorCode = temp1;
+			}
+	    	}catch(Exception e)
+	    	{
+	    		e.printStackTrace();
+	    		System.out.println("Server response:"+dataFlowJson);
+	    	}
+		       throw new IOException(String.format("Dataflow %s download failed: %s - %s", dataflowAlias,errorCode,reasonPhrase));
+	       }
+
+		
 
 		if(dataFlowJson!=null && !dataFlowJson.isEmpty())
 		{
@@ -236,7 +299,7 @@ public class DataFlowUtil {
 	public static List<DataFlow> listDataFlow(PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
 	{
 		List<DataFlow> dfList = new LinkedList<DataFlow>();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -254,14 +317,39 @@ public class DataFlowUtil {
 		CloseableHttpResponse emresponse = httpClient.execute(listEMPost);
 		   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
 	       int statusCode = emresponse.getStatusLine().getStatusCode();
-	       if (statusCode != HttpStatus.SC_OK) {
-		       throw new IOException(String.format("List Dataflow failed: %d %s", statusCode,reasonPhrase));
-	       }
+//	       if (statusCode != HttpStatus.SC_OK) {
+//		       throw new IOException(String.format("List Dataflow failed: %d %s", statusCode,reasonPhrase));
+//	       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		String emList = IOUtils.toString(emis, "UTF-8");
 		emis.close();
 		httpClient.close();
+		
+	       if (statusCode != HttpStatus.SC_OK) 
+	       {
+			String errorCode = statusCode+"";
+	    	try
+	    	{
+	   		ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			Map res =  mapper.readValue(emList, Map.class);
+			String temp = (String) res.get("errorMsg");
+			String temp1 = (String) res.get("errorCode");
+			
+			if(temp != null && !temp.trim().isEmpty())
+			{
+				reasonPhrase = temp;
+				errorCode = temp1;
+			}
+	    	}catch(Exception e)
+	    	{
+	    		e.printStackTrace();
+	    		System.out.println("Server response:"+emList);
+	    	}
+		       throw new IOException(String.format("List Dataflow  failed: %s - %s",errorCode,reasonPhrase));
+	       }
+
 		
 		if(emList!=null && !emList.isEmpty())
 		{
@@ -335,8 +423,13 @@ public class DataFlowUtil {
 
 	public static boolean startDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
-		System.out.println();
-		partnerConnection.getServerTimestamp();
+		if(dataflowId==null|| dataflowId.trim().isEmpty())
+		{
+        	throw new IllegalArgumentException("dataflowId is required param");
+		}
+
+//		System.out.println();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -354,14 +447,36 @@ public class DataFlowUtil {
 		CloseableHttpResponse emresponse = httpClient.execute(httput);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
-       if (statusCode != HttpStatus.SC_OK) {
-	       throw new IOException(String.format("Dataflow %s start failed: %d %s", dataflowAlias,statusCode,reasonPhrase));
-       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		String emList = IOUtils.toString(emis, "UTF-8");
 		emis.close();
 		httpClient.close();
+
+	       if (statusCode != HttpStatus.SC_OK) 
+	       {
+			String errorCode = statusCode+"";
+	    	try
+	    	{
+	   		ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			@SuppressWarnings("rawtypes")
+			Map res =  mapper.readValue(emList, Map.class);
+			String temp = (String) res.get("errorMsg");
+			String temp1 = (String) res.get("errorCode");
+			
+			if(temp != null && !temp.trim().isEmpty())
+			{
+				reasonPhrase = temp;
+				errorCode = temp1;
+			}
+	    	}catch(Exception e)
+	    	{
+	    		e.printStackTrace();
+	    		System.out.println("Server response:"+emList);
+	    	}
+		       throw new IOException(String.format("Dataflow %s start failed: %s - %s", dataflowAlias,errorCode,reasonPhrase));
+	       }
 
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -373,7 +488,7 @@ public class DataFlowUtil {
 		{
 			if((boolean) resList.get(0).get("success"))
 			{
-				System.out.println("Dataflow {"+dataflowAlias+"} succesfully started");	
+				System.out.println(new Date()+" : Dataflow {"+dataflowAlias+"} succesfully started");	
 				return true;
 			}
 		}

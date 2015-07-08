@@ -67,8 +67,8 @@ $(document).ready(function() {
 	{
 		if(create)
 		{
-			$("#dataflowAlias").prop("disabled", false);
-			$("#dataflowAlias").change();
+			$("#dataflowLabel").prop("disabled", false);
+			$("#dataflowLabel").change();
 		}else
 		{
 			self.location.href = 'dataflows.html';
@@ -76,8 +76,8 @@ $(document).ready(function() {
 	}else
 	{
 		$("#dataflowAlias").val(dataflowAlias);
-		$("#dataflowAlias").change();
-		$("#dataflowAlias").prop("disabled", true);
+//		$("#dataflowLabel").change();
+//		$("#dataflowAlias").prop("disabled", true);
 		getJson(editor,dataflowAlias,dataflowId);	
 	}
 
@@ -95,18 +95,19 @@ $(document).ready(function() {
 		}
 
 		dataflowAlias = $("#dataflowAlias").val();
-		if(isEmpty(dataflowAlias))
+		dataflowLabel = $("#dataflowLabel").val();
+		if(isEmpty(dataflowLabel))
 		{
 			alert("You must enter a valid data flow Name!");
 			return;
 		}
 
 		
-		$("#dataflowAlias").prop("disabled", true);		 
+		$("#dataflowLabel").prop("disabled", true);		 
 		$('#submit-xmd-btn').button('loading');
 		editor.setMode('view');
 
-		dataflowAlias = $("#dataflowAlias").val();
+//		dataflowAlias = $("#dataflowAlias").val();
 				
 		setTimeout(function() {
 			$.ajax({
@@ -116,6 +117,7 @@ $(document).ready(function() {
 			    			jsonString: json_string,
 			    			type:'dataflow',
 			    			dataflowAlias:dataflowAlias,
+			    			dataflowLabel: dataflowLabel,
 			    			dataflowId: dataflowId,
 			    			create: create
 			     		},
@@ -170,7 +172,10 @@ function urlParam(name){
 function getJson(editor,dataflowAlias,dataflowId){
 		full_url = "/json?type=dataflow&dataflowAlias=" + dataflowAlias + "&dataflowId=" + dataflowId;
 		$.getJSON(full_url, {}, function(data){
-				editor.set(data);
+			$("#dataflowLabel").val(data.masterLabel);
+			$("#dataflowLabel").change();
+			$("#dataflowLabel").prop("disabled", true);
+			editor.set(data.workflowDefinition);
 		})
         .fail(function(jqXHR, textStatus, errorThrown) { 
             if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {

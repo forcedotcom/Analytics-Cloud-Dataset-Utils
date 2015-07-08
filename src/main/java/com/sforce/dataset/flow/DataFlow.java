@@ -46,6 +46,8 @@ public class DataFlow {
 	private String _uid;
 	private String WorkflowType;
 	private String status;
+	@SuppressWarnings("rawtypes")
+	private Map workflowDefinition;
 
 	public String getStatus() {
 		if(status==null||status.trim().isEmpty())
@@ -58,8 +60,6 @@ public class DataFlow {
 			this.status = status;
 	}
 
-	@SuppressWarnings("rawtypes")
-	private Map workflowDefinition;
 
 	public String get_type() {
 		return _type;

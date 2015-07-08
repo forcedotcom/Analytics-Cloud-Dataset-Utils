@@ -54,7 +54,7 @@ public class SaqlUtil {
 	public static List<Map<String,Object>> queryDataset(PartnerConnection partnerConnection, String saqlQuery) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		List<Map<String,Object>> records = null;
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();

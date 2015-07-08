@@ -1,21 +1,19 @@
 $(document).ready(function() {
-    listDataflows();
+    listSchedules();
             
 	$('#createButton').click(function() {
-		if (confirm('Create a new local data flow? This will defunct the dafault flow on the server')) { 
-			self.location.href = 'datafloweditor.html?create=true'; 
-			}		   
+			self.location.href = 'scheduleeditor.html?create=true'; 
 	});
 });
 
 
-function listDataflows(){
-    $.getJSON('list?type=dataflow',{},function(data){
+function listSchedules(){
+    $.getJSON('list?type=schedule',{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
         	printTable(data);
     	}else
     	{
-     	   var tmp = $('<tr/>').append('').html("<td colspan=\"7\">No Dataflows found</td>");
+     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">No Schedules found</td>");
        	   tmp.attr("id","ErrorRow");
        	   tmp.addClass("alert-danger");
             $("#result-body").append(tmp)            
@@ -33,14 +31,14 @@ function listDataflows(){
     });
   }
 
-function deleteDataflow(id){		
-	var url = "list?type=dataflowDelete&dataflowAlias=" + id;
+function deleteSchedule(id){		
+	var url = "list?type=scheduleDelete&scheduleAlias=" + id;
     $.getJSON(url,{},function(data){
     	$( "#"+id).remove();
     	var rowCount = $('#result tr').length;
     	if(rowCount == 5)
     	{
-    		listDataflows();
+    		listSchedules();
     	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -55,15 +53,56 @@ function deleteDataflow(id){
     });
 }
 
-	function printTable(data)
+function enableSchedule(id){		
+	var url = "list?type=scheduleEnable&scheduleAlias=" + id;
+    $.getJSON(url,{},function(data){
+    		listSchedules();
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+        {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });
+}
+
+function disableSchedule(id){		
+	var url = "list?type=scheduleDisable&scheduleAlias=" + id;
+    $.getJSON(url,{},function(data){
+    		listSchedules();
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+        {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });
+}
+
+
+function printTable(data)
 	{
 	    $("#result-body").empty();
 	    $.each(data, function(i,obj)
 	    {
+    	   var linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
+    	   if(data[i].disabled)
+    	   {
+    		   linkText = "<a href=\"scheduleeditor.html?scheduleAlias="+data[i].devName+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
+    	   }
+
 	    	var frequency = "n/a";
-	    	if(data[i].refreshFrequencySec>0)
+	    	if(data[i].interval>0)
 	    	{
-	    		frequency = "Every " + (data[i].refreshFrequencySec/3600) + " Hour";
+	    		frequency = "Every " + data[i].interval + " " + data[i].frequency;
 	    	}
 	    	
 	    	var runTime = "n/a";
@@ -72,26 +111,25 @@ function deleteDataflow(id){
 	    		runTime = new Date(data[i].nextRunTime).toLocaleString();
 	    	}
     	   
-    	   var statusLabel = "<span class=\"label label-success\">Active</span>";
-    	   var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
-    	   if(data[i].status != "Active") 
+    	   var statusLabel = "<span class=\"label label-success\">Enabled</span>";
+    	   var actions = " \
+        	   <li><a href=\"#\" onclick='disableSchedule(\""+data[i].devName+"\");'>Disable</a></li> \
+        	   ";
+    	   if(data[i].disabled) 
     	   { 
-    		   statusLabel = "<span class=\"label label-danger\">Defunct</span>";
-    		   linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
+    		   statusLabel = "<span class=\"label label-danger\">Disabled</span>";
+
+        	   actions = " \
+            	   <li><a href=\"#\" onclick='enableSchedule(\""+data[i].devName+"\");'>Enable</a></li> \
+            	   <li><a href=\"#\" onclick='deleteSchedule(\""+data[i].devName+"\");'>Delete</a></li> \
+            	   ";
     	   }
-    	   
-    	   var deleteText = "class=\"disabled\"";
-    	   if(data[i].workflowType === 'Local')
-    	   {
-    		   deleteText = "";
-    	   }
-    	  
+    	       	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
-    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i]._lastModifiedBy.name+"</span> </td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i].lastModifiedBy.name+"</span> </td> \
     	   <td class=\"hidden-phone\">"+frequency+"</td> \
     	   <td class=\"hidden-phone\">"+runTime+"</td> \
-    	   <td class=\"hidden-phone\">"+data[i].workflowType+"</td> \
     	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
@@ -100,16 +138,12 @@ function deleteDataflow(id){
     	   <span class=\"caret\"> \
     	   </span> \
     	   </button> \
-    	   <ul class=\"dropdown-menu pull-right\"> \
-    	   <li "+ deleteText +">  \
-    	   <a href=\"#\" onclick='deleteDataflow(\""+data[i].name+"\");'>Delete</a> \
-    	   </li> \
-    	   </ul> \
+    	   <ul class=\"dropdown-menu pull-right\">"+ actions +"</ul> \
     	   </div> \
     	   </td>"
     	   
     	   var tmp = $('<tr/>').append('').html(tablerow);
-       	   tmp.attr("id",data[i].name);
+       	   tmp.attr("id",data[i].devName);
             $("#result-body").append(tmp);
           });
        $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));

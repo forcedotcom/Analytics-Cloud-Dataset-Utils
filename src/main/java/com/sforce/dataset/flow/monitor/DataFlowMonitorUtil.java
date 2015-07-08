@@ -80,7 +80,7 @@ public class DataFlowMonitorUtil {
 	{
 		List<JobEntry> jobsList = new LinkedList<JobEntry>(); 
 //		System.out.println();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -199,7 +199,7 @@ public class DataFlowMonitorUtil {
 	{
 		List<NodeEntry> nodeList = new LinkedList<NodeEntry>(); 
 //		System.out.println();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
 		String sessionID = config.getSessionId();
 		String serviceEndPoint = config.getServiceEndpoint();
@@ -310,7 +310,7 @@ public class DataFlowMonitorUtil {
 		}
 
 //		System.out.println();
-		partnerConnection.getServerTimestamp();
+//		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();
 		String orgId = partnerConnection.getUserInfo().getOrganizationId();
 
