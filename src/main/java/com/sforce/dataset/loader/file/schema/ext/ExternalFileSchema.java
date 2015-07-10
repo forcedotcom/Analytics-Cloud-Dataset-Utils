@@ -886,7 +886,14 @@ public class ExternalFileSchema  {
 				int index = 1;
 				while(true)
 				{
-					newName = devNames.get(i) + index;
+					int maxLength = 40 - (index+"").length();
+					if(devNames.get(i).length()>maxLength)
+					{
+						newName = devNames.get(i).substring(0, maxLength) + index;
+					}else
+					{
+						newName = devNames.get(i) + index;						
+					}
 					if(!uniqueColumnNames.contains(newName) && !originalColumnNames.subList(i+1, devNames.size()).contains(newName))
 					{
 						break;
@@ -901,7 +908,14 @@ public class ExternalFileSchema  {
 					int index = 1;
 					while(true)
 					{
-						newName = devNames.get(i) + index;
+						int maxLength = 40 - (index+"").length();
+						if(devNames.get(i).length()>maxLength)
+						{
+							newName = devNames.get(i).substring(0, maxLength) + index;
+						}else
+						{
+							newName = devNames.get(i) + index;						
+						}
 						if(!uniqueColumnNames.contains(newName) && !originalColumnNames.subList(i+1, devNames.size()).contains(newName))
 						{
 							break;
@@ -918,6 +932,14 @@ public class ExternalFileSchema  {
 	public static String createDevName(String inString, String defaultName, int columnIndex, boolean allowCustomFieldExtension) {
 		String outString = inString;
 		String suffix = null;
+		int maxLength = 80;
+		if(defaultName != null)
+		{
+			if(defaultName.equalsIgnoreCase("object") || defaultName.equalsIgnoreCase("column"))
+			{
+				maxLength = 40;
+			}
+		}
 		try 
 		{
 			if(inString != null && !inString.trim().isEmpty())
@@ -927,6 +949,7 @@ public class ExternalFileSchema  {
 				{
 					suffix = "__c";
 					inString = inString.substring(0,inString.length()-3);
+					maxLength = maxLength - suffix.length();
 				}
 				@SuppressWarnings("unused")
 				int index = 0;	
@@ -934,10 +957,8 @@ public class ExternalFileSchema  {
 				boolean lastCharIsUnderscore = false;
 				for(char ch:inString.toCharArray())
 				{
-//					if(Character.isLetterOrDigit((int)ch))
 					if(isLatinLetter(ch) || isLatinNumber(ch))
 					{
-//						if(!hasFirstChar && Character.isDigit((int)ch))
 						if(!hasFirstChar && isLatinNumber(ch))
 						{
 								outStr.append('X');
@@ -949,10 +970,6 @@ public class ExternalFileSchema  {
 					{
 						outStr.append('_');
 						lastCharIsUnderscore = true;
-//						if(!(ch == '_'))
-//						{
-//							lastCharIsUnderscore = true;
-//						}
 					}
 					index++;
 				}
@@ -961,8 +978,8 @@ public class ExternalFileSchema  {
 			    } else 
 			    {
 					outString = outStr.toString();
-			    	if(outString.length() > 40) {
-			    		outString= outString.substring(0, 40);
+			    	if(outString.length() > maxLength) {
+			    		outString= outString.substring(0, maxLength);
 			    	}
 			    	while(outString.endsWith("_") && outString.length() > 0) {
 			    		outString = outString.substring(0, outString.length()-1);
