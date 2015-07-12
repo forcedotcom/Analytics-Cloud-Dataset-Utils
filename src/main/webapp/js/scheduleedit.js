@@ -1,5 +1,7 @@
 $(document).ready(function() {	
 
+     orderCount = 0;
+
 	$('.input-group input[required], .input-group textarea[required], .input-group select[required]').on('keyup change', function() {
 		var $form = $(this).closest('form'),
             $group = $(this).closest('.input-group'),
@@ -87,7 +89,7 @@ $(document).ready(function() {
 	    if ($(this).val() === 'Hour') 
 	    {
 	    	$("#interval").empty();
-	    	for(i=1;i<13;i++)
+	    	for(var i=1;i<13;i++)
 	    	{
 	            $('#interval').append(
 		                 $('<option></option>')
@@ -98,7 +100,7 @@ $(document).ready(function() {
 	//	    $('#interval').change();
 	    } else if ($(this).val() === 'Minute') {
 	    	$("#interval").empty();
-	    	for(i=5;i<31;i=i+5)
+	    	for(var i=5;i<31;i=i+5)
 	    	{
 	    		$('#interval').append(
 	                 $('<option></option>')
@@ -109,7 +111,7 @@ $(document).ready(function() {
 //		    $('#interval').change();
 	    } else {
 	    	$("#interval").empty();
-	    	for(i=1;i<2;i++)
+	    	for(var i=1;i<2;i++)
 	    	{
 	            $('#interval').append(
 		                 $('<option></option>')
@@ -118,10 +120,10 @@ $(document).ready(function() {
 	    	}
 //	    	$('#interval').change();
 	    	$('#interval').prop("disabled", true);
-		   }
-	    
+		   }        
 	});
 
+	
 	function sendJson(event){
 
 		scheduleAlias = $("#scheduleAlias").val();
@@ -164,10 +166,19 @@ $(document).ready(function() {
 			alert("You must select one or more jobs!");
 			return;
 		}
+
+        var selected = [];
+        selectedJobs.each(function() {
+            selected.push([$(this).val(), $(this).data('order')]);
+        });
+
+        selected.sort(function(a, b) {
+            return a[1] - b[1];
+        });
 		
 		var jobs = [];
-		for (var i = 0; i < selectedJobs.length; ++i) {
-			jobs.push(selectedJobs[i].value);
+		for (var i = 0; i < selected.length; i++) {
+			jobs.push(selected[i][0]);
 		}
 		
 		setTimeout(function() {
@@ -281,10 +292,22 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValues)
     })
     .always(function() {
     	$(selobj).attr("multiple",true);
-    	$(selobj).multiselect();
+//    	$(selobj).multiselect();
+        $(selobj).multiselect({
+        	numberDisplayed: 1,
+            onChange: function(option, checked) {
+                if (checked) {
+                    orderCount++;
+                    $(option).data('order', orderCount);
+                }
+                else {
+                    $(option).data('order', '');
+                }
+            }
+        });
     	if(selectedValues.length>0)
    		{
-          $(selobj).multiselect('select',selectedValues);
+          $(selobj).multiselect('select',selectedValues,true);
           $(selobj).change();
    		}
       });
