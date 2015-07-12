@@ -154,11 +154,12 @@ public class DataFlow {
 		WorkflowType = workflowType;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Map getWorkflowDefinition() {
 		return workflowDefinition;
 	}
 
-	public void setWorkflowDefinition(Map workflowDefinition) {
+	public void setWorkflowDefinition(@SuppressWarnings("rawtypes") Map workflowDefinition) {
 		this.workflowDefinition = workflowDefinition;
 	}
 

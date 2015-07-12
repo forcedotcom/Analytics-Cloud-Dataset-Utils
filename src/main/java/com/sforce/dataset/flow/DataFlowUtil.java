@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -60,6 +61,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.FileUtilsExt;
 import com.sforce.dataset.util.HttpUtils;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
@@ -518,7 +520,22 @@ public class DataFlowUtil {
 		saveDataFlow(partnerConnection, df);
 	}
 
+	public static void copyDataFlow(PartnerConnection partnerConnection, String dataflowAlias, String dataflowId) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException
+	{
+		DataFlow df = getDataFlow(partnerConnection, dataflowAlias, dataflowId);
+		String orgId = partnerConnection.getUserInfo().getOrganizationId();
+		File dataflowDir = DatasetUtilConstants.getDataflowDir(orgId);
+		File dataflowFile = new File(dataflowDir,df.getName()+".json");
+		dataflowFile = FileUtilsExt.getUniqueFile(dataflowFile);
+		df.setName(FilenameUtils.getBaseName(dataflowFile.getName()));
+		df.setMasterLabel(df.getMasterLabel() + " Copy");
+		df.set_uid(null);
+		df.setWorkflowType("Local");
+		df.setLastModifiedBy(partnerConnection);
+		saveDataFlow(partnerConnection, df);
+	}
 
+	
 	public static void deleteDataFlow(PartnerConnection partnerConnection, String dataflowAlias) throws ConnectionException, JsonGenerationException, JsonMappingException, IOException
 	{
 		String orgId = partnerConnection.getUserInfo().getOrganizationId();
@@ -553,6 +570,7 @@ public class DataFlowUtil {
 		if(!create)
 		{
 			df = getDataFlowLocal(partnerConnection, dataflowAlias);
+			df.setMasterLabel(dataflowMasterLabel);
 		}else
 		{
 			df = new DataFlow();
@@ -564,6 +582,7 @@ public class DataFlowUtil {
 			df.setLastModifiedBy(partnerConnection);
 		}
 		df.setWorkflowDefinition(dataflowObject);
+		
 		if(create)
 		{
 			createDataFlow(partnerConnection, df);

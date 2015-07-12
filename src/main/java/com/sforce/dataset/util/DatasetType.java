@@ -125,6 +125,7 @@ public class DatasetType implements Comparable<DatasetType> {
 	}
 	
 
+	@SuppressWarnings("unchecked")
 	public static DatasetType getDatasetType(Map<String,?> input)
 	{
 		DatasetType ret = null;
@@ -232,6 +233,7 @@ public class DatasetType implements Comparable<DatasetType> {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static EdgemartDataType getEdgemartDataType(DatasetType obj,Map<String,?> input)
 	{
 		if(input!=null && !input.isEmpty())

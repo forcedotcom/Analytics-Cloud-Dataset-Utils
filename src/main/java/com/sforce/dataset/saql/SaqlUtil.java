@@ -51,6 +51,7 @@ import com.sforce.ws.ConnectorConfig;
 
 public class SaqlUtil {
 
+	@SuppressWarnings("unchecked")
 	public static List<Map<String,Object>> queryDataset(PartnerConnection partnerConnection, String saqlQuery) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
 	{
 		List<Map<String,Object>> records = null;

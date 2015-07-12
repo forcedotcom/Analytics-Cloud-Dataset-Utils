@@ -152,6 +152,19 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), dataflowAlias);
+					}
+					else if(value.equalsIgnoreCase("dataflowCopy"))
+					{
+						String dataflowAlias = request.getParameter("dataflowAlias");
+						if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("dataflowAlias is required param");
+						}
+						String dataflowId = request.getParameter("dataflowId");						
+						DataFlowUtil.copyDataFlow(conn, dataflowAlias, dataflowId);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), dataflowAlias);
 					} else if(value.equalsIgnoreCase("folder"))
 					{
 						List<FolderType> folders = DatasetUtils.listFolders(conn);

@@ -2,9 +2,7 @@ $(document).ready(function() {
     listDataflows();
             
 	$('#createButton').click(function() {
-		if (confirm('Create a new local data flow? This will defunct the dafault flow on the server')) { 
 			self.location.href = 'datafloweditor.html?create=true'; 
-			}		   
 	});
 });
 
@@ -13,6 +11,13 @@ function listDataflows(){
     $.getJSON('list?type=dataflow',{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
         	printTable(data);
+        	if(data.length > 1)
+        	{
+        		$('#createButton').prop('disabled', false);
+        	}else
+        	{
+        		$('#createButton').prop('disabled', true);	
+        	}            
     	}else
     	{
      	   var tmp = $('<tr/>').append('').html("<td colspan=\"7\">No Dataflows found</td>");
@@ -42,6 +47,30 @@ function deleteDataflow(id){
     	{
     		listDataflows();
     	}
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+        {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });
+}
+
+function copyDataflow(dataflowAlias,dataflowId){		
+	var rowCount = $('#result tr').length;
+   	if(rowCount == 5)
+	{
+		if (!confirm('Create a new local data flow? This will invalidate the dafault flow on the server')) { 
+			return; 
+		}		   
+	}
+	var url = "list?type=dataflowCopy&dataflowAlias=" + dataflowAlias + "&dataflowId="+dataflowId;
+	$.getJSON(url,{},function(data){
+    		listDataflows();
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
         if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
@@ -103,6 +132,9 @@ function deleteDataflow(id){
     	   <ul class=\"dropdown-menu pull-right\"> \
     	   <li "+ deleteText +">  \
     	   <a href=\"#\" onclick='deleteDataflow(\""+data[i].name+"\");'>Delete</a> \
+    	   </li> \
+    	   <li>  \
+    	   <a href=\"#\" onclick='copyDataflow(\""+data[i].name+"\",\""+data[i]._uid+"\");'>Copy</a> \
     	   </li> \
     	   </ul> \
     	   </div> \

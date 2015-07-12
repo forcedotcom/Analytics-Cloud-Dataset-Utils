@@ -103,7 +103,7 @@ $(document).ready(function() {
 		}
 
 		
-		$("#dataflowLabel").prop("disabled", true);		 
+//		$("#dataflowLabel").prop("disabled", true);		 
 		$('#submit-xmd-btn').button('loading');
 		editor.setMode('view');
 
@@ -174,7 +174,13 @@ function getJson(editor,dataflowAlias,dataflowId){
 		$.getJSON(full_url, {}, function(data){
 			$("#dataflowLabel").val(data.masterLabel);
 			$("#dataflowLabel").change();
-			$("#dataflowLabel").prop("disabled", true);
+	    	   if(data.workflowType === 'Local')
+	    	   {
+	    		   $("#dataflowLabel").prop("disabled", false);
+	    	   }else
+	    	   {
+	    		   $("#dataflowLabel").prop("disabled", true);	    		   
+	    	   }
 			editor.set(data.workflowDefinition);
 		})
         .fail(function(jqXHR, textStatus, errorThrown) { 
