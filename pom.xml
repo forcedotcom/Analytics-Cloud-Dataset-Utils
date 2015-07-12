@@ -290,7 +290,7 @@
 				<executions>
 					<execution>
 						<id>createzip</id>
-						<phase>install</phase>
+						<phase>package</phase>
 						<configuration>
 							<tasks>
 								<mkdir dir="${project.build.directory}/archive/${project.artifactId}" />
