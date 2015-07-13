@@ -238,7 +238,7 @@ public class SchedulerUtil {
 				Calendar calendar = GregorianCalendar.getInstance(); // creates a new calendar instance
 				calendar.setTime(dt);   // assigns calendar to given date 
 				int minute = calendar.get(Calendar.MINUTE);
-				int hour = calendar.get(Calendar.HOUR);
+				int hour = calendar.get(Calendar.HOUR_OF_DAY);
 				int day = calendar.get(Calendar.DAY_OF_MONTH);
 				int dayofweek = calendar.get(Calendar.DAY_OF_WEEK);
 				long interval = sched.getInterval();
