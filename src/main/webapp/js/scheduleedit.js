@@ -71,7 +71,7 @@ $(document).ready(function() {
 
 			$("#scheduleAlias").prop("disabled", false);
 			$("#scheduleAlias").change();
-			$('#startDateTime').val(new Date().toLocaleString());
+			$('#startDateTime').val(new Date((new Date()).getTime() + 5*60000).toLocaleString());
 			$("#startDateTime").change();
 		}else
 		{
