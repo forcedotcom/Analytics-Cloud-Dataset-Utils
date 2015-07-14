@@ -281,8 +281,15 @@ public class DetectFieldTypes {
 				{
 					if(header[i]!=null && !header[i].trim().isEmpty())
 					{	
-						newField.setLabel(header[i]);
-						newField.setDescription(header[i]);
+						if(header[i].length()>255)
+						{
+							newField.setLabel(header[i].substring(0,255));
+							newField.setDescription(header[i].substring(0,255));
+						}else
+						{
+							newField.setLabel(header[i]);
+							newField.setDescription(header[i]);							
+						}
 					}
 					types.add(newField);
 				}

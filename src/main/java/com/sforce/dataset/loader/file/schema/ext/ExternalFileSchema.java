@@ -426,9 +426,9 @@ public class ExternalFileSchema  {
 						if(user_object.getLabel()==null||user_object.getLabel().trim().isEmpty())
 						{
 							message.append("[objects["+objectCount+"].label] in schema cannot be null or empty\n");
-						}else if(user_object.getLabel().length()>40)
+						}else if(user_object.getLabel().length()>255)
 						{
-							message.append("object label ["+user_object.getLabel()+"] in schema cannot be greater than 40 characters in  length\n");
+							message.append("object label ["+user_object.getLabel()+"] in schema cannot be greater than 255 characters in  length\n");
 						}
 
 						if(user_object.getFullyQualifiedName()==null||user_object.getFullyQualifiedName().trim().isEmpty())
@@ -484,9 +484,9 @@ public class ExternalFileSchema  {
 								
 								if(user_field.getLabel()!=null && !user_field.getLabel().trim().isEmpty())
 								{
-									if(user_field.getLabel().length()>40)
+									if(user_field.getLabel().length()>255)
 									{
-										message.append("field label {"+user_field.getLabel()+"} is greater than 40 characters\n");
+										message.append("field label {"+user_field.getLabel()+"} is greater than 255 characters\n");
 									}
 								}else
 								{
