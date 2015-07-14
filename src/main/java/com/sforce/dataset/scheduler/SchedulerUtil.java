@@ -42,12 +42,13 @@ import java.util.Map;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
-import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -109,6 +110,22 @@ public class SchedulerUtil {
 		dg.setJobDataMap(jobDataMap);
 		dg.set_LastModifiedBy(partnerConnection);
 		writeSchedule(partnerConnection, dg, isCreate);
+		return;
+	}
+
+	public static void startNow(PartnerConnection partnerConnection, String scheduleName, Map<?,?> jobDataMap) throws ConnectionException, SchedulerException
+	{
+		String masterLabel = scheduleName;
+		String devName = ExternalFileSchema.createDevName(scheduleName, "Schedule", 1, false);
+		Schedule dg = new Schedule();
+		dg.setDevName(devName);
+		dg.setMasterLabel(masterLabel);
+		dg.setFrequency("startNow");
+		dg.setInterval(0);
+		dg.setScheduleStartDate(System.currentTimeMillis());
+		dg.setJobDataMap(jobDataMap);
+		dg.set_LastModifiedBy(partnerConnection);
+		startSchedule(dg, partnerConnection);
 		return;
 	}
 	
@@ -300,10 +317,23 @@ public class SchedulerUtil {
 	
 	public static void startSchedule(Schedule sched, PartnerConnection partnerConnection) throws SchedulerException
 	{
-	       Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+		Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();	       
 	        if(sched.getJobType().equalsIgnoreCase("dataflow"))
 	        {
+	    	    if(isJobRunning(sched.getDevName(), "dataflow"))
+	    	    {
+	    	    	throw new SchedulerException("Schedule is already running");
+	    	    }
+
 	        	JobKey jkey = jobKey(sched.getDevName(), "dataflow");
+	        	
+	        	if(sched.getFrequency().equalsIgnoreCase("startNow"))
+	        	{
+	        		if(scheduler.checkExists(jkey))
+	        		{
+		        		scheduler.deleteJob(jkey);
+	        		}
+	        	}
 
 	        	if(!scheduler.checkExists(jkey))
 	        	{
@@ -318,11 +348,21 @@ public class SchedulerUtil {
 		        			job.getJobDataMap().put(key.toString(), sched.getJobDataMap().get(key));   
 		        		}
 	        		}
-	        		        		
-	                CronTrigger trigger = newTrigger()
+	        		  
+	        		Trigger trigger = null;
+	        		if(!sched.getFrequency().equalsIgnoreCase("startNow"))
+	        		{
+	                 trigger = newTrigger()
 	                	    .withIdentity(sched.getDevName()+"_trigger", "dataflow")
 	                	    .withSchedule(cronSchedule(getCronSchedule(sched)))
 	                	    .build();
+	        		}else
+	        		{	                
+	                 trigger = TriggerBuilder.newTrigger()
+	                        .withIdentity(sched.getDevName()+"_trigger", "dataflow")
+	                        .startNow()
+	                        .build();
+	        		}
 	                
 	                scheduler.getContext().put("conn", partnerConnection);
 	                
@@ -369,6 +409,19 @@ public class SchedulerUtil {
 		return 0;
 	}
 	
+	
+	public static boolean isJobRunning(String jobName, String groupName)
+	        throws SchedulerException {
+	    List<JobExecutionContext> currentJobs = StdSchedulerFactory.getDefaultScheduler().getCurrentlyExecutingJobs();
+	    for (JobExecutionContext jobCtx : currentJobs) {
+	        String thisJobName = jobCtx.getJobDetail().getKey().getName();
+	        String thisGroupName = jobCtx.getJobDetail().getKey().getGroup();
+	        if (jobName.equalsIgnoreCase(thisJobName) && groupName.equalsIgnoreCase(thisGroupName)) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
 
 
 

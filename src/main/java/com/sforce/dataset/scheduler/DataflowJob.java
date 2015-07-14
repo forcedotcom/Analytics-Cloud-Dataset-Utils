@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.apache.http.client.ClientProtocolException;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -39,10 +40,12 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.DataFlow;
 import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.JobEntry;
+import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
@@ -123,10 +126,17 @@ public class DataflowJob  implements Job {
 		
 		for(DataFlow task:tasks)
 		{
+			Session session = null;
 			try {
+				session = Session.getCurrentSession(partnerConnection.getUserInfo().getOrganizationId(), task.getMasterLabel(), true);
+				session.setType("Dataflow");
+				session.start();
 				runDataflow(task,partnerConnection);
+				session.end();
+				session.setParam(DatasetUtilConstants.serverStatusParam,"COMPLETED");
 			} catch (Exception e) {
 //				e.printStackTrace();
+				session.fail(e.getMessage());
 				throw new JobExecutionException(e); //TODO Do we cary on to next job
 			}
 		}

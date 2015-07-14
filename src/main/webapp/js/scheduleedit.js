@@ -96,7 +96,7 @@ $(document).ready(function() {
 		                        .val(i)
 		                        .html(i));
 		    }
-	    	$('#interval').prop("disabled", false);
+//	    	$('#interval').prop("disabled", false);
 	//	    $('#interval').change();
 	    } else if ($(this).val() === 'Minute') {
 	    	$("#interval").empty();
@@ -107,7 +107,7 @@ $(document).ready(function() {
 	                        .val(i)
 	                        .html(i));
 	    	}
-	    	$('#interval').prop("disabled", false);
+//	    	$('#interval').prop("disabled", false);
 //		    $('#interval').change();
 	    } else {
 	    	$("#interval").empty();
@@ -119,7 +119,7 @@ $(document).ready(function() {
 		                        .html(i));
 	    	}
 //	    	$('#interval').change();
-	    	$('#interval').prop("disabled", true);
+//	    	$('#interval').prop("disabled", true);
 		   }        
 	});
 

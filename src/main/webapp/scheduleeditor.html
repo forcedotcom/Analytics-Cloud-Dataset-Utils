@@ -87,14 +87,15 @@
 				<div class="form-group">
 					<label for="frequency">Repeat Every</label>
 					<div class="input-group">
-						<select class="form-control" name="interval" id="interval" required placeholder="Select Interval..." disabled>
+						<select class="form-control input-sm" name="interval" id="interval" required placeholder="Select Interval...">
 							<option value="1">1</option>
 						</select> 
-						<select class="form-control" name="frequency" id="frequency" required placeholder="Select Frequency...">
+						<span class="input-group-btn" style="width: 0px;"></span> 
+						<select class="form-control input-sm" name="frequency" id="frequency" required placeholder="Select Frequency...">
 							<option value="">Select Frequency...</option>
-							<option value="Day">Day</option>
-							<option value="Hour">Hour</option>
 							<option value="Minute">Minute</option>
+							<option value="Hour">Hour</option>
+							<option value="Day" selected>Day</option>
 							<option value="Week">Week</option>
 							<option value="Month">Month</option>
 						</select> 

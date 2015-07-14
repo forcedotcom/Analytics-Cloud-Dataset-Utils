@@ -58,6 +58,8 @@ long targetErrorCount=0;
 String status;
 String message = "";
 String workflowId = null;
+String type = "FileUpload";
+
 //String jobTrackerid = null;
 volatile AtomicBoolean isDone = new AtomicBoolean(false);
 volatile AtomicBoolean isDoneDone = new AtomicBoolean(false);
@@ -302,6 +304,14 @@ public boolean isDone() {
 
 public boolean isDoneDone() {
 	return isDoneDone.get();
+}
+
+public String getType() {
+	return type;
+}
+
+public void setType(String type) {
+	this.type = type;
 }
 
 

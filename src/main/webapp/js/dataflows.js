@@ -11,7 +11,7 @@ function listDataflows(){
     $.getJSON('list?type=dataflow',{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
         	printTable(data);
-        	if(data.length > 1)
+        	if(hasLocal(data))
         	{
         		$('#createButton').prop('disabled', false);
         	}else
@@ -59,6 +59,24 @@ function deleteDataflow(id){
         }
     });
 }
+
+function startDataflow(id){		
+	var url = "list?type=dataflowStart&dataflowAlias=" + id;
+    $.getJSON(url,{},function(data){
+    	self.location.href = 'logs.html';            	
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) { 
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+        {
+            self.location.href = 'login.html';
+        }else
+        {
+        	   var err = eval("(" + jqXHR.responseText + ")");
+            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+        }
+    });
+}
+
 
 function copyDataflow(dataflowAlias,dataflowId){		
 	var rowCount = $('#result tr').length;
@@ -130,6 +148,9 @@ function copyDataflow(dataflowAlias,dataflowId){
     	   </span> \
     	   </button> \
     	   <ul class=\"dropdown-menu pull-right\"> \
+    	   <li>  \
+    	   <a href=\"#\" onclick='startDataflow(\""+data[i].name+"\");'>Start Now</a> \
+    	   </li> \
     	   <li "+ deleteText +">  \
     	   <a href=\"#\" onclick='deleteDataflow(\""+data[i].name+"\");'>Delete</a> \
     	   </li> \
@@ -162,4 +183,16 @@ $(document).ajaxComplete(function(event, request, settings) {
 
 function isEmpty(str) {
     return (!str || 0 === str.length || str === 'null');
+}
+
+function hasLocal(data) {
+	var found = false;
+    $.each(data, function(i,obj)
+    {
+    	if(data[i].name.indexOf("SalesEdgeEltWorkflowcopy") > -1)
+    	{
+    		found = true;
+    	}
+    });
+    return found;
 }

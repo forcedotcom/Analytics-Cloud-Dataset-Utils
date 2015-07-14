@@ -59,20 +59,24 @@ $(document).ready(function() {
                 link = data[i].targetErrorCount+"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-th-list\"></span>"+"</a>";
               }
 
-              var actionString = "<a href='upload?id="+data[i].id+"&type=sessionLog'>"+"Log"+"</a>";                 
-              if(data[i].params.METADATA_JSON)
-                actionString = actionString + "&nbsp;|&nbsp;" + "<a href='upload?id="+data[i].id+"&type=metadataJson'>"+"Json"+"</a>";
-
-              if (type == "sessionHistory"){
-                actionString = "&nbsp;";
+              var actionString = "&nbsp;";
+              if(data[i].type === "FileUpload")
+              {
+            	  actionString = "<a href='upload?id="+data[i].id+"&type=sessionLog'>"+"Log"+"</a>";                 
+	              if(data[i].params.METADATA_JSON)
+	                actionString = actionString + "&nbsp;|&nbsp;" + "<a href='upload?id="+data[i].id+"&type=metadataJson'>"+"Json"+"</a>";	
               }
-
+              
+              if (type == "sessionHistory"){
+	                actionString = "&nbsp;";
+              }
+              
               var status1 = data[i].status;
               if(data[i].params.SERVER_STATUS)
                 status1 = data[i].status + "&nbsp;|&nbsp;" + data[i].params.SERVER_STATUS;
               
               var tablerow = $('<tr/>');
-              if (data[i].status == "ERROR" || data[i].params.SERVER_STATUS == "ERROR")
+              if (data[i].status == "FAILED" || data[i].params.SERVER_STATUS == "ERROR")
                 tablerow.attr({'class': 'danger'});
               else if (data[i].targetErrorCount != 0 && data[i].status == "COMPLETED" && data[i].params.SERVER_STATUS == "COMPLETED")
                 tablerow.attr({'class': 'warning'});

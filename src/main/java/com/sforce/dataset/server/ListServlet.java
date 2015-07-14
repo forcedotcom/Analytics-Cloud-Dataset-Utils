@@ -153,6 +153,21 @@ public class ListServlet extends HttpServlet {
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), dataflowAlias);
 					}
+					else if(value.equalsIgnoreCase("dataflowStart"))
+					{
+						String dataflowAlias = request.getParameter("dataflowAlias");
+						if(dataflowAlias==null || dataflowAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("dataflowAlias is required param");
+						}
+						LinkedHashMap<String,String> jobDataMap = new LinkedHashMap<String,String>();
+						jobDataMap.put(dataflowAlias, "DataFlow");
+						SchedulerUtil.startNow(conn,dataflowAlias+"startNow", jobDataMap);
+						
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), dataflowAlias);
+					}
 					else if(value.equalsIgnoreCase("dataflowCopy"))
 					{
 						String dataflowAlias = request.getParameter("dataflowAlias");
@@ -225,24 +240,27 @@ public class ListServlet extends HttpServlet {
 						List<Session> sessions = DatasetUtils.listSessions(conn);
 						for(Session s:sessions)
 						{
-							if(s.getStatus().equalsIgnoreCase("COMPLETED"))
+							if(s.getType().equalsIgnoreCase("FileUpload"))
 							{
-								String serverStatus = s.getParam(DatasetUtilConstants.serverStatusParam);
-								if(serverStatus == null || (serverStatus.equalsIgnoreCase("New") || serverStatus.equalsIgnoreCase("Queued") || serverStatus.replaceAll(" ", "").equalsIgnoreCase("InProgress")))
+								if(s.getStatus().equalsIgnoreCase("COMPLETED"))
 								{
-									String hdrId = s.getParam(DatasetUtilConstants.hdrIdParam);
-									if(hdrId != null && !hdrId.trim().isEmpty())
+									String serverStatus = s.getParam(DatasetUtilConstants.serverStatusParam);
+									if(serverStatus == null || (serverStatus.equalsIgnoreCase("New") || serverStatus.equalsIgnoreCase("Queued") || serverStatus.replaceAll(" ", "").equalsIgnoreCase("InProgress")))
 									{
-										try
+										String hdrId = s.getParam(DatasetUtilConstants.hdrIdParam);
+										if(hdrId != null && !hdrId.trim().isEmpty())
 										{
-											String temp = DatasetLoader.getUploadedFileStatus(conn, hdrId);
-											if(temp!=null && !temp.isEmpty())
+											try
 											{
-												s.setParam(DatasetUtilConstants.serverStatusParam,temp.toUpperCase());
+												String temp = DatasetLoader.getUploadedFileStatus(conn, hdrId);
+												if(temp!=null && !temp.isEmpty())
+												{
+													s.setParam(DatasetUtilConstants.serverStatusParam,temp.toUpperCase());
+												}
+											}catch(Throwable t)
+											{
+												t.printStackTrace();
 											}
-										}catch(Throwable t)
-										{
-											t.printStackTrace();
 										}
 									}
 								}
