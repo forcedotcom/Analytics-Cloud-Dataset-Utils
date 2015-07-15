@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +137,9 @@ public class DataFlowMonitorUtil {
 								if(temp != null && temp instanceof Number)
 								{
 									jobEntry._createdDateTime = ((Number)temp).longValue();
+								}else
+								{
+									System.out.println("invalid _createdDateTime value {"+temp+"}");
 								}
 								
 								jobEntry._type  = (String) job.get("_type");
@@ -146,6 +150,9 @@ public class DataFlowMonitorUtil {
 								if(temp != null && temp instanceof Number)
 								{
 									jobEntry.duration = ((Number)temp).longValue();
+								}else
+								{
+									System.out.println("invalid duration value {"+temp+"}");
 								}
 								
 								jobEntry.endTime = (String) job.get("endTime");
@@ -154,6 +161,9 @@ public class DataFlowMonitorUtil {
 								if(temp != null && temp instanceof Number)
 								{
 									jobEntry.endTimeEpoch = ((Number)temp).longValue();
+								}else
+								{
+									System.out.println("invalid endTimeEpoch value {"+temp+"}");
 								}
 								
 								jobEntry.errorMessage = (String) job.get("errorMessage");
@@ -166,12 +176,18 @@ public class DataFlowMonitorUtil {
 								if(temp != null && temp instanceof Number)
 								{
 									jobEntry.startTimeEpoch = ((Number)temp).longValue();
+								}else
+								{
+									System.out.println("invalid startTimeEpoch value {"+temp+"}");
 								}
 								
 								temp = job.get("status");
 								if(temp != null && temp instanceof Number)
 								{
 									jobEntry.status = ((Number)temp).intValue();
+								}else
+								{
+									System.out.println("invalid status value {"+temp+"}");
 								}
 								
 								jobEntry.type = (String) job.get("type");
@@ -191,6 +207,7 @@ public class DataFlowMonitorUtil {
 				}
 		}
 //		System.out.println("Found {"+jobsList.size()+"} jobs for dataset {"+datasetName+"}");
+		Collections.sort(jobsList, Collections.reverseOrder());
 		return jobsList;
 	}
 	

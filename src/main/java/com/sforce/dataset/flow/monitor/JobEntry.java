@@ -25,7 +25,7 @@
  */
 package com.sforce.dataset.flow.monitor;
 
-public class JobEntry {
+public class JobEntry implements Comparable<JobEntry> {
     String errorMessage = null;
     long startTimeEpoch = 0;
     int status = 0;
@@ -88,5 +88,15 @@ public class JobEntry {
 				+ ", _type=" + _type + ", duration=" + duration
 				+ ", _createdDateTime=" + _createdDateTime + ", workflowName="
 				+ workflowName + ", nodeUrl=" + nodeUrl + "]";
+	}
+	
+	@Override
+	public int compareTo(JobEntry o) {
+		if (this.startTimeEpoch > o.startTimeEpoch)
+			return 1;
+		else if (this.startTimeEpoch < o.startTimeEpoch)
+			return -1;
+		else
+			return 0;
 	}
 }

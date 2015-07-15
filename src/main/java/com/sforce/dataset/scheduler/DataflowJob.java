@@ -137,7 +137,7 @@ public class DataflowJob  implements Job {
 			} catch (Exception e) {
 //				e.printStackTrace();
 				session.fail(e.getMessage());
-				throw new JobExecutionException(e); //TODO Do we cary on to next job
+				throw new JobExecutionException(e); //TODO Do we should skip to next job
 			}
 		}
 	}
@@ -147,9 +147,8 @@ public class DataflowJob  implements Job {
 	public void runDataflow(DataFlow task, PartnerConnection partnerConnection) throws IllegalStateException, ConnectionException, IOException, URISyntaxException
 	{		
 		System.out.println(new Date()+ " : Executing job: " + task.getName());
-		if(!isRunning(defaultDataflowId, 0, partnerConnection, task.getName()))
+		if(!isRunning(partnerConnection, defaultDataflowId, task.getName(), null))
 		{
-			long startTime = System.currentTimeMillis();
 //			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 //			long utcStartTime = cal.getTimeInMillis();
 //			System.out.println("Difference between current and utc:" + (utcStartTime-startTime));
@@ -157,10 +156,12 @@ public class DataflowJob  implements Job {
 			{
 				DataFlowUtil.uploadDataFlow(partnerConnection, task.getName(), defaultDataflowId, task.getWorkflowDefinition());
 			}
-			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), defaultDataflowId);			
+			long startTime = System.currentTimeMillis();
+			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), defaultDataflowId);
+			JobEntry job = getJob(partnerConnection, defaultDataflowId, startTime);
 			while(true)
 			{
-				if(isRunning(defaultDataflowId, startTime, partnerConnection, task.getName()))
+				if(isRunning(partnerConnection, defaultDataflowId, task.getName(), job))
 				{
 					try {
 						Thread.sleep(60000);
@@ -180,49 +181,73 @@ public class DataflowJob  implements Job {
 		{
 			throw new IllegalStateException("Dataflow is already running");
 		}
-		
-		
 	}
 	
-	public boolean isRunning(String Id, long after, PartnerConnection partnerConnection, String dataFlowName) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException
+	public JobEntry getJob(PartnerConnection partnerConnection, String dataFlowId, long after) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException
 	{		
-		boolean jobFound = false;
-		while(!jobFound)
+		int retryCount = 0;
+		long lastJob = 0;
+		while(retryCount<7)
 		{
-			List<JobEntry> jobList = DataFlowMonitorUtil.getDataFlowJobs(partnerConnection, null, Id);
+			retryCount++;
+			List<JobEntry> jobList = DataFlowMonitorUtil.getDataFlowJobs(partnerConnection, null, dataFlowId);
 			for(JobEntry job:jobList)
 			{
+				if(lastJob==0)
+					lastJob = job.getStartTimeEpoch();
 				if(job.getStartTimeEpoch()>after)
 				{
-					jobFound = true;
-					if(job.getStatus()==2)
+					System.out.println("Found job: " + job);
+					return job;
+				}
+			}
+			try {
+				Thread.sleep(60000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		throw new IllegalStateException("Failed to find any jobs after {"+new Date(after)+"} last job excution  was at {"+new Date(lastJob)+"}");
+	}
+	
+	
+	public boolean isRunning(PartnerConnection partnerConnection, String dataFlowId, String dataFlowName, JobEntry jobEntry) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException
+	{		
+			List<JobEntry> jobList = DataFlowMonitorUtil.getDataFlowJobs(partnerConnection, null, dataFlowId);
+			if(jobList.size()>0)
+			{
+				System.out.println("Found job: " + jobList.get(0));
+			}else
+			{
+				throw new IllegalStateException("Failed to find any jobs");
+			}
+			for(JobEntry job:jobList)
+			{
+				if(jobEntry == null || job.getStartTimeEpoch() == jobEntry.getStartTimeEpoch())
+				{
+					System.out.println("Found job: " + job);
+					if(job.getStatus()==0)
+					{
+						if(jobEntry!=null)
+							System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} Failed");
+						return false;
+					} else if(job.getStatus()==1)
+					{
+						if(jobEntry!=null)
+							System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} completed succesfully");
+						return false;
+					}else if(job.getStatus()==2)
 					{
 						return true;
 					}else
 					{
-						if(after>0)
-						{
-							if(job.getStatus()==1)
-							{
-								System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} completed succesfully");
-							}else
-							{
-								System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} Failed");
-							}
-						}
+						if(jobEntry!=null)
+							System.out.println(new Date()+ " Scheduled job status {"+job.getStatus()+"}");
+						return true;
 					}
 				}
 			}
-			if(!jobFound)
-			{
-				try {
-					Thread.sleep(60000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return false;
+			throw new IllegalStateException("Failed to find any job {"+jobEntry+"}");
 	}
 
 }
