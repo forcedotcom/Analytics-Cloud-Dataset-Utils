@@ -5,7 +5,7 @@
 	id="WebApp_ID" version="3.0">
 	<display-name>Archetype Created Web Application</display-name>
 	<welcome-file-list>
-		<welcome-file>csvupload.html</welcome-file>
+		<welcome-file>finder.html</welcome-file>
 	</welcome-file-list>
 	<servlet>
 		<servlet-name>default</servlet-name>
@@ -70,15 +70,10 @@
 	<filter-mapping>
 		<filter-name>AuthFilter</filter-name>
 		<url-pattern>*.html</url-pattern>
-		<url-pattern>/csvupload.html</url-pattern>
-		<url-pattern>/csvupload2.html</url-pattern>
-		<url-pattern>/preview.html</url-pattern>
-		<url-pattern>/logs.html</url-pattern>
-		<url-pattern>/xmdeditor.html</url-pattern>
-		<url-pattern>/datafloweditor.html</url-pattern>
 		<url-pattern>/upload</url-pattern>
 		<url-pattern>/list</url-pattern>
 		<url-pattern>/json</url-pattern>
+		<url-pattern>/preview</url-pattern>
 		<url-pattern>/_auth</url-pattern>
 	</filter-mapping>
 
