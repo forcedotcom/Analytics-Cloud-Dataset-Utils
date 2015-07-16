@@ -46,6 +46,7 @@ import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.JobEntry;
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.soap.partner.GetServerTimestampResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
@@ -156,7 +157,13 @@ public class DataflowJob  implements Job {
 			{
 				DataFlowUtil.uploadDataFlow(partnerConnection, task.getName(), defaultDataflowId, task.getWorkflowDefinition());
 			}
-			long startTime = System.currentTimeMillis();
+			long startTime = 0;
+			GetServerTimestampResult serverTimestampResult = partnerConnection.getServerTimestamp();
+			if (serverTimestampResult.getTimestamp() != null) {
+				startTime = serverTimestampResult.getTimestamp().getTimeInMillis();
+				long startTimeSeconds = startTime/1000L;
+				startTime = startTimeSeconds*1000L;
+			}
 			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), defaultDataflowId);
 			JobEntry job = getJob(partnerConnection, defaultDataflowId, startTime);
 			while(true)
@@ -195,7 +202,7 @@ public class DataflowJob  implements Job {
 			{
 				if(lastJob==0)
 					lastJob = job.getStartTimeEpoch();
-				if(job.getStartTimeEpoch()>after)
+				if(job.getStartTimeEpoch()>=after)
 				{
 					System.out.println("Found job: " + job);
 					return job;
@@ -207,6 +214,8 @@ public class DataflowJob  implements Job {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("start time:"+after);
+		System.out.println("last job  :"+lastJob);
 		throw new IllegalStateException("Failed to find any jobs after {"+new Date(after)+"} last job excution  was at {"+new Date(lastJob)+"}");
 	}
 	
