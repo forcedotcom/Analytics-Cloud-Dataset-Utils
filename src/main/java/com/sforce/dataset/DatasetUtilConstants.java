@@ -68,6 +68,7 @@ public class DatasetUtilConstants {
 	public static final String dataflowDirName = "dataflow";
 	public static final String dataflowGroupDirName = "dataflowgroup";
 	public static final String scheduleDirName = "schedule";
+	public static final String listenerDirName = "listener";
 	
 
 	
@@ -196,7 +197,19 @@ public class DatasetUtilConstants {
 		return dataflowDir;
 	}
 
+	public static File getListenerDir(String orgId) {
+		if(orgId == null || orgId.isEmpty())
+			throw new IllegalArgumentException("orgId is null");
+		File dataflowDir = new File(getOrgDir(orgId),listenerDirName);
+		try {
+			FileUtils.forceMkdir(dataflowDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return dataflowDir;
+	}
 
+	
 	public static final File getDebugFile()
 	{
 		File logsDir = new File(DatasetUtilConstants.currentDir,logsDirName);

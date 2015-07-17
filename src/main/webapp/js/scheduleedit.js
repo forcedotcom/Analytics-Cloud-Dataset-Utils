@@ -75,7 +75,7 @@ $(document).ready(function() {
 			$("#startDateTime").change();
 		}else
 		{
-			self.location.href = 'dataflows.html';
+			self.location.href = 'schedules.html';
 		}
 	}else
 	{

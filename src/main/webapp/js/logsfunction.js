@@ -47,7 +47,7 @@ $(document).ready(function() {
          {
               var link = ""+data[i].targetErrorCount;
               
-              if (data[i].status == "COMPLETED" && data[i].targetErrorCount != 0){
+              if ((data[i].status == "COMPLETED" || data[i].status == "FAILED" || data[i].status == "TERMINATED") && data[i].targetErrorCount != 0){
                 
                 var href_link = "<a href='upload?id="+data[i].id+"&type=errorCsv";
                 if (type == "sessionHistory"){
@@ -56,7 +56,7 @@ $(document).ready(function() {
 
                 href_link += "'>";
 
-                link = data[i].targetErrorCount+"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-th-list\"></span>"+"</a>";
+                link = data[i].targetErrorCount+"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-download-alt\"></span>"+"</a>";
               }
 
               var actionString = "&nbsp;";

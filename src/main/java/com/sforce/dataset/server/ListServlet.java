@@ -45,6 +45,8 @@ import com.sforce.dataset.flow.monitor.JobEntry;
 import com.sforce.dataset.flow.monitor.NodeEntry;
 import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.SessionHistory;
+import com.sforce.dataset.listeners.Listener;
+import com.sforce.dataset.listeners.ListenerUtil;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.scheduler.Schedule;
@@ -140,6 +142,59 @@ public class ListServlet extends HttpServlet {
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), scheduleAlias);
+					}
+					else if(value.equalsIgnoreCase("listener"))
+					{
+						String listenerAlias = request.getParameter("listenerAlias");
+						if(listenerAlias!=null && !listenerAlias.trim().isEmpty())
+						{
+							Listener sched = ListenerUtil.readListener(conn, listenerAlias);
+						    response.setContentType("application/json");
+					    	ObjectMapper mapper = new ObjectMapper();
+					    	mapper.writeValue(response.getOutputStream(), sched);
+						}else
+						{
+							List<Listener> list = ListenerUtil.listListeners(conn);
+						    response.setContentType("application/json");
+					    	ObjectMapper mapper = new ObjectMapper();
+					    	mapper.writeValue(response.getOutputStream(), list);
+						}
+					}
+					else if(value.equalsIgnoreCase("listenerDelete"))
+					{
+						String listenerAlias = request.getParameter("listenerAlias");
+						if(listenerAlias==null || listenerAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("listenerAlias is required param");
+						}
+						ListenerUtil.deleteListener(conn, listenerAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), listenerAlias);
+					}
+					else if(value.equalsIgnoreCase("listenerEnable"))
+					{
+						String listenerAlias = request.getParameter("listenerAlias");
+						if(listenerAlias==null || listenerAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("listenerAlias is required param");
+						}
+						ListenerUtil.enableListener(conn, listenerAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), listenerAlias);
+					}
+					else if(value.equalsIgnoreCase("listenerDisable"))
+					{
+						String listenerAlias = request.getParameter("listenerAlias");
+						if(listenerAlias==null || listenerAlias.trim().isEmpty())
+						{
+							throw new IllegalArgumentException("listenerAlias is required param");
+						}
+						ListenerUtil.disableListener(conn, listenerAlias);
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), listenerAlias);
 					}
 					else if(value.equalsIgnoreCase("dataflowDelete"))
 					{
@@ -431,6 +486,62 @@ public class ListServlet extends HttpServlet {
 				}
 				
 				SchedulerUtil.saveSchedule(conn, scheduleAlias, null, frequency, interval, jobDataMap, startDateTime, isCreate);
+			}else if(type.equalsIgnoreCase("listener"))
+			{
+				String listenerAlias = request.getParameter("listenerAlias");
+				if(listenerAlias==null || listenerAlias.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("listenerAlias is a required param");
+				}
+
+				String listenerType = request.getParameter("listenerType");
+				if(listenerType==null || listenerType.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("listenerType is a required param");
+				}
+				
+				String temp = request.getParameter("create");
+				boolean isCreate = false;
+				if(temp!=null && !temp.trim().isEmpty() && temp.equalsIgnoreCase("true"))
+				{
+					isCreate = true;
+				}
+
+				LinkedHashMap<String,String> params = new LinkedHashMap<String,String>();
+				if(listenerType.equalsIgnoreCase("file"))
+				{
+					String datasetAlias = request.getParameter("datasetAlias");
+					if(datasetAlias==null || datasetAlias.trim().isEmpty())
+					{
+						throw new IllegalArgumentException("datasetAlias is a required param");
+					}
+					
+					String datasetLabel = datasetAlias;
+					datasetAlias = ExternalFileSchema.createDevName(datasetAlias, "Dataset", 1, false);
+					
+					String datasetApp = request.getParameter("datasetApp");
+					String operation = request.getParameter("operation");
+					if(operation==null || operation.trim().isEmpty())
+					{
+						throw new IllegalArgumentException("operation is a required param");
+					}
+					String inputFileDirectory = request.getParameter("inputFileDirectory");
+					if(inputFileDirectory==null || inputFileDirectory.trim().isEmpty())
+					{
+						throw new IllegalArgumentException("inputFileDirectory is a required param");
+					}
+					String inputFilePattern = request.getParameter("inputFilePattern");
+					if(inputFilePattern==null || inputFilePattern.trim().isEmpty())
+						inputFilePattern = "*.csv";
+	
+					params.put("datasetAlias", datasetAlias);
+					params.put("datasetLabel", datasetLabel);
+					params.put("datasetApp", datasetApp);
+					params.put("operation", operation);
+					params.put("inputFileDirectory", inputFileDirectory);
+					params.put("inputFilePattern", inputFilePattern);
+				}
+				ListenerUtil.saveListener(conn, listenerType, listenerAlias,params, isCreate);
 			}else
 			{
 				response.setContentType("application/json");

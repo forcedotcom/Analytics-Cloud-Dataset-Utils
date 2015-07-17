@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -52,16 +53,16 @@ public class FileListenerThread implements Runnable {
 //private static final String sessionLog = "Logs";
 
 
-  private volatile boolean isDone = false;
+  private AtomicBoolean isDone = new AtomicBoolean(false);
 
   private final  FileListener fileListener;
   private final PartnerConnection partnerConnection;
 //  private final File errorDir;
 //  private final File successDir;
 //  private final File logsDir;
-//  private final Session session;
+  private Session session = null;
   
-  FileListenerThread(FileListener fileListener, PartnerConnection partnerConnection) throws IOException, ConnectionException 
+  public FileListenerThread(FileListener fileListener, PartnerConnection partnerConnection) throws IOException, ConnectionException 
   { 
 	  if(fileListener==null)
 	  {
@@ -78,11 +79,11 @@ public class FileListenerThread implements Runnable {
   }
  
 public void run() {
- 		System.out.println("Starting FileListener for Dataset {"+fileListener.getDataset()+"} ");
+ 		System.out.println("Starting FileListener for Dataset {"+fileListener.getDatasetAlias()+"} ");
  		
     try {
 
-    	while (!isDone) {
+    	while (!isDone()) {
 			try
 			{
 				long cutOff = System.currentTimeMillis() - (fileListener.getFileAge());
@@ -101,9 +102,9 @@ public void run() {
 						Thread.sleep(fileListener.getPollingInterval());
 					}catch(Throwable t)
 					{
-						t.printStackTrace();
+//						t.printStackTrace();
 					}
-					if(isDone)
+					if(isDone())
 						break;
 					else
 						continue;
@@ -112,12 +113,12 @@ public void run() {
 				for(File file:files)
 				{
 					PrintStream logger = null;
-					Session session = null;
+					
 					try
 					{
 						String orgId = null;
 						orgId = partnerConnection.getUserInfo().getOrganizationId();
-						session = Session.getCurrentSession(orgId, fileListener.getDataset(), true);
+						session = Session.getCurrentSession(orgId, fileListener.getDatasetAlias(), true);
 //						session = new Session(orgId,fileListener.getDataset());
 //				        ThreadContext threadContext = ThreadContext.get();
 //				        threadContext.setSession(session);
@@ -126,7 +127,7 @@ public void run() {
 //						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
 						File logFile = session.getSessionLog();
 						logger = new PrintStream(new FileOutputStream(logFile), true, "UTF-8");
-						boolean status = DatasetLoader.uploadDataset(file.toString(), fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDataset(), fileListener.getApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, logger);
+						boolean status = DatasetLoader.uploadDataset(file.toString(), fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDatasetAlias(), fileListener.getDatasetApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, logger);
 						if(status)
 							session.end();
 						else
@@ -146,6 +147,7 @@ public void run() {
 						if(logger!=null)
 							logger.close();
 						logger = null;
+						session = null;
 					}
 				}
 				
@@ -157,12 +159,13 @@ public void run() {
     }catch (Throwable t) {
        System.out.println (Thread.currentThread().getName() + " " + t.getMessage());
     }
-	System.out.println("Starting FileListener for Dataset {"+fileListener.getDataset()+"} ");
-    isDone = true;
+	System.out.println("Stopping FileListener for Dataset {"+fileListener.getDatasetAlias()+"} ");
+    isDone.set(true);
+    session = null;
   }
 
 public boolean isDone() {
-	return isDone;
+	return isDone.get();
 }
   
 	public static File[] getFiles(File directory, IOFileFilter fileFilter) {
@@ -236,6 +239,12 @@ public boolean isDone() {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void stop() {
+		isDone.set(true);
+		if(session!=null)
+			session.terminate(null);
 	}
 
 

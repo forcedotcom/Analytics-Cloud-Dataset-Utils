@@ -32,16 +32,16 @@ import java.nio.charset.CodingErrorAction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class FileListener {
-	private String dataset = null;
+	private String datasetAlias = null;
 	private String datasetLabel = null;
-	private String app = null;
-	private String filecharset = "UTF-8";
-	private String uploadFormat = "binary"; 
-	private String codingErrorAction = "REPORT";
-	private String operation = "Overwrite"; 
-	private boolean useBulkAPI = false;
+	private String datasetApp = null;
 	private String inputFileDirectory = null;
 	private String inputFilePattern = null;
+	private String operation = "Overwrite"; 
+	private String filecharset = null;
+	private String uploadFormat = "binary"; 
+	private String codingErrorAction = "REPORT";
+	private boolean useBulkAPI = false;
 	private int pollingInterval = 10000;
 	private int fileAge = 10000;
 	
@@ -65,23 +65,11 @@ public class FileListener {
 		this.cea = cea;
 	}
 	
-	public String getDataset() {
-		return dataset;
-	}
-	public void setDataset(String dataset) {
-		this.dataset = dataset;
-	}
 	public String getDatasetLabel() {
 		return datasetLabel;
 	}
 	public void setDatasetLabel(String datasetLabel) {
 		this.datasetLabel = datasetLabel;
-	}
-	public String getApp() {
-		return app;
-	}
-	public void setApp(String app) {
-		this.app = app;
 	}
 	public String getFilecharset() {
 		return filecharset;
@@ -180,6 +168,10 @@ public class FileListener {
 	}
 	
 	public String getInputFilePattern() {
+		if(inputFilePattern!=null && !inputFilePattern.isEmpty())
+		{
+			inputFilePattern = "*.csv";
+		}
 		return inputFilePattern;
 	}
 
@@ -208,4 +200,29 @@ public class FileListener {
 	public void setFileAge(int fileAge) {
 		this.fileAge = fileAge;
 	}
+
+	public String getUri() {
+		if(this.fileDir!=null)
+		{
+			return this.fileDir.toURI().toASCIIString() + "("+inputFilePattern!=null?inputFilePattern:"*"+")";
+		}
+		return null;
+	}
+
+	public String getDatasetAlias() {
+		return datasetAlias;
+	}
+
+	public void setDatasetAlias(String datasetAlias) {
+		this.datasetAlias = datasetAlias;
+	}
+
+	public String getDatasetApp() {
+		return datasetApp;
+	}
+
+	public void setDatasetApp(String datasetApp) {
+		this.datasetApp = datasetApp;
+	}
+
 }

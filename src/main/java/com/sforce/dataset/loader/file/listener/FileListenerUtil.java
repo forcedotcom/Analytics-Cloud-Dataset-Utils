@@ -25,104 +25,60 @@
  */
 package com.sforce.dataset.loader.file.listener;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
 public class FileListenerUtil {
 	
 	public static final String listenerSettingsFileName = "sfdc_file_listeners.json";
-//	static LinkedHashMap<String,FileListener> listeners = null;
+	private static final Map<String,FileListenerThread> listeners = new LinkedHashMap<String,FileListenerThread>(); 
+	private static final Map<String,Thread> threads = new LinkedHashMap<String,Thread>(); 
 
-	public static FileListenerSettings getFileListeners(PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
+	public static boolean startListener(String devName, FileListener listener, PartnerConnection partnerConnection) throws IOException, ConnectionException
 	{
-		String orgId = partnerConnection.getUserInfo().getOrganizationId();
-		File configDir = DatasetUtilConstants.getConfigDir(orgId);
-		File listenerSettingsFile = new File(configDir,listenerSettingsFileName);
-		ObjectMapper mapper = new ObjectMapper();	
-		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		if(listenerSettingsFile.exists() && listenerSettingsFile.length()>0)
+		if(!isRunning(devName))
 		{
-			FileListenerSettings listenerSettings = mapper.readValue(listenerSettingsFile, FileListenerSettings.class);
-			return listenerSettings;
-		}
-		return null;
-		
-	}
-	
-	public static void saveFileListeners(FileListenerSettings listeners,PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
-	{
-		String orgId = partnerConnection.getUserInfo().getOrganizationId();
-		File configDir = DatasetUtilConstants.getConfigDir(orgId);
-		File listenerSettingsFile = new File(configDir,listenerSettingsFileName);
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.writerWithDefaultPrettyPrinter().writeValue(listenerSettingsFile, listeners);
-	}
-	
-	public static boolean addListener(FileListener listener, PartnerConnection partnerConnection) throws JsonParseException, JsonMappingException, IOException, ConnectionException
-	{
-		FileListenerSettings listeners = getFileListeners(partnerConnection);
-		if(listeners==null)
-		{
-			listeners = new FileListenerSettings();
-		}
-		if(listeners.fileListeners==null )
-		{
-			listeners.fileListeners = new LinkedHashMap<String,FileListener>();
-		}
-		if(!listeners.fileListeners.containsKey(listener.getDataset()))
-		{
-			listeners.fileListeners.put(listener.getDataset(), listener);
-			saveFileListeners(listeners, partnerConnection);
+			FileListenerThread fileListenerThread = new FileListenerThread(listener, partnerConnection);
+			Thread th = new Thread(fileListenerThread,"FileListener-"+devName);
+			th.setDaemon(true);
+			th.start();
+			listeners.put(devName, fileListenerThread);
+			threads.put(devName, th);
 			return true;
-		}else
+		}
+		throw new IllegalArgumentException("Listener {"+devName+"} is already running");
+	}
+
+	public static boolean isRunning(String devName) {
+		if(listeners.containsKey(devName))
 		{
-			System.out.println("\nERROR: FileListener for dataset {"+listener.getDataset()+"} already exists");
+			FileListenerThread temp = listeners.get(devName);
+			if(temp.isDone())
+			{
+				listeners.remove(devName);
+				return false;
+			}
+			return true;
 		}
 		return false;
 	}
-	
-	public static boolean startListener(FileListener listener, PartnerConnection partnerConnection) throws IOException, ConnectionException
-	{
-		FileListenerThread fileListenerThread = new FileListenerThread(listener, partnerConnection);
-		Thread th = new Thread(fileListenerThread,"FileListener-"+listener.getDataset());
-		th.setDaemon(true);
-		th.start();
-		return true;
-	}
 
-	public static boolean addAndStartListener(FileListener listener, PartnerConnection partnerConnection) throws IOException, ConnectionException
-	{
-		if(addListener(listener, partnerConnection))
-			return startListener(listener, partnerConnection);
-		else
-			return false;
-	}
-	
-	public static void startAllListener(PartnerConnection partnerConnection)
-	{
-		try 
+	public static boolean stopListener(String devName) {
+		if(listeners.containsKey(devName))
 		{
-			FileListenerSettings listeners = getFileListeners(partnerConnection);
-			if(listeners!=null && listeners.fileListeners != null && !listeners.fileListeners.isEmpty())
-			{
-				for(String dataset:listeners.fileListeners.keySet())
-				{
-					startListener(listeners.fileListeners.get(dataset), partnerConnection);
-				}
-			}
-		} catch (Throwable t) {
-			t.printStackTrace();
+			FileListenerThread temp = listeners.get(devName);
+			temp.stop();
+			Thread th = threads.get(devName);
+			th.interrupt();
+			listeners.remove(devName);
+			threads.remove(devName);
+			return true;
 		}
+		return false;
 	}
-
 
 }

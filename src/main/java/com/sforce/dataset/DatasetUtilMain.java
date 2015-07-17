@@ -48,13 +48,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.Session;
-import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.DatasetLoader;
 import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.loader.EbinFormatWriter;
-import com.sforce.dataset.loader.file.listener.FileListener;
-import com.sforce.dataset.loader.file.listener.FileListenerThread;
-import com.sforce.dataset.loader.file.listener.FileListenerUtil;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.server.DatasetUtilServer;
 import com.sforce.dataset.util.CharsetChecker;
@@ -404,7 +400,7 @@ public class DatasetUtilMain {
 		if(args.length==0 || action == null)
 		{
 			System.out.println("\n*******************************************************************************");					
-			FileListenerUtil.startAllListener(partnerConnection);
+//			FileListenerUtil.startAllListener(partnerConnection);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -431,12 +427,13 @@ public class DatasetUtilMain {
 				}
 				params = new DatasetUtilParams();
 				getRequiredParams(action, partnerConnection, params);
+				@SuppressWarnings("unused")
 				boolean status = doAction(action, partnerConnection, params);
-				if(status)
-				{
-					if(action.equalsIgnoreCase("load") && params.debug)
-						createListener(partnerConnection, params);
-				}
+//				if(status)
+//				{
+//					if(action.equalsIgnoreCase("load") && params.debug)
+//						createListener(partnerConnection, params);
+//				}
 			}
 		}else
 		{
@@ -1105,7 +1102,7 @@ public class DatasetUtilMain {
 		
 	}
 	
-
+/*
 	private static void createListener(PartnerConnection partnerConnection,
 			DatasetUtilParams params) {
 		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);
@@ -1136,7 +1133,7 @@ public class DatasetUtilMain {
 			}
 		}
 	}
-
+*/
 	
 	public static void printBanner()
 	{
