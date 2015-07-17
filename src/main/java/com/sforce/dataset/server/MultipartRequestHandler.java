@@ -66,13 +66,13 @@ public class MultipartRequestHandler {
 		for (FileItem item : items) {
 			if (item.isFormField()) {
 				if (item.getFieldName().equalsIgnoreCase("DatasetName")) {
-					String datasetName = item.getString();
-					String santizedDatasetName = ExternalFileSchema.createDevName(item.getString(), "Dataset", 1, false);
-					if(!datasetName.equals(santizedDatasetName))
-					{
-						throw new IllegalArgumentException("dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");
-					}
-					return datasetName;
+//					String datasetName = item.getString();
+					return ExternalFileSchema.createDevName(item.getString(), "Dataset", 1, false);
+//					if(!datasetName.equals(santizedDatasetName))
+//					{
+//						throw new IllegalArgumentException("dataset name can only contain alpha-numeric or '_', must start with alpha, and cannot end in '__c'");
+//					}
+//					return datasetName;
 				}
 			}
 		}
