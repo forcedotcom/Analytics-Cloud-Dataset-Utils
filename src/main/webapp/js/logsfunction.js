@@ -62,7 +62,7 @@ $(document).ready(function() {
 
                 href_link += "'>";
 
-                link = data[i].targetErrorCount+"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-download-alt\"></span>"+"</a>";
+                link = data[i].targetErrorCount.toLocaleString() +"&nbsp;&nbsp;&nbsp;"+href_link+"<span class=\"glyphicon glyphicon-download-alt\"></span>"+"</a>";
               }
 
               var actionString = "&nbsp;";
@@ -95,7 +95,7 @@ $(document).ready(function() {
                         .append($('<td/>').text(data[i].startTimeFormatted))
                         .append($('<td/>').text(endTime))
                         .append($('<td/>').html(status1))
-                        .append($('<td/>').text(data[i].targetTotalRowCount))
+                        .append($('<td/>').text(data[i].targetTotalRowCount.toLocaleString()))
                         .append($('<td/>').html(link))
                         .append($('<td/>').text(data[i].message))
                         .append($('<td/>').html(actionString))

@@ -96,6 +96,7 @@ $(document).ready(function() {
 
 		var listenerAlias = $("#listenerAlias").val();
 		var datasetAlias = $("#datasetAlias").val();
+		var datasetLabel = $("#datasetAlias").text();
 		var datasetApp = $("#datasetApp").val();
 		var operation = $("#operation").val();
 		var inputFileDirectory = $("#inputFileDirectory").val();
@@ -110,6 +111,7 @@ $(document).ready(function() {
 			    	listenerType: 'file',
 			    	listenerAlias: listenerAlias,
 			    	datasetAlias:datasetAlias,
+			    	datasetLabel:datasetLabel,
 			    	datasetApp: datasetApp,
 			    	operation: operation,
 			    	inputFileDirectory: inputFileDirectory,
@@ -168,27 +170,20 @@ function loadlist(selobj,url,nameattr,displayattr,selectedValue)
     $.getJSON(url,{},function(data)
     {
         $(selobj).empty();
-    	if(!isEmpty(selectedValue))
-    	{
-            $(selobj).append(
-                    $('<option></option>')
-                           .val(selectedValue)
-                           .html(selectedValue));    		
-    	}
 
         $.each(data, function(i,obj)
         {
-        	if(obj[nameattr] === selectedValue)
-        	{
-        		return true;
-        	}else
-        	{
         		$(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
                         .html(obj[displayattr]));
-        	}
-        })        
+        })
+        
+    	if(!isEmpty(selectedValue))
+    	{
+            $(selobj).val(selectedValue);    		
+    	}
+
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
         if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
@@ -201,7 +196,7 @@ function loadlist(selobj,url,nameattr,displayattr,selectedValue)
     });    
 }
 
-function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValue)
+function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValue,selectedLabel)
 {
     $.getJSON(url,{},function(data)
     {
@@ -211,7 +206,7 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValue)
             $(selobj).append(
                     $('<option></option>')
                            .val(selectedValue)
-                           .html(selectedValue));    		
+                           .html(selectedLabel));    		
     	}
 
         $.each(data, function(i,obj)
@@ -283,6 +278,11 @@ function getListener(listenerAlias){
 		    	datasetAlias = data.params['datasetAlias'];
 		    }
 
+		    var datasetLabel = null;
+		    if (data.params.hasOwnProperty('datasetLabel')) {
+		    	datasetLabel = data.params['datasetLabel'];
+		    }
+		    
 		    var datasetApp = null;
 		    if (data.params.hasOwnProperty('datasetApp')) {
 		    	datasetApp = data.params['datasetApp'];
@@ -292,7 +292,8 @@ function getListener(listenerAlias){
 		     		 'list?type=dataset',/*the url of the server-side script*/
 		     		 '_alias',/*The name of the field in the returned list*/
 		     		 'name',
-		     		 datasetAlias
+		     		 datasetAlias,
+		     		 datasetLabel
 		     		 );
 
 		    loadlist($('select#datasetApp').get(0),/*the 'select' object*/
