@@ -49,7 +49,7 @@ public class ErrorWriter {
 	private String HeaderLine = "";	 
 	private String[] headerColumns = null;	 
 	private String HeaderSuffix = "Error";
-	private String errorFileSuffix = "_err.";
+	public static String errorFileSuffix = "_err.";
 	private File errorCsv;
 	private BufferedWriter fWriter = null;
 	private CsvContext context = new CsvContext(1, 1, 1);

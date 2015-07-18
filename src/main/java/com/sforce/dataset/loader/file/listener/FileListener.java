@@ -147,18 +147,29 @@ public class FileListener {
 		if(inputFileDirectory!=null)
 		{
 			File temp = new File(inputFileDirectory);
+			String pattern = null;
 			if(temp.exists())
 			{
-				if(temp.isDirectory())
+				if(!temp.isDirectory())
 				{
-					this.inputFileDirectory = inputFileDirectory;
-					this.fileDir = temp;
-				}else
+					temp = temp.getAbsoluteFile().getParentFile();
+					if(temp==null)
+					{
+						throw new IllegalArgumentException("Invalid inputFileDirectory {"+inputFileDirectory+"}");
+					}
+					pattern = temp.getName();
+				}
+				
+				if(temp.getAbsoluteFile().getParentFile()==null)
 				{
-					this.fileDir = temp.getAbsoluteFile().getParentFile();
-					if(this.fileDir != null)
-						this.inputFileDirectory = this.fileDir.toString();
-					setInputFilePattern(temp.getName());
+					throw new IllegalArgumentException("Invalid inputFileDirectory {"+inputFileDirectory+"}, directory cannot be top level directory");
+				}
+				
+				this.fileDir = temp;
+				this.inputFileDirectory = temp.getAbsolutePath();
+				if(pattern!=null)
+				{
+					setInputFilePattern(pattern);
 				}
 			}
 		}else

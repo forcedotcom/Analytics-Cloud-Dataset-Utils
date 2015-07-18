@@ -36,7 +36,7 @@ function deleteListener(id){
     $.getJSON(url,{},function(data){
     	$( "#"+id).remove();
     	var rowCount = $('#result tr').length;
-    	if(rowCount == 5)
+    	if(rowCount <= 4)
     	{
     		listListeners();
     	}
@@ -128,8 +128,8 @@ function printTable(data)
     	       	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
-    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i].lastModifiedBy.name+"</span> </td> \
     	   <td class=\"hidden-phone\"><span class=\"name\">"+uri+"</span> </td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i].lastModifiedBy.name+"</span> </td> \
     	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \

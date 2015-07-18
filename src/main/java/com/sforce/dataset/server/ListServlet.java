@@ -25,6 +25,7 @@
  */
 package com.sforce.dataset.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -515,9 +516,13 @@ public class ListServlet extends HttpServlet {
 					{
 						throw new IllegalArgumentException("datasetAlias is a required param");
 					}
-					
-					String datasetLabel = datasetAlias;
-					datasetAlias = ExternalFileSchema.createDevName(datasetAlias, "Dataset", 1, false);
+
+					String datasetLabel = request.getParameter("datasetLabel");
+					if(datasetLabel==null || datasetLabel.trim().isEmpty())
+					{
+						datasetLabel = datasetAlias;
+						datasetAlias = ExternalFileSchema.createDevName(datasetAlias, "Dataset", 1, false);
+					}
 					
 					String datasetApp = request.getParameter("datasetApp");
 					String operation = request.getParameter("operation");
@@ -530,6 +535,26 @@ public class ListServlet extends HttpServlet {
 					{
 						throw new IllegalArgumentException("inputFileDirectory is a required param");
 					}
+					File file = new File(inputFileDirectory);
+					if(!file.exists())
+					{
+						throw new IllegalArgumentException("Directory {"+inputFileDirectory+"} not found");
+					}
+					if(file.getAbsoluteFile().getParentFile()==null)
+					{
+						throw new IllegalArgumentException("Invalid inputFileDirectory {"+inputFileDirectory+"}, directory cannot be top level directory");
+					}
+
+					if(!file.canWrite())
+					{
+						throw new IllegalArgumentException("Directory {"+inputFileDirectory+"} is not writeable");
+					}
+					
+					if(!file.getAbsoluteFile().getParentFile().canWrite())
+					{
+						throw new IllegalArgumentException("Directory {"+file.getAbsoluteFile().getParentFile()+"} is not writeable");
+					}
+
 					String inputFilePattern = request.getParameter("inputFilePattern");
 					if(inputFilePattern==null || inputFilePattern.trim().isEmpty())
 						inputFilePattern = "*.csv";

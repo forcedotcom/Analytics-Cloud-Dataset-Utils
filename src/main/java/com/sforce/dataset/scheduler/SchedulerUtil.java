@@ -304,13 +304,19 @@ public class SchedulerUtil {
 		{
 			if(!sched.isDisabled())
 			{
-				try
-				{
-					startSchedule(sched, partnerConnection);
-				}catch(Exception t)
-				{
-					t.printStackTrace();
-				}
+		        if(sched.getJobType().equalsIgnoreCase("dataflow"))
+		        {
+		    	    if(isJobRunning(sched.getDevName(), "dataflow"))
+		    	    {
+						try
+						{
+							startSchedule(sched, partnerConnection);
+						}catch(Exception t)
+						{
+							t.printStackTrace();
+						}
+		    	    }
+		        }
 			}
 		}
 	}

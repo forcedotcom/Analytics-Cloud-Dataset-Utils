@@ -171,13 +171,19 @@ public class ListenerUtil {
 		{
 			if(!sched.isDisabled())
 			{
-				try
-				{
-					startListener(sched, partnerConnection);
-				}catch(Exception t)
-				{
-					t.printStackTrace();
-				}
+		        if(sched.getType().equalsIgnoreCase("file"))
+		        {
+					try
+					{
+			    	    if(!FileListenerUtil.isRunning(sched.getDevName()))
+			    	    {
+			    	    	startListener(sched, partnerConnection);
+			    	    }
+					}catch(Exception t)
+					{
+						t.printStackTrace();
+					}
+		        }
 			}
 		}
 	}

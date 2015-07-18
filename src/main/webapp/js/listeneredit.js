@@ -76,6 +76,10 @@ $(document).ready(function() {
 		        
 			$("#listenerAlias").prop("disabled", false);
 			$("#listenerAlias").change();
+			
+			$("#inputFilePattern").val("*.csv");
+			$("#inputFilePattern").change();
+			
 		}else
 		{
 			self.location.href = 'listeners.html';

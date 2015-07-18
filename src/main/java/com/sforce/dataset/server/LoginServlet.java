@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.listeners.ListenerUtil;
 import com.sforce.dataset.scheduler.SchedulerUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.server.auth.SecurityContext;
@@ -146,6 +147,14 @@ public class LoginServlet extends HttpServlet {
 	        try
 	        {
 	        	SchedulerUtil.startAllSchedules(conn);
+	        }catch(Exception e)
+	        {
+	        	e.printStackTrace();
+	        }
+	        
+	        try
+	        {
+		        ListenerUtil.startAllListeners(conn);
 	        }catch(Exception e)
 	        {
 	        	e.printStackTrace();

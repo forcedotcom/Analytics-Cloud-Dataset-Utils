@@ -47,6 +47,12 @@ $(document).ready(function() {
          {
               var link = ""+data[i].targetErrorCount;
               
+              var endTime = "n/a";
+              if(data[i].endTimeFormatted != null)
+              {
+            	  endTime = data[i].endTimeFormatted;
+              }
+              
               if ((data[i].status == "COMPLETED" || data[i].status == "FAILED" || data[i].status == "TERMINATED") && data[i].targetErrorCount != 0){
                 
                 var href_link = "<a href='upload?id="+data[i].id+"&type=errorCsv";
@@ -87,7 +93,7 @@ $(document).ready(function() {
                       tablerow
                         .append($('<td/>').text(data[i].name))
                         .append($('<td/>').text(data[i].startTimeFormatted))
-                        .append($('<td/>').text(data[i].endTimeFormatted))
+                        .append($('<td/>').text(endTime))
                         .append($('<td/>').html(status1))
                         .append($('<td/>').text(data[i].targetTotalRowCount))
                         .append($('<td/>').html(link))
