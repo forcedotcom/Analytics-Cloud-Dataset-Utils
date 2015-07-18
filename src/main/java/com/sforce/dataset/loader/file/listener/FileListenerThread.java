@@ -236,15 +236,16 @@ public boolean isDone() {
 
 		File jsonInputFile =  com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema.getSchemaFile(inputFile, System.out);
 		File jsonWorkFile =  com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema.getSchemaFile(workFile, System.out);
-		if(jsonInputFile.exists() && !jsonFile.exists())
+		if(jsonInputFile.exists())
 		{
-			FileUtils.copyFile(jsonInputFile, jsonFile);
+			FileUtils.copyFile(jsonInputFile, jsonWorkFile);
+		}else
+		{		
+			if(jsonFile.exists())
+			{
+				FileUtils.copyFile(jsonFile, jsonWorkFile);
+			}
 		}
-		
-		if(jsonFile.exists())
-		{
-			FileUtils.copyFile(jsonFile, jsonWorkFile);
-		}		
 		return workFile;
 	}
 	
@@ -304,18 +305,15 @@ public boolean isDone() {
 		
 		if(jsonWorkFile.exists())
 		{
-			if(!this.jsonFile.exists())
-			{
+			File jsonDoneFile = new File(directory,jsonWorkFile.getName());
 				try {
-					FileUtils.moveFile(jsonWorkFile, jsonFile);
+					FileUtils.moveFile(jsonWorkFile, jsonDoneFile);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}
-			FileUtilsExt.deleteQuietly(jsonWorkFile);
-			if(jsonFile.exists())
+			if(jsonDoneFile.exists())
 			{
-				session.setParam(DatasetUtilConstants.metadataJsonParam, jsonFile.getAbsolutePath());
+				session.setParam(DatasetUtilConstants.metadataJsonParam, jsonDoneFile.getAbsolutePath());
 			}
 		}
 	}
