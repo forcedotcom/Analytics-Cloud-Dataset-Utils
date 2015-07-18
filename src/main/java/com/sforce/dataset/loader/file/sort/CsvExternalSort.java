@@ -52,6 +52,7 @@ import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.FileUtilsExt;
 
 public class CsvExternalSort extends ExternalSort {
 	
@@ -248,7 +249,7 @@ public class CsvExternalSort extends ExternalSort {
             copyHeader(inputfile, writer, cs, headersize, pref);
             int rowcounter = mergeSortedFiles(writer, cmp, distinct, bfbs);
             for (File f : files)
-                    f.delete();
+            	FileUtilsExt.deleteQuietly(f);
             return rowcounter;            
     }
     

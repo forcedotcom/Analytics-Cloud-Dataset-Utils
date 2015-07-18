@@ -42,6 +42,7 @@ import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
 
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.FileUtilsExt;
 
 public class ErrorWriter {
 			
@@ -109,7 +110,7 @@ public class ErrorWriter {
 				FileUtils.moveFile(this.errorCsv, new File(archiveDir,this.errorCsv.getName()+"."+this.errorCsv.lastModified()));
 			}catch(Throwable t)
 			{
-				FileUtils.deleteQuietly(this.errorCsv);
+				FileUtilsExt.deleteQuietly(this.errorCsv);
 			}
 		}		
 	}

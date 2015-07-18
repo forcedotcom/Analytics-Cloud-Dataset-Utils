@@ -83,6 +83,7 @@ import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.loader.file.sort.CsvExternalSort;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.FileUtilsExt;
 import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.QueryResult;
@@ -419,7 +420,17 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
+			long sortStartTime = System.currentTimeMillis();
+			File unsortedFile = inputFile;
 			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema, pref);
+			long sortEndTime = System.currentTimeMillis();
+			
+			if(unsortedFile != inputFile)
+			{
+				logger.println("\n*******************************************************************************");									
+				logger.println(" File {"+inputFile.getName()+"}, sorted in Time {"+nf.format(sortEndTime-sortStartTime) + "} msecs");
+				logger.println("*******************************************************************************\n");					
+			}
 			
 			if(session.isDone())
 			{
@@ -984,7 +995,7 @@ public class DatasetLoader {
 						allPartsUploaded = false;
 					}else
 					{
-						FileUtils.deleteQuietly(fileParts.get(i));
+						FileUtilsExt.deleteQuietly(fileParts.get(i));
 					}
 				}
 				if(allPartsUploaded)
@@ -1313,7 +1324,7 @@ public class DatasetLoader {
 	        	File tmpFile = new File(archiveDir,FilenameUtils.getBaseName(inputFile.getName())+"."+filePartNumber + "." + FilenameUtils.getExtension(inputFile.getName()));
 				if(tmpFile != null && tmpFile.exists())
 				{
-					FileUtils.deleteQuietly(tmpFile);
+					FileUtilsExt.deleteQuietly(tmpFile);
 					if(tmpFile.exists())
 					{
 						logger.println("Failed to cleanup file {"+tmpFile+"}");
@@ -1361,7 +1372,7 @@ public class DatasetLoader {
 				File requestFile = new File(fileParts.get(i).getParent(),"request.txt");
 				if(requestFile != null && requestFile.exists())
 				{
-					FileUtils.deleteQuietly(requestFile);
+					FileUtilsExt.deleteQuietly(requestFile);
 					if(requestFile.exists())
 					{
 						logger.println("createBatchZip(): Failed to cleanup file {"+requestFile+"}");
@@ -1399,7 +1410,7 @@ public class DatasetLoader {
 	    		File zipFile = new File(fileParts.get(i).getParent(), FilenameUtils.getBaseName(fileParts.get(i).getName()) + ".zip");
 				if(zipFile != null && zipFile.exists())
 				{
-					FileUtils.deleteQuietly(zipFile);
+					FileUtilsExt.deleteQuietly(zipFile);
 					if(zipFile.exists())
 					{
 						logger.println("createBatchZip(): Failed to cleanup file {"+zipFile+"}");
@@ -1512,7 +1523,7 @@ public class DatasetLoader {
     				{
     					if(f != null && f.exists())
     					{
-    						f.delete();
+    						FileUtilsExt.deleteQuietly(f);
 	    					if(f.exists())
 	    					{
 	    						logger.println("Failed to cleanup file {"+f+"}");
@@ -1687,7 +1698,7 @@ public class DatasetLoader {
 			{
 				if(file != null && file.exists())
 				{
-					file.delete();
+					FileUtilsExt.deleteQuietly(file);
 					if(file.exists())
 					{
 						logger.println("createZip(): Failed to cleanup file {"+file+"}");
