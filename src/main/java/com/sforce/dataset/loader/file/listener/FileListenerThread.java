@@ -135,13 +135,22 @@ public void run() {
 //						session = new Session(orgId,fileListener.getDataset());
 //				        ThreadContext threadContext = ThreadContext.get();
 //				        threadContext.setSession(session);
-				        session.start();
 				        workFile = setup(file, session);
+				        if(workFile==null || !workFile.exists())
+				        {
+				        	continue;
+				        }
+				        session.start();
 //						long timeStamp = System.currentTimeMillis();
 //						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
 						File logFile = session.getSessionLog();
 						logger = new PrintStream(new FileOutputStream(logFile), true, "UTF-8");
 						status = DatasetLoader.uploadDataset(workFile.toString(), fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDatasetAlias(), fileListener.getDatasetApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, logger);
+						if(workFile!=null && workFile.exists())
+						{
+							cleanup(workFile, status, session);
+							workFile = null;
+						}
 						if(status)
 							session.end();
 						else
@@ -154,16 +163,16 @@ public void run() {
 						else
 							t.printStackTrace();
 
+						if(workFile!=null && workFile.exists())
+						{
+							cleanup(workFile, status, session);
+						}
 						if(session!=null)
 							session.fail("Check sessionLog for details");
 					}finally
 					{
 						if(logger!=null)
 							logger.close();
-						if(workFile!=null)
-						{
-							cleanup(workFile, status, session);
-						}
 						logger = null;
 						session = null;
 					}
@@ -233,6 +242,10 @@ public boolean isDone() {
 			
 		File workFile = new File(workDir, FilenameUtils.getBaseName(inputFile.getName())+"_"+session.getId()+"."+FilenameUtils.getExtension(inputFile.getName()));
 		FileUtils.moveFile(inputFile, workFile);
+		if(!workFile.exists())
+		{
+			return null;
+		}
 
 		File jsonInputFile =  com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema.getSchemaFile(inputFile, System.out);
 		File jsonWorkFile =  com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema.getSchemaFile(workFile, System.out);
