@@ -204,7 +204,7 @@ public class DataflowJob  implements Job {
 					lastJob = job.getStartTimeEpoch();
 				if(job.getStartTimeEpoch()>=after)
 				{
-					System.out.println("Found job: " + job);
+//					System.out.println("Found job: " + job);
 					return job;
 				}
 			}
@@ -214,8 +214,8 @@ public class DataflowJob  implements Job {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("start time:"+after);
-		System.out.println("last job  :"+lastJob);
+//		System.out.println("start time:"+after);
+//		System.out.println("last job  :"+lastJob);
 		throw new IllegalStateException("Failed to find any jobs after {"+new Date(after)+"} last job excution  was at {"+new Date(lastJob)+"}");
 	}
 	
@@ -225,7 +225,7 @@ public class DataflowJob  implements Job {
 			List<JobEntry> jobList = DataFlowMonitorUtil.getDataFlowJobs(partnerConnection, null, dataFlowId);
 			if(jobList.size()>0)
 			{
-				System.out.println("Found job: " + jobList.get(0));
+//				System.out.println("Found job: " + jobList.get(0));
 			}else
 			{
 				throw new IllegalStateException("Failed to find any jobs");
@@ -234,7 +234,7 @@ public class DataflowJob  implements Job {
 			{
 				if(jobEntry == null || job.getStartTimeEpoch() == jobEntry.getStartTimeEpoch())
 				{
-					System.out.println("Found job: " + job);
+//					System.out.println("Found job: " + job);
 					if(job.getStatus()==0)
 					{
 						if(jobEntry!=null)
