@@ -25,6 +25,7 @@
  */
 package com.sforce.dataset;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -273,11 +274,13 @@ public class DatasetUtilMain {
 
 		if(params.server)
 		{
+			Console c = System.console();
+			boolean join = (c == null);
 			System.out.println();
 			System.out.println("\n*******************************************************************************");					
 	        try {
 		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-				datasetUtilServer.init(args, false);
+				datasetUtilServer.init(args, join);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -296,7 +299,8 @@ public class DatasetUtilMain {
 					if(choice==0)
 						System.exit(0); 
 				}catch(Throwable me)
-				{				
+				{
+					me.printStackTrace();
 				}
 			}			
 		}
@@ -399,14 +403,14 @@ public class DatasetUtilMain {
 
 		if(args.length==0 || action == null)
 		{
-			System.out.println("\n*******************************************************************************");					
-//			FileListenerUtil.startAllListener(partnerConnection);
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			}
-			System.out.println("*******************************************************************************\n");	
-			System.out.println();			
+//			System.out.println("\n*******************************************************************************");					
+////			FileListenerUtil.startAllListener(partnerConnection);
+//			try {
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//			}
+//			System.out.println("*******************************************************************************\n");	
+//			System.out.println();			
 
 //			System.out.println("\n*******************************************************************************");					
 //	        try {
