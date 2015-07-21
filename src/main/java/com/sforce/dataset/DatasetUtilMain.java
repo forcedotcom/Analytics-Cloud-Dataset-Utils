@@ -25,7 +25,6 @@
  */
 package com.sforce.dataset;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -38,6 +37,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.text.DecimalFormat;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -274,39 +274,17 @@ public class DatasetUtilMain {
 
 		if(params.server)
 		{
-			Console c = System.console();
-			boolean join = (c == null);
 			System.out.println();
 			System.out.println("\n*******************************************************************************");					
 	        try {
 		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-				datasetUtilServer.init(args, join);
+				datasetUtilServer.init(args, true);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println("*******************************************************************************\n");	
-			System.out.println();
-			if(!join)
-			{
-				while(true)
-				{
-					try
-					{
-						String tmp = DatasetUtils.readInputFromConsole("Enter 0  to Exit: ");
-						if(tmp==null)
-							System.exit(0); 
-						if(tmp.trim().isEmpty())
-							continue;
-						long choice = Long.parseLong(tmp.trim());
-						if(choice==0)
-							System.exit(0); 
-					}catch(Throwable me)
-					{
-						me.printStackTrace();
-					}
-				}
-			}
 			System.out.println("Server ended, exiting JVM.....");
+			System.out.println("*******************************************************************************\n");	
+			System.out.println("QUITAPP");
 			System.exit(0); 
 		}
 
@@ -1148,11 +1126,22 @@ public class DatasetUtilMain {
 	{
 		for(int i=0;i<5;i++)
 			System.out.println();
-		System.out.println("\n\t\t****************************************");
-		System.out.println("\t\tSalesforce Analytics Cloud Dataset Utils");
-		System.out.println("\t\t****************************************\n");					
+		System.out.println("\n\t\t**************************************************");
+		System.out.println("\t\tSalesforce Analytics Cloud Dataset Utils - " + getAppversion());
+		System.out.println("\t\t**************************************************\n");					
 	}
 	
+	public static String getAppversion()
+	{
+        try {
+            Properties versionProps = new Properties();
+            versionProps.load(DatasetUtilMain.class.getClassLoader().getResourceAsStream("version.properties"));
+            return versionProps.getProperty("datasetutils.version");
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+		return "0.0.0";
+	}
 
 			
 }
