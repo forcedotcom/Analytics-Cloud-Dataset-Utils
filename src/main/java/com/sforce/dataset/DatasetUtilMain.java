@@ -1138,7 +1138,7 @@ public class DatasetUtilMain {
             versionProps.load(DatasetUtilMain.class.getClassLoader().getResourceAsStream("version.properties"));
             return versionProps.getProperty("datasetutils.version");
         } catch (Throwable t) {
-            t.printStackTrace();
+            //t.printStackTrace();
         }
 		return "0.0.0";
 	}
