@@ -26,8 +26,16 @@
 package com.sforce.dataset.flow.monitor;
 
 public class JobEntry implements Comparable<JobEntry> {
-    String errorMessage = null;
+
+	   public static final Integer SUCCESS = 1;
+	   public static final Integer FAILED = 0;
+	   public static final Integer RUNNING = 2;
+	   public static final Integer QUEUED = 4;
+	   public static final Integer WARNING = 5;
+
+	String errorMessage = null;
     long startTimeEpoch = 0;
+
     int status = 0;
     long endTimeEpoch = 0;
     String _uid = null;

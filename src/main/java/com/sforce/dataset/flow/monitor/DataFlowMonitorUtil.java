@@ -69,7 +69,24 @@ public class DataFlowMonitorUtil {
 			{
 				if(cnt>4)
 					break;
-				getJobErrorFile(partnerConnection, datasetName, job._uid);
+				if(job.getType().equalsIgnoreCase("system") && (job.getStatus()==JobEntry.FAILED || job.getStatus()==JobEntry.WARNING))
+				{									
+					List<NodeEntry> nodes = DataFlowMonitorUtil.getDataFlowJobNodes(partnerConnection, job.getNodeUrl());
+					for(NodeEntry node:nodes)
+					{
+						if(node.getNodeType() != null && (node.getNodeType().equalsIgnoreCase("csvDigest") || node.getNodeType().equalsIgnoreCase("binDigest")))
+						{
+							if(node.getOutputRowsFailed()>0)
+							{
+								File file = getJobErrorFile(partnerConnection, datasetName, job._uid);
+								if(file==null || !file.exists() || file.length() == 0)
+								{
+									System.out.println("Found job with {"+node.getOutputRowsFailed()+"} failures but no error file");
+								}
+							}
+						}
+					}
+				}
 				cnt++;
 			}
 		}
@@ -264,7 +281,18 @@ public class DataFlowMonitorUtil {
 								nodeEntry.startTime  = (String) job.get("startTime");
 								
 								nodeEntry._uid  = (String) job.get("_uid");
-								nodeEntry.duration = (String) job.get("duration");
+								Object temp = job.get("duration");
+								if(temp != null)
+								{
+									if(temp instanceof Number)
+									{
+										nodeEntry.duration = ((Number)temp).longValue();
+									}else
+									{
+										BigDecimal bd = new BigDecimal(temp.toString());
+										nodeEntry.duration = bd.longValue();
+									}
+								}
 								
 								nodeEntry.nodeName = (String) job.get("nodeName");
 								
@@ -274,7 +302,7 @@ public class DataFlowMonitorUtil {
 								
 								nodeEntry.status = (String) job.get("status");
 								
-								Object temp = job.get("outputRowsFailed");
+								temp = job.get("outputRowsFailed");
 								if(temp != null)
 								{
 									if(temp instanceof Number)

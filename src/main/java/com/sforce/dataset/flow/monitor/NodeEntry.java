@@ -28,7 +28,7 @@ package com.sforce.dataset.flow.monitor;
 public class NodeEntry {
 	String startTime = null;//	:	Tue Mar 03 00:41:36 GMT 2015	
 	String _type = null;//	:	nodes
-	String duration = null;//	:	0 hours, 0 minutes
+	long duration = 0;//	:	0 hours, 0 minutes
 	String status = null;//	:	success			
 	long outputRowsFailed = 0;//	:	5			
 	long outputRowsProcessed = 0; //	:	17934			
@@ -42,7 +42,7 @@ public class NodeEntry {
 	public String get_type() {
 		return _type;
 	}
-	public String getDuration() {
+	public long getDuration() {
 		return duration;
 	}
 	public String getStatus() {
