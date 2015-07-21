@@ -109,7 +109,7 @@ Input Parameter
 ## Usage Example 6: Define Salesforce data flow
     java -jar datasetutils-32.0.0.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
 
-## Usage Example 7: Detect inputFie encoding
+## Usage Example 7: Detect inputFile encoding
     java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
 
 ## Usage Example 8: download error logs file for csv uploads
