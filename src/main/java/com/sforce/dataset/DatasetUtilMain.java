@@ -286,23 +286,28 @@ public class DatasetUtilMain {
 			}
 			System.out.println("*******************************************************************************\n");	
 			System.out.println();
-			while(true)
+			if(!join)
 			{
-				try
+				while(true)
 				{
-					String tmp = DatasetUtils.readInputFromConsole("Enter 0  to Exit: ");
-					if(tmp==null)
-						System.exit(0); 
-					if(tmp.trim().isEmpty())
-						continue;
-					long choice = Long.parseLong(tmp.trim());
-					if(choice==0)
-						System.exit(0); 
-				}catch(Throwable me)
-				{
-					me.printStackTrace();
+					try
+					{
+						String tmp = DatasetUtils.readInputFromConsole("Enter 0  to Exit: ");
+						if(tmp==null)
+							System.exit(0); 
+						if(tmp.trim().isEmpty())
+							continue;
+						long choice = Long.parseLong(tmp.trim());
+						if(choice==0)
+							System.exit(0); 
+					}catch(Throwable me)
+					{
+						me.printStackTrace();
+					}
 				}
-			}			
+			}
+			System.out.println("Server ended, exiting JVM.....");
+			System.exit(0); 
 		}
 
 		if(params.sessionId==null)

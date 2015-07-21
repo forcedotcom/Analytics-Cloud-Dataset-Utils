@@ -654,7 +654,7 @@ public class DatasetUtils {
 			try {
 				line = bufferedReader.readLine();
 			} catch (IOException e) {
-				// Ignore
+				e.printStackTrace();
 			}
 		}
 		return line;
