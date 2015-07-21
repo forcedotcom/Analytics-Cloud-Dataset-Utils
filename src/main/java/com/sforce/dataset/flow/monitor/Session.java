@@ -354,6 +354,18 @@ public static final Session getSession(String orgId,String id)
 	return null;
 }
 
+public static final Session getCurrentSession()
+{
+    ThreadContext threadContext = ThreadContext.get();
+   return threadContext.getSession();
+}
+
+public static final void setCurrentSession(Session session)
+{
+    ThreadContext threadContext = ThreadContext.get();
+	threadContext.setSession(session);
+}
+
 public static final Session getCurrentSession(String orgId,String name, boolean force)
 {
     ThreadContext threadContext = ThreadContext.get();

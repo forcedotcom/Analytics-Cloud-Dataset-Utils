@@ -25,6 +25,7 @@
  */
 package com.sforce.dataset.util;
 
+import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.soap.partner.Connector;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.SessionHeader_element;
@@ -51,31 +52,50 @@ import com.sforce.ws.ConnectorConfig;
 		}
 
         @Override
-        public SessionRenewalHeader renewSession(ConnectorConfig config) throws ConnectionException {        	
-        	config.setSessionId(null);
-            
-//			ConnectorConfig config1 = new ConnectorConfig();
-//			config1.setUsername(username);
-//			config1.setPassword(password);
-//			config1.setAuthEndpoint(endpoint);
+        public SessionRenewalHeader renewSession(ConnectorConfig config) throws ConnectionException {
+        	ConnectionException c = null;
+			Session session = Session.getCurrentSession();
+        	for(int i=0;i<5;i++)
+        	{
+    			if(session!=null && !session.isDone() && i >0)
+    			{
+        			try {
+						Thread.sleep(i*3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						break;
+					}
+    			}
 
-        	PartnerConnection connection = Connector.newConnection(config);
-			
-//			DatasetUtils.loginInternal(connection);
-			
-			connection.getUserInfo();
-
-//			config.setSessionId(connection.getConfig().getSessionId());
-//			config.setServiceEndpoint(connection.getConfig().getServiceEndpoint());
-
-            SessionRenewalHeader header = new SessionRenewalHeader();
-            header.name = SESSION_HEADER_QNAME;
-//            header.name = new QName("urn:partner.soap.sforce.com", "SessionHeader");
-            SessionHeader_element se = new SessionHeader_element();
-            se.setSessionId(config.getSessionId());
-            header.headerElement = se;
-            
-            return header;
+        		try
+        		{
+		        	config.setSessionId(null);
+		        	PartnerConnection connection = Connector.newConnection(config);
+					connection.getUserInfo();
+		            SessionRenewalHeader header = new SessionRenewalHeader();
+		            header.name = SESSION_HEADER_QNAME;
+		            SessionHeader_element se = new SessionHeader_element();
+		            se.setSessionId(config.getSessionId());
+		            header.headerElement = se;
+		            return header;
+        		}catch(ConnectionException ce)
+        		{
+        			c = ce;
+        			if(session==null || session.isDone())
+        			{
+        				throw ce;
+        			}
+        		}
+        	}
+			if(session!=null && c!=null)
+			{
+				session.fail(c.getMessage());
+	        	throw c;
+			}
+			if(c!=null)
+				throw c;
+			else
+				throw new ConnectionException("Failed to renew connection");
         }
 
     }

@@ -35,12 +35,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.io.FileUtils;
 
 import com.sforce.dataset.flow.monitor.Session;
+import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.sobject.SObject;
  
 public class FilePartsUploaderThread implements Runnable {
-	
 
   private final BlockingQueue<Map<Integer,File>> queue;
   private final PartnerConnection partnerConnection;
@@ -52,9 +52,8 @@ public class FilePartsUploaderThread implements Runnable {
   private volatile int totalRowCount = 0;
   private final PrintStream logger;
   Session session = null;
-
-
-	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+  
+  public static final NumberFormat nf = NumberFormat.getIntegerInstance();
 
 FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection partnerConnection, String insightsExternalDataId, PrintStream logger, Session session) 
   { 
@@ -69,35 +68,37 @@ FilePartsUploaderThread(BlockingQueue<Map<Integer,File>> q,PartnerConnection par
 	  this.session = session;
   }
  
-  public void run() {
-    try {
-       Map<Integer, File> row = queue.take();
-   		logger.println("Start: " + Thread.currentThread().getName());
-   		done.set(false);
+	public void run() {
+		try {
+			ThreadContext threadContext = ThreadContext.get();
+			threadContext.setSession(session);
 
-       while (!row.isEmpty()) {
-     	   if(session.isDone())
-	   		{
-	   			throw new DatasetLoaderException("Operation terminated on user request");
-	   		}
-			try
-			{
+			Map<Integer, File> row = queue.take();
+			logger.println("Start: " + Thread.currentThread().getName());
+			done.set(false);
+
+			while (!row.isEmpty()) {
+				if (session.isDone()) {
+					throw new DatasetLoaderException(
+							"Operation terminated on user request");
+				}
+				try {
 					totalRowCount++;
-					if(!insertFileParts(partnerConnection, insightsExternalDataId, row, 0))
+					if (!insertFileParts(partnerConnection,
+							insightsExternalDataId, row, 0))
 						errorRowCount++;
-			}catch(Throwable t)
-			{
-				errorRowCount++;
-				t.printStackTrace();
+				} catch (Throwable t) {
+					errorRowCount++;
+					t.printStackTrace();
+				}
+				row = queue.take();
 			}
-         row = queue.take();
-       }
-    }catch (Throwable t) {
-       logger.println (Thread.currentThread().getName() + " " + t);
-    }
-    done.set(true);
-	logger.println("END: " + Thread.currentThread().getName());
-  }
+		} catch (Throwable t) {
+			logger.println(Thread.currentThread().getName() + " " + t);
+		}
+		done.set(true);
+		logger.println("END: " + Thread.currentThread().getName());
+	}
 
 public boolean isDone() {
 	return done.get();
@@ -112,7 +113,7 @@ public int getErrorRowCount() {
 }
   
   
-	private boolean insertFileParts(PartnerConnection partnerConnection, String insightsExternalDataId, Map<Integer,File> fileParts, int retryCount) throws Exception 
+	private boolean insertFileParts(PartnerConnection partnerConnection, String insightsExternalDataId, Map<Integer,File> fileParts, int retryCount) 
 	{
 		for(int i:fileParts.keySet())
 		{
@@ -141,16 +142,7 @@ public int getErrorRowCount() {
 				logger.println("File Part {"+ fileParts.get(i) + "} Insert Failed: " + t.toString());
 			}
 		}
-//			if(retryCount<3)
-//			{		
-//				retryCount++;
-//				Thread.sleep(1000*retryCount);
-////				partnerConnection = DatasetUtils.login(0, username, password, token, endpoint, sessionId);
-//				return insertFileParts(partnerConnection, insightsExternalDataId, fileParts, retryCount);
-//			}else
-			{
-				return false;
-			}
+		return false;
 	}
 
 
