@@ -34,7 +34,8 @@ Unzip datasetutils.zip to a local folder. To start the jar in server mode: Doubl
 
 **Mac**: 
 
-Install  datasetutils.dmg by double clicking it and dragging and dropping it into applications folder
+Install  datasetutils.dmg by double clicking it and dragging and dropping it into applications folder.
+
 Run datasetutils.app by double clicking it
 	 	 
 
