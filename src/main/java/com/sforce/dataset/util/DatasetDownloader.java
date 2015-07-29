@@ -333,7 +333,7 @@ public class DatasetDownloader {
 									URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
 									HttpGet listEMPost1 = new HttpGet(listEMURI1);
 
-									System.out.println("Downloading file {"+filename+"}");
+									System.out.println("Downloading file {"+filename+"} + URI: " + listEMURI1);
 									listEMPost1.setConfig(requestConfig);
 									listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
 

@@ -30,6 +30,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
@@ -37,7 +42,9 @@ import org.apache.commons.io.input.BOMInputStream;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.loader.file.schema.ext.DetectFieldTypes;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.SortSimpleDateFormat;
 
 
 public class DatasetUtilConstants {
@@ -69,6 +76,7 @@ public class DatasetUtilConstants {
 	public static final String dataflowGroupDirName = "dataflowgroup";
 	public static final String scheduleDirName = "schedule";
 	public static final String listenerDirName = "listener";
+	public static final String dateFormatsFileName = "dateFormats.json";
 	
 
 	
@@ -258,4 +266,70 @@ public class DatasetUtilConstants {
 		return conf;
 	}
 
+	public static LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
+	{
+		LinkedHashSet<SimpleDateFormat> dateFormats = new LinkedHashSet<SimpleDateFormat>();
+		File configDir = new File(DatasetUtilConstants.currentDir,configDirName);
+		try {
+			FileUtils.forceMkdir(configDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		File configFile = new File(configDir,dateFormatsFileName);
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		if(configFile != null && configFile.exists())
+		{
+			InputStreamReader reader = null;
+			try {
+				reader = new InputStreamReader(new BOMInputStream(new FileInputStream(configFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+				SupportedDateFormatType dateFormatsList = mapper.readValue(reader, SupportedDateFormatType.class);
+				if(dateFormatsList.supportedDateFormatList != null && !dateFormatsList.supportedDateFormatList.isEmpty())
+				{
+				    Collections.sort(dateFormatsList.supportedDateFormatList, new SortSimpleDateFormat());
+					for(String dateFormat:dateFormatsList.supportedDateFormatList)
+					{
+				         try
+				         {
+				        	 SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+					   	     SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+						     tempSdf.setLenient(false);
+						     dateFormats.add(tempSdf);
+				         }catch(Throwable t1)
+				         {
+				        	 t1.printStackTrace();
+				         }					
+				     }
+				}
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}finally
+			{
+				IOUtils.closeQuietly(reader);
+			}
+		}
+		
+		if(dateFormats == null || dateFormats.isEmpty())
+		{
+			dateFormats = DetectFieldTypes.getSuportedDateFormats();
+			List<String> dateFormatsList= new ArrayList<String>();
+			for(SimpleDateFormat sdf:dateFormats)
+			{
+				dateFormatsList.add(sdf.toPattern());
+			}
+
+			try
+			{
+			    Collections.sort(dateFormatsList, new SortSimpleDateFormat());
+			    SupportedDateFormatType sdft = new SupportedDateFormatType();
+			    sdft.supportedDateFormatList = dateFormatsList;
+				mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, sdft);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return dateFormats;
+		
+	}
 }

@@ -448,8 +448,8 @@ public class ExternalFileSchema  {
 							for(FieldType user_field:user_fields)
 							{
 								fieldCount++;
-								if(user_field!=null)
-								{
+							if(user_field!=null)
+							{
 								if(user_field != null && user_field.getName()!=null && !user_field.getName().isEmpty())
 								{
 									if(user_field.getName().length()>40)
@@ -592,10 +592,10 @@ public class ExternalFileSchema  {
 										uniqueIdfieldNames.add(user_field.getFullyQualifiedName());
 									}
 								}
-								}else
-								{
+							}else
+							{
 									message.append("[objects["+objectCount+"].fields["+fieldCount+"]] in schema cannot be null\n");
-								}
+							}
 
 							} //End for
 							if(uniqueIdfieldNames.size()>1)

@@ -38,7 +38,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,12 +47,15 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.util.DatasetUtils;
 
 
 public class DetectFieldTypes {
 
-	public static final int sampleSize = 3000;
+	public static final int sampleSize = 1000;
+	public static final int maxRowsToSample = sampleSize*3;
+	public static final int maxConsectiveFailures = (int) (sampleSize*.25);
 //	public static final Pattern dates = Pattern.compile("(.*)([0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][0-9]{1,2}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{4}|[0-9]{4}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2}|[0-9]{1,2}[/-\\\\.][A-Z]{3}[/-\\\\.][0-9]{1,2})(.*)");
 //	public static final Pattern numbers = Pattern.compile("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$");	
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
@@ -115,7 +117,7 @@ public class DetectFieldTypes {
 			}
 
 
-			List<String> nextLine = null;
+//			List<String> nextLine = null;
 			types = new LinkedList<FieldType>();
 			boolean uniqueColumnFound = false;
 			
@@ -167,43 +169,43 @@ public class DetectFieldTypes {
 					first = false;
 				}
 
-				
+				boolean fetchedExtraRows = false;
 				LinkedList<String> columnValues = new LinkedList<String>();			
-				HashSet<String> uniqueColumnValues = new HashSet<String>();			
-				int rowCount = 0;
+				LinkedHashSet<String> uniqueColumnValues = new LinkedHashSet<String>();			
 				logger.print("Column: "+ header[i]);
-				try
-				{
-					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
-					header = reader.getHeader(true);
-
-					rowCount++;
-					while ((nextLine = reader.read()) != null) {
-						rowCount++;
-						if(i>=nextLine.size())
-							continue; //This line does not have enough columns
-						if(nextLine.get(i) != null && !nextLine.get(i).trim().isEmpty())
-						{
-							columnValues.add(nextLine.get(i).trim());
-							uniqueColumnValues.add(nextLine.get(i).trim());
-						}
-						if(columnValues.size()>=sampleSize || rowCount > 10000)
-						{
-							break;
-						}
-					}
-				}catch(Throwable t)
-				{
-					t.printStackTrace();
-				}finally
-				{
-					if(reader!=null)
-							reader.close();
-					reader = null;
-				}
+				long rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize, maxRowsToSample, columnValues, 0);
+//				try
+//				{
+//					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
+//					header = reader.getHeader(true);
+//
+//					rowCount++;
+//					while ((nextLine = reader.read()) != null) {
+//						rowCount++;
+//						if(i>=nextLine.size())
+//							continue; //This line does not have enough columns
+//						if(nextLine.get(i) != null && !nextLine.get(i).trim().isEmpty())
+//						{
+//							columnValues.add(nextLine.get(i).trim());
+//							uniqueColumnValues.add(nextLine.get(i).trim());
+//						}
+//						if(columnValues.size()>=sampleSize || rowCount > maxRowsToSample)
+//						{
+//							break;
+//						}
+//					}
+//				}catch(Throwable t)
+//				{
+//					t.printStackTrace();
+//				}finally
+//				{
+//					if(reader!=null)
+//							reader.close();
+//					reader = null;
+//				}
 				logger.print(", ");
 				FieldType newField = null;
-				int prec = detectTextPrecision(uniqueColumnValues);
+				int prec = detectTextPrecision(columnValues);
 				DecimalFormat df = null;
 				boolean isPercent = isPercent(columnValues);
 				BigDecimal bd = detectNumeric(columnValues, null, isPercent);
@@ -230,9 +232,22 @@ public class DetectFieldTypes {
 					 bd = detectNumeric(columnValues, df, isPercent);
 				}
 
-				if(bd!=null && (uniqueColumnValues.size() == (rowCount-1)) && bd.scale() == 0 && !uniqueColumnFound)
+				if(!uniqueColumnFound && bd!=null &&  bd.scale() == 0 &&  columnValues.size() == (rowCount-1) && prec<32)
 				{	
-					bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
+					getUniqueColumnValues(columnValues, uniqueColumnValues);
+					if(uniqueColumnValues.size() == columnValues.size())
+					{
+						rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount);
+						fetchedExtraRows=true;
+						if(columnValues.size() == (rowCount-1))
+						{
+							getUniqueColumnValues(columnValues, uniqueColumnValues);
+							if(uniqueColumnValues.size() == columnValues.size())
+							{
+								bd = null; //this is a Numeric uniqueId therefore treat is Text/Dim
+							}
+						}
+					}
 				}
 				
 				if(bd!=null)
@@ -252,19 +267,37 @@ public class DetectFieldTypes {
 						logger.println("Type: Numeric, Scale: "+ bd.scale() + " Format: "+ format);
 				}else
 				{
-					SimpleDateFormat sdf = null;
-						sdf = detectDate(columnValues);
-					if(sdf!= null)
-					{
-						newField =  FieldType.GetDateKeyDataType(devNames[i], sdf.toPattern(), null);
-						logger.println("Type: Date, Format: "+ sdf.toPattern());
-					}else
+						SimpleDateFormat sdf = null;
+							sdf = detectDate(columnValues);
+						if(sdf!= null)
+						{
+							newField =  FieldType.GetDateKeyDataType(devNames[i], sdf.toPattern(), null);
+							logger.println("Type: Date, Format: "+ sdf.toPattern());
+						}
+					
+					if(newField==null)
 					{
 						newField =  FieldType.GetStringKeyDataType(devNames[i], null, null);
-						if(!uniqueColumnFound && uniqueColumnValues.size() == (rowCount-1) && prec<32)
+						if(!uniqueColumnFound && columnValues.size() == (rowCount-1) && prec<32)
 						{
-							newField.isUniqueId = true;
-							uniqueColumnFound = true;
+							getUniqueColumnValues(columnValues, uniqueColumnValues);
+							if(uniqueColumnValues.size() == columnValues.size())
+							{
+								if(!fetchedExtraRows)
+								{
+									rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount);
+									fetchedExtraRows=true;
+									if(columnValues.size() == (rowCount-1))
+									{
+										getUniqueColumnValues(columnValues, uniqueColumnValues);
+									}
+								}
+								if(uniqueColumnValues.size() == columnValues.size())
+								{
+									newField.isUniqueId = true;
+									uniqueColumnFound = true;
+								}
+							}
 						}
 						if(prec>255)
 						{
@@ -391,7 +424,7 @@ public class DetectFieldTypes {
 	        	 consectiveFailures++;
 	         }
 	    	
-	    	if(consectiveFailures>=1000)
+	    	if(consectiveFailures>=maxConsectiveFailures)
 	    	{
 	    		
 	    		return null;
@@ -437,7 +470,7 @@ public class DetectFieldTypes {
 	public SimpleDateFormat detectDate(LinkedList<String> columnValues) 
 	{
 	    
-		LinkedHashSet<SimpleDateFormat> dateFormats = getSuportedDateFormats();
+		LinkedHashSet<SimpleDateFormat> dateFormats = DatasetUtilConstants.getSuportedDateFormats();
 
 	    for(int j=0;j<columnValues.size();j++)
 	    {
@@ -497,10 +530,10 @@ public class DetectFieldTypes {
 							consectiveFailures++;
 						}
 
-			        	 if(consectiveFailures>=1000)
+			        	 if(consectiveFailures>=maxConsectiveFailures)
 				    		break;
 	    		    }
-	    		    if(!(consectiveFailures>=1000) && (1.0*success/columnValues.size()) > 0.95)
+	    		    if(!(consectiveFailures>=maxConsectiveFailures) && (1.0*success/columnValues.size()) > 0.95)
 	    		    {
 	    		    	return dtf;
 	    		    }else
@@ -515,9 +548,9 @@ public class DetectFieldTypes {
 	    
 	}
 	
-	public int detectTextPrecision(HashSet<String> uniqueColumnValues) {
+	public int detectTextPrecision(List<String> columnValues) {
 		int length = 0;
-	    for(String columnValue:uniqueColumnValues)
+	    for(String columnValue:columnValues)
 	    {
 	        if(columnValue!=null)
 	        {
@@ -528,7 +561,7 @@ public class DetectFieldTypes {
 	    return length;
 	}
 	
-	public LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
+	public static LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
 	{
 		LinkedHashSet<SimpleDateFormat> dateFormats = new LinkedHashSet<SimpleDateFormat>();
 		Locale[] locales = Locale.getAvailableLocales();
@@ -538,9 +571,13 @@ public class DetectFieldTypes {
 	      	  continue; // Skip language-only locales
 	        }	    	  
 	      SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM,SimpleDateFormat.MEDIUM, locales[i]);
-	      SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
-	      tempSdf.setLenient(false);
-	      dateFormats.add(tempSdf);
+	      String pat = sdf.toPattern();
+	      if(!pat.contains("MMM"))
+	      {
+		      SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+		      tempSdf.setLenient(false);
+		      dateFormats.add(tempSdf);
+	      }
 	    }
 
 	    for (int i = 0; i < additionalDatePatterns.length; i++) 
@@ -563,9 +600,13 @@ public class DetectFieldTypes {
 	      	  continue; // Skip language-only locales
 	        }	    	  
 	        SimpleDateFormat sdf = (SimpleDateFormat) SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, locales[i]);
-	   	    SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
-		    tempSdf.setLenient(false);
-		    dateFormats.add(tempSdf);
+		      String pat = sdf.toPattern();
+		      if(!pat.contains("MMM"))
+		      {
+		   	    SimpleDateFormat tempSdf = new SimpleDateFormat(sdf.toPattern());
+			    tempSdf.setLenient(false);
+			    dateFormats.add(tempSdf);
+		      }
 	    }
 	    return dateFormats;
     }
@@ -586,5 +627,62 @@ public class DetectFieldTypes {
 	    }
 	    return false;
 	}
+	
+	private long getColumnValuefromCsv(File inputCsv, Charset fileCharset, CsvPreference pref, int columnIndex, long sampleSize, long maxRowsToSample, LinkedList<String> columnValues, long rowCountToSkip)
+	{
+		CsvListReader reader = null;
+		String[] header = null;
+		long rowCount = 0L;
+		try
+		{
+			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
+			header = reader.getHeader(true);
+			if(columnIndex>=header.length)
+				return rowCount;
+			rowCount++;
+			List<String> nextLine = null;
+			while ((nextLine = reader.read()) != null) {
+				rowCount++;
+				if(rowCount<=rowCountToSkip)
+					continue;
+				if(columnIndex>=nextLine.size())
+					continue; //This line does not have enough columns
+				if(nextLine.get(columnIndex) != null && !nextLine.get(columnIndex).trim().isEmpty())
+				{
+					columnValues.add(nextLine.get(columnIndex).trim());
+				}
+				if(columnValues.size()>=sampleSize || rowCount > maxRowsToSample)
+				{
+					break;
+				}
+			}
+		}catch(Throwable t)
+		{
+			t.printStackTrace();
+		}finally
+		{
+			if(reader!=null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e) {
+				}
+			}
+			reader = null;
+		}
+		return rowCount;
+	}
+	
+	private void getUniqueColumnValues(LinkedList<String> columnValues,LinkedHashSet<String> uniqueColumnValues)
+	{
+	    for(String columnValue:columnValues)
+	    {
+	        if(columnValue!=null)
+	        {
+	        	uniqueColumnValues.add(columnValue);
+	        }
+	    }
+	}
+	
 
 }
