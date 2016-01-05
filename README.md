@@ -20,7 +20,7 @@ Download and install Java JDK (not JRE) from Oracle
 
 * [Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 
-After installation is complete. open a console and check that the java version is 1.7 or higher by running the following command:
+After installation is complete. open a console and check that the java version is 1.8 or higher by running the following command:
 
 ``java -version``
 
