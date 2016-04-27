@@ -32,3 +32,4 @@ release.properties
 *.csv
 *.log
 /Org-*/
+/mapred/
