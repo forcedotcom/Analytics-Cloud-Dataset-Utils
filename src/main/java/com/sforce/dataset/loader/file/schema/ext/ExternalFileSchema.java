@@ -142,13 +142,13 @@ public class ExternalFileSchema  {
 		return true;
 	}
 
-	public static ExternalFileSchema init(File csvFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
+	public static ExternalFileSchema init(File csvFile, File schemaFile, Charset fileCharset, PrintStream logger, String orgId) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
 		ExternalFileSchema newSchema = null;
 		//try 
 		//{				
-			ExternalFileSchema userSchema = ExternalFileSchema.load(csvFile, fileCharset, logger);
-			ExternalFileSchema autoSchema = ExternalFileSchema.createAutoSchema(csvFile, userSchema, fileCharset, logger);
+			ExternalFileSchema userSchema = ExternalFileSchema.load(csvFile, schemaFile, fileCharset, logger);
+			ExternalFileSchema autoSchema = ExternalFileSchema.createAutoSchema(csvFile, userSchema, fileCharset, logger, orgId);
 			
 			if(userSchema==null)
 			{
@@ -179,7 +179,7 @@ public class ExternalFileSchema  {
 
 
 	
-	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger) throws IOException, DatasetLoaderException
+	public static ExternalFileSchema createAutoSchema(File csvFile, ExternalFileSchema userSchema, Charset fileCharset, PrintStream logger, String orgId) throws IOException, DatasetLoaderException
 	{
 		ExternalFileSchema emd = null;
 		String baseName = FilenameUtils.getBaseName(csvFile.getName());
@@ -210,23 +210,28 @@ public class ExternalFileSchema  {
 		if(userSchema!=null)
 		{
 			delim = userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0);
-		}else
+		}else if(fileExt == null || !fileExt.equalsIgnoreCase("csv"))
 		{	
 				delim = SeparatorGuesser.guessSeparator(csvFile, fileCharset, true);
 //				logger.println("\n*******************************************************************************");					
-			    logger.println("File {"+csvFile+"} has delimiter {"+delim+"}");
+//			    logger.println("File {"+csvFile+"} has delimiter {"+delim+"}");
 //				logger.println("*******************************************************************************\n");					
 				
 				if(delim==0)
 				{
+//					logger.println("Failed to determine field Delimiter for file {"+csvFile+"}");
+//					delim = ',';
 					throw new DatasetLoaderException("Failed to determine field Delimiter for file {"+csvFile+"}");
+				}else
+				{
+				    logger.println("File {"+csvFile+"} has delimiter {"+delim+"}");
 				}
 		}
 
 		CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), delim, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 		
 			DetectFieldTypes detEFT = new DetectFieldTypes();
-			List<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset,pref, logger);
+			List<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset,pref, logger, orgId);
 			FileFormat fileFormat = new FileFormat();
 			fileFormat.setFieldsDelimitedBy(delim+"");
 
@@ -255,7 +260,7 @@ public class ExternalFileSchema  {
 		ObjectMapper mapper = new ObjectMapper();	
 		try 
 		{
-			if(!schemaFile.getName().endsWith(SCHEMA_FILE_SUFFIX))
+			if(!schemaFile.getName().toLowerCase().endsWith(SCHEMA_FILE_SUFFIX))
 			{
 				FilenameUtils.getBaseName(schemaFile.getName());
 				schemaFile = new File(schemaFile.getParent(),FilenameUtils.getBaseName(schemaFile.getName())+SCHEMA_FILE_SUFFIX);
@@ -273,16 +278,23 @@ public class ExternalFileSchema  {
 		}
 	}
 	
-	public static ExternalFileSchema load(File inputCSV, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
+	public static ExternalFileSchema load(File inputCSV,File schemaFile, Charset fileCharset, PrintStream logger) throws JsonParseException, JsonMappingException, IOException
 	{
-		File schemaFile = inputCSV;
+		
 		String fileExt = FilenameUtils.getExtension(inputCSV.getName());
 
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		if(!inputCSV.getName().endsWith(SCHEMA_FILE_SUFFIX))
-		{
-			schemaFile = new File(inputCSV.getParent(),FilenameUtils.getBaseName(inputCSV.getName())+SCHEMA_FILE_SUFFIX);
+		
+		if(schemaFile == null)
+		{		
+			if(!inputCSV.getName().toLowerCase().endsWith(SCHEMA_FILE_SUFFIX))
+			{
+				schemaFile = new File(inputCSV.getParent(),FilenameUtils.getBaseName(inputCSV.getName())+SCHEMA_FILE_SUFFIX);
+			}else
+			{
+				schemaFile = inputCSV;
+			}
 		}
 		ExternalFileSchema userSchema = null;
 		if(schemaFile.exists())
@@ -467,7 +479,7 @@ public class ExternalFileSchema  {
 										message.append("Duplicate field name {"+user_field.getName()+"}\n");
 									}
 									
-									if(user_field.getName().endsWith("_sec_epoch") || user_field.getName().endsWith("_day_epoch") || user_field.getName().endsWith("_Day") || user_field.getName().endsWith("_Month") || user_field.getName().endsWith("_Year") || user_field.getName().endsWith("_Quarter") || user_field.getName().endsWith("_Week") || user_field.getName().endsWith("_Hour")|| user_field.getName().endsWith("_Minute")|| user_field.getName().endsWith("_Second")|| user_field.getName().endsWith("_Month_Fiscal")|| user_field.getName().endsWith("_Year_Fiscal")|| user_field.getName().endsWith("_Quarter_Fiscal") || user_field.getName().endsWith("_Week_Fiscal"))
+									if(user_field.getName().toUpperCase().endsWith("_sec_epoch".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_day_epoch".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Day".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Month".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Year".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Quarter".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Week".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Hour".toUpperCase())|| user_field.getName().toUpperCase().endsWith("_Minute".toUpperCase())|| user_field.getName().toUpperCase().endsWith("_Second".toUpperCase())|| user_field.getName().toUpperCase().endsWith("_Month_Fiscal".toUpperCase())|| user_field.getName().toUpperCase().endsWith("_Year_Fiscal".toUpperCase())|| user_field.getName().toUpperCase().endsWith("_Quarter_Fiscal".toUpperCase()) || user_field.getName().toUpperCase().endsWith("_Week_Fiscal".toUpperCase()))
 									{
 										for(FieldType user_field_2:user_fields)
 										{
@@ -799,7 +811,7 @@ public class ExternalFileSchema  {
 		try 
 		{
 			//init(csvFile);
-			if(!csvFile.getName().endsWith(SCHEMA_FILE_SUFFIX))
+			if(!csvFile.getName().toUpperCase().endsWith(SCHEMA_FILE_SUFFIX))
 			{
 				FilenameUtils.getBaseName(csvFile.getName());
 				csvFile = new File(csvFile.getParent(),FilenameUtils.getBaseName(csvFile.getName())+SCHEMA_FILE_SUFFIX);

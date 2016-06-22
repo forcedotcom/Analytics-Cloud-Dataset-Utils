@@ -23,33 +23,15 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.util;
 
-import java.util.Comparator;
+package com.sforce.dataset;
 
-public class SortSimpleDateFormat implements Comparator<String > {
 
-	@Override
-	public int compare(String o1, String o2) {
-		if (o1.length() > o2.length())
-			return -1;
-		else if (o1.length() < o2.length())
-			return 1;
-		else
-		{
-			return o1.compareTo(o2);
-			
-		}
-	}
 
+public class Preferences {
+    public String notificationLevel = null;
+	public String notificationEmail = null;
+	public int fiscalMonthOffset = 0; //The month in which the fiscal quarter starts
+	public int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
+	public  boolean isYearEndFiscalYear = true; //Optional	public String proxyNtlmDomain = null;
 }
-
-
-//public class SortSimpleDateFormat implements Comparator<SimpleDateFormat > {
-//
-//	@Override
-//	public int compare(SimpleDateFormat o1, SimpleDateFormat o2) {
-//		return o1.toPattern().compareTo(o2.toPattern());
-//	}
-//
-//}

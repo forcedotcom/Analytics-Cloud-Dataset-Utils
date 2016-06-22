@@ -85,6 +85,7 @@ import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.FileUtilsExt;
 import com.sforce.dataset.util.SfdcUtils;
+import com.sforce.soap.partner.GetUserInfoResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.SaveResult;
@@ -93,21 +94,41 @@ import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 import com.sforce.ws.util.Base64;
 
+/**
+ * The Class DatasetLoader.
+ */
 public class DatasetLoader {
 	
 
+	/** The Constant DEFAULT_BUFFER_SIZE. */
 	private static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
+	
+	/** The Constant EOF. */
 	private static final int EOF = -1;
+	
+	/** The Constant LF. */
 	private static final char LF = '\n';
+	
+	/** The Constant CR. */
 	private static final char CR = '\r';
+	
+	/** The Constant QUOTE. */
 	private static final char QUOTE = '"';
+	
+	/** The Constant COMMA. */
 	private static final char COMMA = ',';
 
 	
+	/** The Constant filePartsHdr. */
 	private static final String[] filePartsHdr = {"InsightsExternalDataId","PartNumber","DataFile"};
 	
+	/** The Constant nf. */
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+	
+	/** The max num upload threads. */
 	private static int MAX_NUM_UPLOAD_THREADS = 3;
+	
+	/** The Constant logformat. */
 	static final SimpleDateFormat logformat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS zzz");
 	static
 	{
@@ -116,13 +137,54 @@ public class DatasetLoader {
 	
 //	PrintStream logger = null;
 
+/**
+ * Upload dataset.
+ *
+ * @param inputCsv the input csv
+ * @param inputFileCharset the input file charset
+ * @param datasetAlias the dataset alias
+ * @param datasetFolder the dataset folder
+ * @param datasetLabel the dataset label
+ * @param Operation the operation (OverWrite/Upserts/Append)
+ * @param fields the list of fields in the csv
+ * @param sessionID the sfdc authenticated session id
+ * @param serverInstanceURL the server instance url returned from the authentication
+ * @param logger the logger
+ * @throws DatasetLoaderException the dataset loader exception
+ */
+	public static void uploadDataset(File inputCsv,
+			Charset inputFileCharset, String datasetAlias,
+			String datasetFolder,String datasetLabel, String Operation, List<FieldType> fields,
+			String sessionID, String serverInstanceURL, PrintStream logger) throws DatasetLoaderException
+	{
+		//Blackbox
+	}
 
-	@SuppressWarnings("deprecation")
-	public static boolean uploadDataset(String inputFileString,
+	/**
+ * Upload dataset.
+ *
+ * @param inputFileString the input file string
+ * @param uploadFormat the upload format
+ * @param codingErrorAction the coding error action
+ * @param inputFileCharset the input file charset
+ * @param datasetAlias the dataset alias
+ * @param datasetFolder the dataset folder
+ * @param datasetLabel the dataset label
+ * @param Operation the operation
+ * @param useBulkAPI the use bulk api
+ * @param partnerConnection the partner connection
+ * @param logger the logger
+ * @param notificationLevel notificationLevel
+ * @param notificationEmail notificationEmail
+ * @return true, if successful
+ * @throws DatasetLoaderException the dataset loader exception
+ */
+@SuppressWarnings("deprecation")
+	public static boolean uploadDataset(String inputFileString,String schemaFileString,
 			String uploadFormat, CodingErrorAction codingErrorAction,
 			Charset inputFileCharset, String datasetAlias,
 			String datasetFolder,String datasetLabel, String Operation, boolean useBulkAPI,
-			PartnerConnection partnerConnection, PrintStream logger) throws DatasetLoaderException
+			PartnerConnection partnerConnection,String notificationLevel, String notificationEmail, PrintStream logger) throws DatasetLoaderException
 	{
 		File archiveDir = null;
 		File datasetArchiveDir = null;
@@ -146,6 +208,11 @@ public class DatasetLoader {
 		if(codingErrorAction==null)
 			codingErrorAction = CodingErrorAction.REPORT;
 		
+
+		if(logger==null)
+			logger = System.out;
+		
+
 		if(inputFileCharset==null)
 		{
 			Charset tmp = null;
@@ -185,12 +252,15 @@ public class DatasetLoader {
 		logger.println("\n*******************************************************************************");					
 		logger.println("Start Timestamp: "+logformat.format(new Date()));
 		logger.println("inputFileString: "+inputFileString);
+		logger.println("schemaFileString: "+schemaFileString);
 		logger.println("inputFileCharset: "+inputFileCharset);
 		logger.println("datasetAlias: "+datasetAlias);
 		logger.println("datasetLabel: "+datasetLabel);
 		logger.println("datasetFolder: "+datasetFolder);
 		logger.println("Operation: "+Operation);
 		logger.println("uploadFormat: "+uploadFormat);
+		logger.println("notificationLevel: "+notificationLevel);
+		logger.println("notificationEmail: "+notificationEmail);
 		logger.println("JVM Max memory: "+nf.format(rt.maxMemory()/mb));
 		logger.println("JVM Total memory: "+nf.format(rt.totalMemory()/mb));
 		logger.println("JVM Free memory: "+nf.format(rt.freeMemory()/mb));
@@ -210,7 +280,22 @@ public class DatasetLoader {
 				logger.println("Error: File {"+inputFile.getAbsolutePath()+"} is empty");
 				throw new DatasetLoaderException("Error: File {"+inputFile.getAbsolutePath()+"} is empty");
 			}
-			
+
+			if(schemaFileString != null)
+			{
+				schemaFile = new File(schemaFileString);
+				if(!schemaFile.exists())
+				{
+					logger.println("Error: File {"+schemaFile.getAbsolutePath()+"} not found");
+					throw new DatasetLoaderException("File {"+schemaFile.getAbsolutePath()+"} not found");
+				}
+	
+				if(schemaFile.length()==0)
+				{
+					logger.println("Error: File {"+schemaFile.getAbsolutePath()+"} is empty");
+					throw new DatasetLoaderException("Error: File {"+schemaFile.getAbsolutePath()+"} is empty");
+				}
+			}
 			
 			if(datasetAlias==null||datasetAlias.trim().isEmpty())
 			{
@@ -246,9 +331,12 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 			
+			if(schemaFile==null)
+				schemaFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
 			
-			schemaFile = ExternalFileSchema.getSchemaFile(inputFile, logger);
 			ExternalFileSchema schema = null;
+			String orgId = partnerConnection.getUserInfo().getOrganizationId();
+
 			
 			//If this is incremental, fetch last uploaded json instead of generating a new one
 			if(schemaFile == null || !schemaFile.exists() || schemaFile.length()==0)
@@ -304,6 +392,7 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
+			
 			if(schema==null)
 			{
 				logger.println("\n*******************************************************************************");					
@@ -314,7 +403,7 @@ public class DatasetLoader {
 					else
 						session.setStatus("DETECTING SCHEMA");
 								
-					schema = ExternalFileSchema.init(inputFile, inputFileCharset,logger);
+					schema = ExternalFileSchema.init(inputFile, schemaFile, inputFileCharset,logger, orgId);
 					if(schema==null)
 					{
 						logger.println("Failed to parse schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
@@ -324,7 +413,7 @@ public class DatasetLoader {
 				{
 					if(schemaFile != null && schemaFile.exists() && schemaFile.length()>0)
 						session.setStatus("LOADING SCHEMA");
-					schema = ExternalFileSchema.load(inputFile, inputFileCharset,logger);
+					schema = ExternalFileSchema.load(inputFile, schemaFile, inputFileCharset,logger);
 					if(schema==null)
 					{
 						logger.println("Failed to load schema file {"+ ExternalFileSchema.getSchemaFile(inputFile, logger) +"}");
@@ -404,7 +493,7 @@ public class DatasetLoader {
 
 			if(hdrId==null || hdrId.isEmpty())
 			{
-				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, altSchema.toBytes(), uploadFormat, Operation, logger);
+				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, altSchema.toBytes(), uploadFormat, Operation, notificationLevel,  notificationEmail, logger);
 			}
 			
 			if(hdrId ==null || hdrId.isEmpty())
@@ -420,17 +509,20 @@ public class DatasetLoader {
 				throw new DatasetLoaderException("Operation terminated on user request");
 			}
 
-			long sortStartTime = System.currentTimeMillis();
-			File unsortedFile = inputFile;
-			inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema, pref);
-			long sortEndTime = System.currentTimeMillis();
-			
-			if(unsortedFile != inputFile)
-			{
-				logger.println("\n*******************************************************************************");									
-				logger.println(" File {"+inputFile.getName()+"}, sorted in Time {"+nf.format(sortEndTime-sortStartTime) + "} msecs");
-				logger.println("*******************************************************************************\n");					
+			if(isParsable)
+			{	
+				long sortStartTime = System.currentTimeMillis();
+				File unsortedFile = inputFile;
+				inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema, pref);
+				long sortEndTime = System.currentTimeMillis();
+				if(unsortedFile != inputFile)
+				{
+					logger.println("\n*******************************************************************************");									
+					logger.println(" File {"+inputFile.getName()+"}, sorted in Time {"+nf.format(sortEndTime-sortStartTime) + "} msecs");
+					logger.println("*******************************************************************************\n");					
+				}
 			}
+			
 			
 			if(session.isDone())
 			{
@@ -734,7 +826,7 @@ public class DatasetLoader {
 			}
 
 			long startTime = System.currentTimeMillis();
-			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, logger);
+			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, notificationLevel,  notificationEmail, logger);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 			
@@ -794,59 +886,31 @@ public class DatasetLoader {
 
 	
 	/**
-	 * @param dataFile  The file to upload
-	 * @param dataFormat The format of the file (CSV or Binary)
-	 * @param metadataJson The metadata of the file
-	 * @param datasetAlias The Alias of the dataset 
-	 * @param datasetArchiveDir 
-	 * @param logger 
-	 * @param username The Salesforce username
-	 * @param password The Salesforce password
-	 * @param token The Salesforce security token
-	 * @param endpoint The Salesforce API endpoint URL 
-	 * @return boolean status of the upload
-	 * @throws DatasetLoaderException 
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 * @throws ConnectionException 
-	 * @throws AsyncApiException 
+	 * Upload em.
+	 *
+	 * @param dataFile the data file
+	 * @param dataFormat the data format
+	 * @param metadataJsonBytes the metadata json bytes
+	 * @param datasetAlias the dataset alias
+	 * @param datasetFolder the dataset folder
+	 * @param datasetLabel the dataset label
+	 * @param useBulk the use bulk
+	 * @param partnerConnection the partner connection
+	 * @param hdrId the hdr id
+	 * @param datasetArchiveDir the dataset archive dir
+	 * @param Operation the operation
+	 * @param updateHdrJson the update hdr json
+	 * @param notificationLevel notificationLevel
+	 * @param notificationEmail notificationEmail
+	 * @param logger the logger
+	 * @return true, if successful
+	 * @throws DatasetLoaderException the dataset loader exception
+	 * @throws InterruptedException the interrupted exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws ConnectionException the connection exception
+	 * @throws AsyncApiException the async api exception
 	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, File metadataJson, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) 
-			throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
-	{
-		byte[] metadataJsonBytes = null;
-		if(metadataJson != null && metadataJson.canRead())
-			try {
-				metadataJsonBytes = FileUtils.readFileToByteArray(metadataJson);
-			} catch (IOException e) {
-				e.printStackTrace(logger);
-				throw new DatasetLoaderException("failed to read file {"+metadataJson+"}: "+e.getMessage());
-			}
-		else
-			logger.println("warning: metadata Json file {"+metadataJson+"} not found");			
-
-		return uploadEM(dataFile, dataFormat, metadataJsonBytes, datasetAlias, datasetFolder, datasetLabel, useBulk, partnerConnection, hdrId, datasetArchiveDir, Operation, updateHdrJson, logger);
-	}
-
-	/**
-	 * @param dataFile  The file to upload
-	 * @param dataFormat The format of the file (CSV or Binary)
-	 * @param metadataJson The metadata of the file
-	 * @param datasetAlias The Alias of the dataset 
-	 * @param logger 
-	 * @param operation 
-	 * @param username The Salesforce username
-	 * @param password The Salesforce password
-	 * @param token The Salesforce security token
-	 * @param endpoint The Salesforce API endpoint URL 
-	 * @return boolean status of the upload
-	 * @throws DatasetLoaderException 
-	 * @throws InterruptedException 
-	 * @throws IOException 
-	 * @throws ConnectionException 
-	 * @throws AsyncApiException 
-	 */
-	public static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson, PrintStream logger) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
+	private static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson,String notificationLevel, String notificationEmail, PrintStream logger) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
 	{
 		BlockingQueue<Map<Integer, File>> q = new LinkedBlockingQueue<Map<Integer, File>>(); 
 		LinkedList<Integer> existingFileParts = new LinkedList<Integer>();
@@ -891,7 +955,7 @@ public class DatasetLoader {
 
 		if(hdrId==null || hdrId.trim().isEmpty())
 		{
-			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, metadataJsonBytes, dataFormat, Operation, logger);
+			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, metadataJsonBytes, dataFormat, Operation, notificationLevel,  notificationEmail, logger);
 		}else
 		{
 			existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
@@ -901,7 +965,8 @@ public class DatasetLoader {
 		
 		if(hdrId ==null || hdrId.isEmpty())
 		{
-			return false;
+			logger.println("Error: failed to insert header row into the saleforce SObject");		
+			throw new DatasetLoaderException("Error: failed to insert header row into the saleforce SObject");
 		}
 
 		session.setParam(DatasetUtilConstants.hdrIdParam,hdrId);
@@ -1030,11 +1095,27 @@ public class DatasetLoader {
 	}
 
 	
-	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, String datasetLabel,  byte[] metadataJson, String dataFormat, String Operation, PrintStream logger) throws DatasetLoaderException 
+	/**
+	 * Insert file hdr.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param datasetAlias the dataset alias
+	 * @param datasetContainer the dataset container
+	 * @param datasetLabel the dataset label
+	 * @param metadataJson the metadata json
+	 * @param dataFormat the data format
+	 * @param Operation the operation
+	 * @param logger the logger
+	 * @return the string
+	 * @throws DatasetLoaderException the dataset loader exception
+	 */
+	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, String datasetLabel,  byte[] metadataJson, String dataFormat, String Operation, String notificationLevel, String notificationEmail,PrintStream logger) throws DatasetLoaderException 
 	{
 		String rowId = null;
 		long startTime = System.currentTimeMillis(); 
 		try {
+			
+	    	com.sforce.dataset.Preferences userPref = DatasetUtilConstants.getPreferences(partnerConnection.getUserInfo().getOrganizationId());
 
 			SObject sobj = new SObject();	        
 			sobj.setType("InsightsExternalData"); 
@@ -1075,6 +1156,35 @@ public class DatasetLoader {
     		
     		sobj.setField("Action","None");
     		
+        		//"Always, Failures, Warnings, Never"
+    			if(notificationLevel==null || notificationLevel.trim().isEmpty())
+    			{
+    				if(userPref.notificationLevel==null || userPref.notificationLevel.trim().isEmpty())
+        				notificationLevel = "Warnings";
+        			else
+        				notificationLevel = userPref.notificationLevel;
+
+    			}
+    			
+    			if(notificationEmail==null || notificationEmail.trim().isEmpty())
+    			{
+    				if(userPref.notificationEmail==null || userPref.notificationEmail.trim().isEmpty())
+    				{
+        				GetUserInfoResult userInfo = partnerConnection.getUserInfo();
+        				notificationEmail = userInfo.getUserEmail();
+    				}
+    				else
+        				notificationEmail = userPref.notificationEmail;
+    			}
+    		
+        			sobj.setField("NotificationSent",notificationLevel);
+
+            		sobj.setField("NotificationEmail",notificationEmail);
+    		
+    		
+ 			//sobj.setField("FileName",fileName);
+ 		 	//sobj.setField("Description",description);
+    		
     		SaveResult[] results = partnerConnection.create(new SObject[] { sobj });    	
     		long endTime = System.currentTimeMillis(); 
     		for(SaveResult sv:results)
@@ -1089,7 +1199,6 @@ public class DatasetLoader {
 					throw new DatasetLoaderException("Failed to insert Header into InsightsExternalData Object: " + (getErrorMessage(sv.getErrors())));
     			}
     		}
-
 		} catch (ConnectionException e) {
 			e.printStackTrace(logger);
 			throw new DatasetLoaderException("Failed to insert Header into InsightsExternalData Object: "+e.getMessage());
@@ -1162,6 +1271,19 @@ public class DatasetLoader {
 	}
 	*/
 
+	/**
+	 * Insert file parts bulk.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param insightsExternalDataId the insights external data id
+	 * @param fileParts the file parts
+	 * @param retryCount the retry count
+	 * @param logger the logger
+	 * @return true, if successful
+	 * @throws ConnectionException the connection exception
+	 * @throws AsyncApiException the async api exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@SuppressWarnings("unused")
 	private boolean insertFilePartsBulk(PartnerConnection partnerConnection, String insightsExternalDataId, Map<Integer,File> fileParts, int retryCount, PrintStream logger) throws ConnectionException, AsyncApiException, IOException 
 	{
@@ -1222,10 +1344,24 @@ public class DatasetLoader {
 	}
 	
 	
+	/**
+	 * Update file hdr.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param rowId the row id
+	 * @param datasetAlias the dataset alias
+	 * @param datasetContainer the dataset container
+	 * @param metadataJson the metadata json
+	 * @param dataFormat the data format
+	 * @param Action the action
+	 * @param Operation the operation
+	 * @param logger the logger
+	 * @return true, if successful
+	 * @throws DatasetLoaderException the dataset loader exception
+	 */
 	private static boolean updateFileHdr(PartnerConnection partnerConnection, String rowId, String datasetAlias, String datasetContainer, byte[] metadataJson, String dataFormat, String Action, String Operation, PrintStream logger) throws DatasetLoaderException 
 	{
 		try {
-								
 			long startTime = System.currentTimeMillis(); 
 			SObject sobj = new SObject();
 	        sobj.setType("InsightsExternalData"); 
@@ -1286,10 +1422,13 @@ public class DatasetLoader {
 	}
 	
 	/**
-	 * @param inputFile
-	 * @param logger 
-	 * @return
-	 * @throws IOException
+	 * Chunk binary.
+	 *
+	 * @param inputFile the input file
+	 * @param archiveDir the archive dir
+	 * @param logger the logger
+	 * @return the map
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static Map<Integer,File> chunkBinary(File inputFile, File archiveDir, PrintStream logger) throws IOException 
 	{	
@@ -1363,6 +1502,15 @@ public class DatasetLoader {
 		return fileParts;
 	} 
 	
+	/**
+	 * Creates the batch zip.
+	 *
+	 * @param fileParts the file parts
+	 * @param insightsExternalDataId the insights external data id
+	 * @param logger the logger
+	 * @return the map
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@SuppressWarnings("unused")
 	private static Map<Integer,File> createBatchZip(Map<Integer,File> fileParts,String insightsExternalDataId, PrintStream logger) throws IOException
 	{
@@ -1423,12 +1571,10 @@ public class DatasetLoader {
 	}
 	
 	/**
-	 * This method will format the error message so that it can be logged by
-	 * in the error csv file
-	 * 
-	 * @param errors
-	 *            Array of com.sforce.soap.partner.Error[]
-	 * @return formated Error String
+	 * Gets the error message.
+	 *
+	 * @param errors the errors
+	 * @return the error message
 	 */
 	static String getErrorMessage(com.sforce.soap.partner.Error[] errors)
 	{
@@ -1449,6 +1595,12 @@ public class DatasetLoader {
 	}
 	
 	
+	/**
+	 * Gets the CSV friendly string.
+	 *
+	 * @param content the content
+	 * @return the CSV friendly string
+	 */
 	private static String getCSVFriendlyString(String content)
 	{
 		if(content!=null && !content.isEmpty())
@@ -1462,6 +1614,14 @@ public class DatasetLoader {
 	}
 	
 	
+	/**
+	 * Replace string.
+	 *
+	 * @param original the original
+	 * @param pattern the pattern
+	 * @param replace the replace
+	 * @return the string
+	 */
 	private static String replaceString(String original, String pattern, String replace) 
 	{
 		if(original != null && !original.isEmpty() && pattern != null && !pattern.isEmpty() && replace !=null)
@@ -1492,9 +1652,15 @@ public class DatasetLoader {
 	
 	
 	   /**
-     * Gets the results of the operation and checks for errors.
-	 * @param logger 
-     */
+   	 * Check results.
+   	 *
+   	 * @param connection the connection
+   	 * @param job the job
+   	 * @param batchInfoList the batch info list
+   	 * @param logger the logger
+   	 * @throws AsyncApiException the async api exception
+   	 * @throws IOException Signals that an I/O exception has occurred.
+   	 */
     private static void checkResults(BulkConnection connection, JobInfo job,
     		LinkedHashMap<BatchInfo,File> batchInfoList, PrintStream logger)
             throws AsyncApiException, IOException {
@@ -1545,6 +1711,13 @@ public class DatasetLoader {
 
 
 
+    /**
+     * Close job.
+     *
+     * @param connection the connection
+     * @param jobId the job id
+     * @throws AsyncApiException the async api exception
+     */
     private static void closeJob(BulkConnection connection, String jobId)
           throws AsyncApiException {
         JobInfo job = new JobInfo();
@@ -1556,16 +1729,13 @@ public class DatasetLoader {
 
 
     /**
-     * Wait for a job to complete by polling the Bulk API.
-     * 
-     * @param connection
-     *            BulkConnection used to check results.
-     * @param job
-     *            The job awaiting completion.
-     * @param batchInfoList
-     *            List of batches for this job.
-     * @param logger 
-     * @throws AsyncApiException
+     * Await completion.
+     *
+     * @param connection the connection
+     * @param job the job
+     * @param batchInfoList the batch info list
+     * @param logger the logger
+     * @throws AsyncApiException the async api exception
      */
     private static void awaitCompletion(BulkConnection connection, JobInfo job,
     		LinkedHashMap<BatchInfo,File> batchInfoList, PrintStream logger)
@@ -1597,14 +1767,12 @@ public class DatasetLoader {
 
 
     /**
-     * Create a new job using the Bulk API.
-     * 
-     * @param sobjectType
-     *            The object type being loaded, such as "Account"
-     * @param connection
-     *            BulkConnection used to create the new job.
-     * @return The JobInfo for the new job.
-     * @throws AsyncApiException
+     * Creates the job.
+     *
+     * @param sobjectType the sobject type
+     * @param connection the connection
+     * @return the job info
+     * @throws AsyncApiException the async api exception
      */
     private static JobInfo createJob(String sobjectType, BulkConnection connection)
           throws AsyncApiException {
@@ -1620,7 +1788,12 @@ public class DatasetLoader {
     
 
     /**
-     * Create the BulkConnection used to call Bulk API operations.
+     * Gets the bulk connection.
+     *
+     * @param partnerConfig the partner config
+     * @return the bulk connection
+     * @throws ConnectionException the connection exception
+     * @throws AsyncApiException the async api exception
      */
     private static BulkConnection getBulkConnection(ConnectorConfig partnerConfig)
           throws ConnectionException, AsyncApiException {
@@ -1642,6 +1815,17 @@ public class DatasetLoader {
     }
 
     
+    /**
+     * Creates the batch.
+     *
+     * @param zipFile the zip file
+     * @param batchInfos the batch infos
+     * @param connection the connection
+     * @param jobInfo the job info
+     * @param logger the logger
+     * @throws IOException Signals that an I/O exception has occurred.
+     * @throws AsyncApiException the async api exception
+     */
     private void createBatch(File zipFile,
     		LinkedHashMap<BatchInfo,File> batchInfos, BulkConnection connection, JobInfo jobInfo, PrintStream logger)
     	              throws IOException, AsyncApiException {
@@ -1657,6 +1841,14 @@ public class DatasetLoader {
     	    }
 
 
+	/**
+	 * Creates the zip.
+	 *
+	 * @param zipfile the zipfile
+	 * @param files the files
+	 * @param logger the logger
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private static void createZip(File zipfile,File[] files, PrintStream logger) throws IOException
 	{
 		if(zipfile == null)
@@ -1741,6 +1933,13 @@ public class DatasetLoader {
 	}
 	*/
 
+	/**
+	 * Check api access.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param logger the logger
+	 * @return true, if successful
+	 */
 	private static boolean checkAPIAccess(PartnerConnection partnerConnection, PrintStream logger) {
 		try {
 			Map<String,String> objectList = SfdcUtils.getObjectList(partnerConnection, Pattern.compile("\\b"+"InsightsExternalData"+"\\b"), false);
@@ -1765,6 +1964,15 @@ public class DatasetLoader {
 	}
 	
 
+	/**
+	 * Gets the last incomplete file hdr.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param datasetAlias the dataset alias
+	 * @param logger the logger
+	 * @return the last incomplete file hdr
+	 * @throws Exception the exception
+	 */
 	private static String getLastIncompleteFileHdr(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
 	{
 		String rowId = null;
@@ -1808,6 +2016,14 @@ public class DatasetLoader {
 		return rowId; 
 	}
 	
+	/**
+	 * Gets the uploaded file parts.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param hdrId the hdr id
+	 * @return the uploaded file parts
+	 * @throws ConnectionException the connection exception
+	 */
 	private static LinkedList<Integer> getUploadedFileParts(PartnerConnection partnerConnection, String hdrId) throws ConnectionException 
 	{
 		LinkedList<Integer> existingPartList = new LinkedList<Integer>();
@@ -1841,6 +2057,14 @@ public class DatasetLoader {
 	}	
 
 	
+	/**
+	 * Gets the uploaded file status.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param hdrId the hdr id
+	 * @return the uploaded file status
+	 * @throws ConnectionException the connection exception
+	 */
 	public static String getUploadedFileStatus(PartnerConnection partnerConnection, String hdrId) throws ConnectionException 
 	{
 		String status = null;
@@ -1871,6 +2095,15 @@ public class DatasetLoader {
 	}
 	
 	
+	/**
+	 * Gets the last uploaded json.
+	 *
+	 * @param partnerConnection the partner connection
+	 * @param datasetAlias the dataset alias
+	 * @param logger the logger
+	 * @return the last uploaded json
+	 * @throws Exception the exception
+	 */
 	public static ExternalFileSchema getLastUploadedJson(PartnerConnection partnerConnection, String datasetAlias, PrintStream logger) throws Exception 
 	{
 		String json = null;

@@ -43,7 +43,10 @@ public class FileListener {
 	private String codingErrorAction = "REPORT";
 	private boolean useBulkAPI = false;
 	private int pollingInterval = 10000;
-	private int fileAge = 10000;
+	private int fileAge = 10000;	
+	private String notificationLevel = null; 
+	private String notificationEmail = null;
+
 	
 	@JsonIgnore
 	Charset charset = null;
@@ -234,6 +237,22 @@ public class FileListener {
 
 	public void setDatasetApp(String datasetApp) {
 		this.datasetApp = datasetApp;
+	}
+
+	public String getNotificationLevel() {
+		return notificationLevel;
+	}
+
+	public void setNotificationLevel(String notificationLevel) {
+		this.notificationLevel = notificationLevel;
+	}
+
+	public String getNotificationEmail() {
+		return notificationEmail;
+	}
+
+	public void setNotificationEmail(String notificationEmail) {
+		this.notificationEmail = notificationEmail;
 	}
 
 }

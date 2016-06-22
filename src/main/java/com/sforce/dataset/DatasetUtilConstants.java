@@ -55,9 +55,9 @@ public class DatasetUtilConstants {
 	
 //	public static boolean createNewDateParts = false;
 
-	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/32.0";
-	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/32.0";
-	public static final String defaultSoapEndPointPath = "/services/Soap/u/32.0";
+	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/37.0";
+	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/37.0";
+	public static final String defaultSoapEndPointPath = "/services/Soap/u/37.0";
 	
 	public static boolean debug = false;
 	public static boolean ext = false;
@@ -66,11 +66,12 @@ public class DatasetUtilConstants {
 
 	public static File currentDir =  new File("").getAbsoluteFile();
 	public static final String logsDirName = "logs";
-	public static final String successDirName = "sucess";
+	public static final String successDirName = "success";
 	public static final String errorDirName = "error";
 	public static final String dataDirName = "data";
 	public static final String configDirName = "config";
 	public static final String configFileName = "settings.json";
+	public static final String preferenceFileName = "preferences.json";
 	public static final String debugFileName = "debug.log";
 	public static final String dataflowDirName = "dataflow";
 	public static final String dataflowGroupDirName = "dataflowgroup";
@@ -265,6 +266,43 @@ public class DatasetUtilConstants {
 		}
 		return conf;
 	}
+	
+	
+	public static final Preferences getPreferences(String orgId)
+	{
+		Preferences pref = new Preferences();
+		File configDir = DatasetUtilConstants.getConfigDir(orgId);
+		try {
+			FileUtils.forceMkdir(configDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		File configFile = new File(configDir,preferenceFileName);
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		if(configFile != null && configFile.exists())
+		{
+			InputStreamReader reader = null;
+			try {
+				reader = new InputStreamReader(new BOMInputStream(new FileInputStream(configFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+				pref  =  mapper.readValue(reader, Preferences.class);						
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}finally
+			{
+				IOUtils.closeQuietly(reader);
+			}
+		}else
+		{
+			try
+			{
+				mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, pref);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+		return pref;
+	}
 
 	public static LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
 	{
@@ -311,9 +349,9 @@ public class DatasetUtilConstants {
 		
 		if(dateFormats == null || dateFormats.isEmpty())
 		{
-			dateFormats = DetectFieldTypes.getSuportedDateFormats();
+			LinkedHashSet<SimpleDateFormat> temp = DetectFieldTypes.getSuportedDateFormats();
 			List<String> dateFormatsList= new ArrayList<String>();
-			for(SimpleDateFormat sdf:dateFormats)
+			for(SimpleDateFormat sdf:temp)
 			{
 				dateFormatsList.add(sdf.toPattern());
 			}
@@ -321,15 +359,16 @@ public class DatasetUtilConstants {
 			try
 			{
 			    Collections.sort(dateFormatsList, new SortSimpleDateFormat());
-			    SupportedDateFormatType sdft = new SupportedDateFormatType();
-			    sdft.supportedDateFormatList = dateFormatsList;
-				mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, sdft);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
+			
+			for(String dateformat:dateFormatsList)
+			{
+				dateFormats.add(new SimpleDateFormat(dateformat));
+			}
 		}
-		
-		return dateFormats;
-		
+		return dateFormats;		
 	}
+	
 }

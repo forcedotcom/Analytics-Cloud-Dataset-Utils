@@ -39,6 +39,7 @@ $(document).ready(function() {
 
 
 $(document).ajaxSend(function(event, request, settings) {
+	  	$("#title2").empty();
 		  $('#loading-indicator').show();
 		});
 
