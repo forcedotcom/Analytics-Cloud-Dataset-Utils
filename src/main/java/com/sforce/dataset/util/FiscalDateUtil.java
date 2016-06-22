@@ -27,23 +27,29 @@ package com.sforce.dataset.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.TimeZone;
 
 /**
- * @author pgupta
- *
+ * The Class FiscalDateUtil.
  */
 public class FiscalDateUtil {
 
 
-		static final SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd zzz yyyy");
+		/** The Constant sdf. */
+		static final SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd zzz yyyy HH:mm:ss.SSS");
+		static
+		{
+	    	sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+		}
 		
 	    /**
-	     * @param date
-	     * @param fiscalMonthOffset
-	     * @return The fiscalMonth for the specified offset. 
-	     * In java Month starts at 0, so add 1 to the result to get actual month
-	     */
+    	 * Gets the fiscal month.
+    	 *
+    	 * @param month the month
+    	 * @param fiscalMonthOffset the fiscal month offset
+    	 * @return the fiscal month
+    	 */
 	    public static int getFiscalMonth(int month, int fiscalMonthOffset) {
 //	        int month = date.get(Calendar.MONTH); 
 	        int result = ((month - fiscalMonthOffset - 1) % 12) + 1;
@@ -54,12 +60,14 @@ public class FiscalDateUtil {
 	    }
 
 	    /**
-	     * @param month
-	     * @param year
-	     * @param fiscalMonthOffset
-	     * @param isYearEndFiscalYear
-	     * @return
-	     */
+    	 * Gets the fiscal year.
+    	 *
+    	 * @param year the year
+    	 * @param month the month
+    	 * @param fiscalMonthOffset the fiscal month offset
+    	 * @param isYearEndFiscalYear the is year end fiscal year
+    	 * @return the fiscal year
+    	 */
 	    public static int getFiscalYear(int year,int month, int fiscalMonthOffset, boolean isYearEndFiscalYear) {
 //	        int month = date.get(Calendar.MONTH);
 //	        int year = date.get(Calendar.YEAR);
@@ -70,20 +78,24 @@ public class FiscalDateUtil {
 	    }
 
 	    /**
-	     * @param month
-	     * @param fiscalMonthOffset
-	     * @return
-	     */
+    	 * Gets the fiscal quarter.
+    	 *
+    	 * @param month the month
+    	 * @param fiscalMonthOffset the fiscal month offset
+    	 * @return the fiscal quarter
+    	 */
 	    public static int getFiscalQuarter(int month,int fiscalMonthOffset) {
 	    	return (int) ((((Math.ceil(1.0*(22-fiscalMonthOffset+month)/3.0)*3.0)/3)%4)+1);
 	    }
 
 	    /**
-	     * @param date
-	     * @param fiscalMonthOffset
-	     * @param firstDayOfWeek
-	     * @return
-	     */
+    	 * Gets the fiscal week.
+    	 *
+    	 * @param date the date
+    	 * @param fiscalMonthOffset the fiscal month offset
+    	 * @param firstDayOfWeek the first day of week
+    	 * @return the fiscal week
+    	 */
 	    public static int getFiscalWeek(Calendar date, int fiscalMonthOffset, int firstDayOfWeek) {
 	    	if(fiscalMonthOffset==0)
 	    		return getCalendarWeek(date,firstDayOfWeek);
@@ -101,26 +113,32 @@ public class FiscalDateUtil {
 	    }
 
 	    /**
-	     * @param date
-	     * @return
-	     */
+    	 * Gets the calendar year.
+    	 *
+    	 * @param date the date
+    	 * @return the calendar year
+    	 */
 	    public static int getCalendarYear(Calendar date) {
 	        return date.get(Calendar.YEAR);
 	    }
 
 	    /**
-	     * @param date
-	     * @return the month number. In java month starts at 0
-	     */
+    	 * Gets the calendar month.
+    	 *
+    	 * @param date the date
+    	 * @return the calendar month
+    	 */
 	    public static int getCalendarMonth(Calendar date) {
 	        return date.get(Calendar.MONTH);
 	    }
     
 	    /**
-	     * @param date
-	     * @param firstDayOfWeek
-	     * @return
-	     */
+    	 * Gets the calendar week.
+    	 *
+    	 * @param date the date
+    	 * @param firstDayOfWeek the first day of week
+    	 * @return the calendar week
+    	 */
 	    public static int getCalendarWeek(Calendar date, int firstDayOfWeek) {
 		    Calendar newYearsDay = FiscalDateUtil.setDate(getCalendarYear(date), 0, 1);
 	    	int minimalDaysInFirstWeek = getminimalDaysInFirstWeek(newYearsDay.get(Calendar.DAY_OF_WEEK), firstDayOfWeek);
@@ -133,10 +151,12 @@ public class FiscalDateUtil {
 	    }
 
 	    /**
-	     * @param dayofYear
-	     * @param minimalDaysInFirstWeek
-	     * @return
-	     */
+    	 * Gets the calendar week.
+    	 *
+    	 * @param dayofYear the dayof year
+    	 * @param minimalDaysInFirstWeek the minimal days in first week
+    	 * @return the calendar week
+    	 */
 	    public static int getCalendarWeek(int dayofYear, int minimalDaysInFirstWeek) {
 			if(dayofYear <=(minimalDaysInFirstWeek))
 	    		return 1;
@@ -146,19 +166,23 @@ public class FiscalDateUtil {
 	    }
 
 	    /**
-	     * @param month
-	     * @return
-	     */
+    	 * Gets the calendar quarter.
+    	 *
+    	 * @param month the month
+    	 * @return the calendar quarter
+    	 */
 	    public static int getCalendarQuarter(int month) {
 	    	return getFiscalQuarter(month, 0);
 	    }
 
 	    /**
-	     * @param year
-	     * @param month
-	     * @param day
-	     * @return
-	     */
+    	 * Sets the date.
+    	 *
+    	 * @param year the year
+    	 * @param month the month
+    	 * @param day the day
+    	 * @return the calendar
+    	 */
 	    public static Calendar setDate(int year, int month, int day) {
 	        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 	        calendar.setLenient(false);
@@ -169,15 +193,18 @@ public class FiscalDateUtil {
 	        calendar.set(Calendar.HOUR_OF_DAY, 0);
 	        calendar.set(Calendar.MINUTE, 0);
 	        calendar.set(Calendar.SECOND, 0);
+	        calendar.set(Calendar.MILLISECOND, 0);
 	        calendar.getTime();
 	        return calendar;
 	    }
 
 	    
 	/**
-	 * @param newYearDayOfWeek
-	 * @param firstDayOfWeek
-	 * @return
+	 * Gets the minimal days in first week.
+	 *
+	 * @param newYearDayOfWeek the new year day of week
+	 * @param firstDayOfWeek the first day of week
+	 * @return the minimal days in first week
 	 */
 	public static int getminimalDaysInFirstWeek(int newYearDayOfWeek, int firstDayOfWeek) 
 	{
@@ -194,7 +221,12 @@ public class FiscalDateUtil {
 		return minimalDaysInFirstWeek;
 	}	    
 	    
-	    public static void main(String[] args) {
+	    /**
+    	 * The main method.
+    	 *
+    	 * @param args the arguments
+    	 */
+    	public static void main(String[] args) {
 	    	int fiscalMonthOffset = 2;
 //	    	int firstDayOfWeek = 0;
 	    	int minimalDaysInFirstWeek = 7;
@@ -230,14 +262,75 @@ public class FiscalDateUtil {
 	    	}
 	    	
 }
+	
 	    
-/*
-	    public static int dow(int y, int m, int d)
+	    /**
+    	 * Gets the fiscal period start and end.
+    	 *
+    	 * @param row the row
+    	 * @param cal the cal
+    	 * @param fiscalMonthOffset the fiscal month offset
+    	 * @param firstDayOfWeek the first day of week
+    	 */
+    	public static void getFiscalPeriodStartAndEnd(LinkedHashMap<String,Object> row,Calendar cal, int fiscalMonthOffset, int firstDayOfWeek)
 	    {
-	        int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-	        if(m < 2)
-	        	y--;
-	        return ((y + y/4 - y/100 + y/400 + t[m] + d) % 7)+1;
+//		    int day = cal.get(Calendar.DAY_OF_MONTH);
+	    	@SuppressWarnings("unused")
+			int dayOfweek = cal.get(Calendar.DAY_OF_WEEK);
+		    int month = cal.get(Calendar.MONTH);
+		    int year = cal.get(Calendar.YEAR);
+		    int fiscal_year = year;
+		    
+	    	if(month<fiscalMonthOffset)
+	    		fiscal_year = year -1;
+	    	
+	    	Calendar yearStart = setDate(fiscal_year,fiscalMonthOffset,1);
+	    	long fiscal_year_start_epoch = yearStart.getTime().getTime();
+	    	yearStart.add(Calendar.YEAR, 1);
+	    	long fiscal_year_end_epoch = yearStart.getTime().getTime()-1;
+	    	
+	    	Calendar monthStart = setDate(year,month,1);
+	    	long fiscal_month_start_epoch = monthStart.getTime().getTime();
+	    	monthStart.add(Calendar.MONTH, 1);
+	    	long fiscal_month_end_epoch = monthStart.getTime().getTime()-1;
+	    	
+	    	int fiscal_quarter = getFiscalQuarter(month, fiscalMonthOffset);
+	    	
+	    	Calendar quarterStart = setDate(year,fiscalMonthOffset+(fiscal_quarter-1)*3,1);
+	    	long fiscal_quarter_start_epoch = quarterStart.getTime().getTime();
+	    	quarterStart.add(Calendar.MONTH, 3);
+	    	long fiscal_quarter_end_epoch = quarterStart.getTime().getTime()-1;
+	    	
+	    	Calendar fiscalNewYear = setDate(fiscal_year,fiscalMonthOffset,1);
+    		int minimalDaysInFirstFiscalWeek = getminimalDaysInFirstWeek(fiscalNewYear.get(Calendar.DAY_OF_WEEK), firstDayOfWeek);
+
+	    	int fiscalweek = getFiscalWeek(cal, fiscalMonthOffset, firstDayOfWeek);
+	    	long fiscal_week_start_epoch = 0L;
+	    	long fiscal_week_end_epoch = 0L;
+	    	if(fiscalweek==1)
+	    	{
+		    	fiscal_week_start_epoch = fiscalNewYear.getTime().getTime();	    		
+	    		fiscalNewYear.add(Calendar.DAY_OF_YEAR, minimalDaysInFirstFiscalWeek);
+	    		fiscal_week_end_epoch = fiscalNewYear.getTime().getTime()-1;
+	    	}else
+	    	{
+	    		fiscalNewYear.add(Calendar.DAY_OF_YEAR, minimalDaysInFirstFiscalWeek + 7*(fiscalweek-2));
+		    	fiscal_week_start_epoch = fiscalNewYear.getTime().getTime();	    		
+	    		fiscalNewYear.add(Calendar.DAY_OF_YEAR, 7);
+	    		fiscal_week_end_epoch = fiscalNewYear.getTime().getTime()-1;
+
+	    		if(fiscal_week_start_epoch<fiscal_year_end_epoch && fiscal_week_end_epoch > fiscal_year_end_epoch)
+		    	{
+		    		fiscal_week_end_epoch =  fiscal_year_end_epoch;
+		    	}
+
+	    	}
+
+	    	System.out.println(sdf.format(cal.getTime()));
+	    	System.out.println("Year start:"+sdf.format(fiscal_year_start_epoch)+", Year end:"+sdf.format(fiscal_year_end_epoch));
+	    	System.out.println("Quarter start:"+sdf.format(fiscal_quarter_start_epoch)+", Quarter end:"+sdf.format(fiscal_quarter_end_epoch));
+	    	System.out.println("Month start:"+sdf.format(fiscal_month_start_epoch)+", Month end:"+sdf.format(fiscal_month_end_epoch));
+	    	System.out.println("Week start:"+sdf.format(fiscal_week_start_epoch)+", Week end:"+sdf.format(fiscal_week_end_epoch));
+	    	
 	    }
-*/
 }

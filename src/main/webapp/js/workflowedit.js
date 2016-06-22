@@ -46,7 +46,7 @@ $(document).ready(function() {
 		mode: 'code',
 		modes: ['code', 'tree']
 	};
-	var editor = new JSONEditor(container, options);
+	editor = new JSONEditor(container, options);
 
 	var dataflowAlias = decodeURIComponent(urlParam('dataflowAlias'));
 	var create = decodeURIComponent(urlParam('create'));
@@ -78,10 +78,25 @@ $(document).ready(function() {
 		$("#dataflowAlias").val(dataflowAlias);
 //		$("#dataflowLabel").change();
 //		$("#dataflowAlias").prop("disabled", true);
+
+		if (dataflowAlias == 'AnalyticsCloudReplicationDataflow' ) 
+		{
+			$('#sync-replication-btn').show();
+            $('#sync-replication-btn').prop('disabled', false);
+            $('#sync-replication-btn').removeClass('disabled')
+		}else
+		{
+			$('#sync-replication-btn').hide();		
+            $('#sync-replication-btn').prop('disabled', true);
+            $('#sync-replication-btn').addClass('disabled')
+		}
+		
 		getJson(editor,dataflowAlias,dataflowId);	
 	}
 
 	$("button[name=postjson]").click(sendJson);
+
+	$("button[name=syncjson]").click(syncJson);
 
 	function sendJson(event){
 		var json_string;
@@ -148,6 +163,7 @@ $(document).ready(function() {
 });
 
 $(document).ajaxSend(function(event, request, settings) {
+	  $("#title2").empty();
 	  $('#loading-indicator').show();
 });
 
@@ -184,6 +200,34 @@ function getJson(editor,dataflowAlias,dataflowId){
 			editor.set(data.workflowDefinition);
 		})
         .fail(function(jqXHR, textStatus, errorThrown) { 
+            if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
+                self.location.href = 'login.html';
+            }else
+            {
+	        	   var err = eval("(" + jqXHR.responseText + ")");
+	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+            }
+        });
+}
+
+
+	function syncJson(event){	
+		var dataflowAlias = $("#dataflowAlias").val();		
+		$('#sync-replication-btn').button('loading');
+	
+		full_url = "/json?syncDataflow=true&type=dataflow&dataflowAlias=" + dataflowAlias;
+		$.getJSON(full_url, {}, function(data){
+			$('#sync-replication-btn').button('reset');		
+//			var container = $('#jsoncontainer')[0];
+//			var options = {
+//				mode: 'code',
+//				modes: ['code', 'tree']
+//			};
+//			var editor = new JSONEditor(container, options);
+			editor.set(data.workflowDefinition);			
+		})
+        .fail(function(jqXHR, textStatus, errorThrown) { 
+			$('#sync-replication-btn').button('reset');		
             if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
                 self.location.href = 'login.html';
             }else

@@ -98,7 +98,7 @@ public class SeparatorGuesser {
                             }
                             separator.currentLineCount++;
                         }
-                    }
+                     }
                     
                     if (!inQuote) {
                         for (Separator separator : separators) {
@@ -121,14 +121,20 @@ public class SeparatorGuesser {
                     Collections.sort(separators, new Comparator<Separator>() {
                         @Override
                         public int compare(Separator sep0, Separator sep1) {
-                            return Double.compare(sep0.stddev / sep0.averagePerLine, 
-                            sep1.stddev / sep1.averagePerLine);
+                        	if(sep0.stddev == 0 && sep1.stddev == 0)
+                        		return -1*Double.compare(sep0.averagePerLine, 
+                                        sep1.averagePerLine);
+                        	else
+                        		return Double.compare(sep0.stddev / sep0.averagePerLine, 
+                        				sep1.stddev / sep1.averagePerLine);
                         }
                     });
                     
-                    Separator separator = separators.get(0);
-                    if (separator.stddev / separator.averagePerLine < 0.1) {
-                        return separator.separator;
+                    for (Separator separator : separators) {
+                    	//	Separator separator = separators.get(0);
+	                    if (separator.averagePerLine >= 1.0 && (separator.stddev / separator.averagePerLine < 0.1)) {
+	                        return separator.separator;
+	                    }
                     }
                    
                 }

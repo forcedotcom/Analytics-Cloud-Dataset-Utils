@@ -185,8 +185,8 @@ public class PreviewServlet extends HttpServlet {
 							throw new IllegalArgumentException("file {"+name+"} not found");
 						}
 						
-						List<Header> columns = PreviewUtil.getFileHeader(inputFile);
-						List<Map<String,Object>> data = PreviewUtil.getFileData(inputFile);
+						List<Header> columns = PreviewUtil.getFileHeader(inputFile,orgId);
+						List<Map<String,Object>> data = PreviewUtil.getFileData(inputFile, orgId);
 						PreviewData resp = new PreviewData();
 
 						resp.setColumns(columns);

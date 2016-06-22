@@ -23,33 +23,40 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sforce.dataset.util;
+package com.sforce.dataset.scheduler;
 
-import java.util.Comparator;
 
-public class SortSimpleDateFormat implements Comparator<String > {
+public class CronSchedule {
+	
+	private String frequency;
+	private long interval = 0;
+	private int hourOffest = 0;
+	private int minuteOffset = 0;
 
-	@Override
-	public int compare(String o1, String o2) {
-		if (o1.length() > o2.length())
-			return -1;
-		else if (o1.length() < o2.length())
-			return 1;
-		else
-		{
-			return o1.compareTo(o2);
-			
-		}
+
+	public String getFrequency() {
+		return frequency;
 	}
-
+	public void setFrequency(String frequency) {
+		this.frequency = frequency;
+	}
+	public long getInterval() {
+		return interval;
+	}
+	public void setInterval(long interval) {
+		this.interval = interval;
+	}
+	public int getHourOffest() {
+		return hourOffest;
+	}
+	public void setHourOffest(int hourOffest) {
+		this.hourOffest = hourOffest;
+	}
+	public int getMinuteOffset() {
+		return minuteOffset;
+	}
+	public void setMinuteOffset(int minuteOffset) {
+		this.minuteOffset = minuteOffset;
+	}	
+	
 }
-
-
-//public class SortSimpleDateFormat implements Comparator<SimpleDateFormat > {
-//
-//	@Override
-//	public int compare(SimpleDateFormat o1, SimpleDateFormat o2) {
-//		return o1.toPattern().compareTo(o2.toPattern());
-//	}
-//
-//}

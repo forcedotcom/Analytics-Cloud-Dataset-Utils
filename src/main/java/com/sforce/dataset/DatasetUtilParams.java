@@ -37,12 +37,15 @@ public class DatasetUtilParams {
 	String sessionId = null;
 	String endpoint = null;
 	String inputFile = null;
+	String schemaFile = null;
 	String jsonConfig = null;
 	String rootObject = null;
 	String fileEncoding = null;
 	String uploadFormat = null;
 	String Operation = null;
 	int rowLimit = 0;
+	String notificationLevel = null; 
+	String notificationEmail = null;
 	boolean useBulkAPI = false;
 	boolean debug = false;
 	boolean server = true;

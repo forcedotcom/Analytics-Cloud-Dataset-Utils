@@ -170,17 +170,45 @@ public class DatasetUtilMain {
 						}
 					}
 				}
-				else if(args[i-1].equalsIgnoreCase("--debug"))
+			else if(args[i-1].equalsIgnoreCase("--notificationlevel"))
+			{
+				if(args[i]!=null)
 				{
+					if(args[i].equalsIgnoreCase("always"))
+					{
+						params.notificationLevel = args[i];
+					}else if(args[i].equalsIgnoreCase("failures"))
+					{
+						params.notificationLevel = args[i];
+					}else if(args[i].equalsIgnoreCase("warnings"))
+					{
+						params.notificationLevel = args[i];
+					}else if(args[i].equalsIgnoreCase("never"))
+					{
+						params.notificationLevel = args[i];							
+					}else
+					{
+						System.out.println("Invalid notificationLevel {"+args[i]+"} Must be 'Always' or 'Failures' or 'Warnings' or 'Never'");
+						System.exit(-1);
+					}
+				}
+			}
+			else if(args[i-1].equalsIgnoreCase("--notificationemail"))
+			{
+				if(args[i]!=null && !args[i].trim().isEmpty())
+					params.notificationEmail = args[i];
+			}
+			else if (args[i - 1].equalsIgnoreCase("--debug")) 
+			{
 					params.debug = true;
 					DatasetUtilConstants.debug = true;
-				}
-				else if(args[i-1].equalsIgnoreCase("--ext"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--ext"))
+			{
 					DatasetUtilConstants.ext = true;
-				}
-				else if(args[i-1].equalsIgnoreCase("--inputFile"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--inputFile"))
+			{
 					String tmp = args[i];
 					if(tmp!=null)
 					{
@@ -194,26 +222,42 @@ public class DatasetUtilMain {
 						   System.exit(-1);
 					   }
 					}
-				}
-				else if(args[i-1].equalsIgnoreCase("--dataset"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--schemaFile"))
+			{
+					String tmp = args[i];
+					if(tmp!=null)
+					{
+					   File tempFile = new File (tmp);
+					   if(tempFile.exists())
+					   {
+						   params.schemaFile = tempFile.toString();
+					   }else
+					   {
+						   System.out.println("File {"+args[i]+"} does not exist");
+						   System.exit(-1);
+					   }
+					}
+			}
+			else if(args[i-1].equalsIgnoreCase("--dataset"))
+			{
 					params.dataset = args[i];
-				}
-				else if(args[i-1].equalsIgnoreCase("--datasetLabel"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--datasetLabel"))
+			{
 					params.datasetLabel = args[i];
-				}
-				else if(args[i-1].equalsIgnoreCase("--app"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--app"))
+			{
 					params.app = args[i];
-				}
-				else if(args[i-1].equalsIgnoreCase("--useBulkAPI"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--useBulkAPI"))
+			{
 					if(args[i]!=null && args[i].trim().equalsIgnoreCase("true"))
 						params.useBulkAPI = true;
-				}
-				else if(args[i-1].equalsIgnoreCase("--uploadFormat"))
-				{
+			}
+			else if(args[i-1].equalsIgnoreCase("--uploadFormat"))
+			{
 					if(args[i]!=null && args[i].trim().equalsIgnoreCase("csv"))
 						params.uploadFormat = "csv";
 					else if(args[i]!=null && args[i].trim().equalsIgnoreCase("binary"))
@@ -424,9 +468,12 @@ public class DatasetUtilMain {
 			}
 		}else
 		{
-			doAction(action, partnerConnection, params);
-		}
-		
+			boolean status = doAction(action, partnerConnection, params);
+			if(!status)
+			{
+				System.exit(-1);
+			}
+		}		
 	}
 
 
@@ -650,7 +697,7 @@ public class DatasetUtilMain {
 		}
 		
 		Charset fileCharset = null;
-		if(params.fileEncoding!=null && !params.fileEncoding.trim().isEmpty())
+		if(params.fileEncoding!=null && !params.fileEncoding.trim().isEmpty() && !params.fileEncoding.trim().equalsIgnoreCase("auto"))
 		{
 			try
 			{
@@ -687,7 +734,7 @@ public class DatasetUtilMain {
 			        session.start();
 					try
 					{
-						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, System.out);
+						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.schemaFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, params.notificationLevel, params.notificationEmail, System.out);
 						if(status)
 							session.end();
 						else
