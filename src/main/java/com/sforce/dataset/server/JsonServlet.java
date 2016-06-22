@@ -41,7 +41,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.flow.DataFlow;
 import com.sforce.dataset.flow.DataFlowUtil;
-import com.sforce.dataset.flow.ReplicationUtil;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.server.auth.AuthFilter;
 import com.sforce.dataset.util.DatasetDownloader;
@@ -206,20 +205,7 @@ public class JsonServlet extends HttpServlet {
 							throw new IllegalArgumentException("dataflowAlias is a required param");
 						}
 						String dataflowId = request.getParameter("dataflowId");
-						
-						String temp1 = request.getParameter("syncDataflow");
-						boolean syncDataflow = false;
-						if(temp1!=null && temp1.trim().equalsIgnoreCase("true"))
-							syncDataflow = true;
-
-						DataFlow df = null;
-						if(syncDataflow && dataflowAlias.equalsIgnoreCase("AnalyticsCloudReplicationDataflow"))
-						{
-							df = ReplicationUtil.getReplicationDefinitionFromUserDataflow(conn);
-						}else
-						{
-							df = DataFlowUtil.getDataFlow(conn, dataflowAlias, dataflowId);
-						}
+						DataFlow df = DataFlowUtil.getDataFlow(conn, dataflowAlias, dataflowId);
 				    	ObjectMapper mapper = new ObjectMapper();
 						mapper.writeValue(response.getOutputStream(), df);
 					}else

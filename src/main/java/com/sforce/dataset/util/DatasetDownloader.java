@@ -49,22 +49,17 @@ import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectorConfig;
 
-/**
- * The Class DatasetDownloader.
- */
 public class DatasetDownloader {
 
-	/** The Constant nf. */
 	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+//	private static final int EOF = -1;
 	
 	/**
- * Gets the xmd.
- *
- * @param EM_NAME the em name
- * @param partnerConnection the partner connection
- * @return the xmd
- * @throws Exception the exception
- */
+	 * @param EM_NAME
+	 * @param partnerConnection
+	 * @return
+	 * @throws Exception
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	public static Map<String,String> getXMD(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
 	{
@@ -196,16 +191,6 @@ public class DatasetDownloader {
 		throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
 	}
 
-	/**
-	 * Gets the xmd.
-	 *
-	 * @param alias the alias
-	 * @param datasetId the dataset id
-	 * @param datasetVersion the dataset version
-	 * @param partnerConnection the partner connection
-	 * @return the xmd
-	 * @throws Exception the exception
-	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Map<String,String> getXMD(String alias, String datasetId,String datasetVersion, PartnerConnection partnerConnection) throws Exception 
 	{
@@ -258,12 +243,10 @@ public class DatasetDownloader {
 	
 	
 	/**
-	 * Download em.
-	 *
-	 * @param EM_NAME the em name
-	 * @param partnerConnection the partner connection
-	 * @return true, if successful
-	 * @throws Exception the exception
+	 * @param EM_NAME
+	 * @param partnerConnection
+	 * @return
+	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static boolean downloadEM(String EM_NAME, PartnerConnection partnerConnection) throws Exception 
@@ -438,13 +421,6 @@ public class DatasetDownloader {
 		return false;
 	}
 	
-	/**
-	 * Gets the alias.
-	 *
-	 * @param emarts the emarts
-	 * @param alias the alias
-	 * @return the alias
-	 */
 	@SuppressWarnings("rawtypes")
 	static Map getAlias(List<Map> emarts, String alias)
 	{

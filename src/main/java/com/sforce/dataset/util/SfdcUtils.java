@@ -47,7 +47,6 @@ import java.util.regex.Pattern;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeGlobalSObjectResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
@@ -59,26 +58,18 @@ import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.bind.XmlObject;
 
-/**
- * The Class SfdcUtils.
- */
 public class SfdcUtils {
 
 	
-	/** The Constant MAX_BASE64_LENGTH. */
 	private static final int MAX_BASE64_LENGTH = 7 * 1024 * 1024; 
-	
-	/** The Constant MAX_DECIMAL_PRECISION. */
 	private static final int MAX_DECIMAL_PRECISION = 38;
 
-	/** The Constant sfdcDateTimeFormat. */
 	private static final  SimpleDateFormat sfdcDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	static
 	{
 		sfdcDateTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}
 
-	/** The Constant sfdcDateFormat. */
 	private static final  SimpleDateFormat sfdcDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	static
 	{
@@ -87,11 +78,9 @@ public class SfdcUtils {
 	
 	
 	//SFDC Object that are not supported in flow
-/** The excluded objects. */
-	//	static List<String> excludedObjects = Arrays.asList(new String[]{"UserRecordAccess","Vote","ContentDocumentLink","IdeaComment","UserProfile","AccountPartner","OpportunityPartner","CaseStatus","SolutionStatus","TaskStatus","LeadStatus","ContractStatus","OpportunityStage","PartnerRole","AccountHistory","ActivityHistory","CaseHistory","ContactHistory","ContentDocumentHistory","ContentVersionHistory","ContractHistory","LeadHistory","OrderHistory","OrderItemHistory","OpportunityFieldHistory","Pricebook2History","ProcessInstanceHistory","SolutionHistory","","AccountFeed","AssetFeed","CampaignFeed","CaseFeed","CollaborationGroupFeed","ContactFeed","ContentDocumentFeed","ContractFeed","DashboardFeed","EventFeed","LeadFeed","OrderFeed","OpportunityFeed","OrderItemFeed","Product2Feed","ReportFeed","TaskFeed","SolutionFeed","TopicFeed","UserFeed","DashboardComponentFeed","CaseTeamMember","CaseTeamRole","CaseTeamTemplate","CaseTeamTemplateMember","CaseTeamTemplateRecord","","AcceptedEventRelation","DeclinedEventRelation","UndecidedEventRelation","OpenActivity","TaskPriority","CombinedAttachment","NoteAndAttachment","OwnedContentDocument","AttachedContentDocument","Interviewer__Share","Position__Share","Applicant__Share","UserRecordAccess","RecentlyViewed","Name","WebLinkLocalization","RecordTypeLocalization","ScontrolLocalization","CategoryNodeLocalization","AggregateResult"});
+//	static List<String> excludedObjects = Arrays.asList(new String[]{"UserRecordAccess","Vote","ContentDocumentLink","IdeaComment","UserProfile","AccountPartner","OpportunityPartner","CaseStatus","SolutionStatus","TaskStatus","LeadStatus","ContractStatus","OpportunityStage","PartnerRole","AccountHistory","ActivityHistory","CaseHistory","ContactHistory","ContentDocumentHistory","ContentVersionHistory","ContractHistory","LeadHistory","OrderHistory","OrderItemHistory","OpportunityFieldHistory","Pricebook2History","ProcessInstanceHistory","SolutionHistory","","AccountFeed","AssetFeed","CampaignFeed","CaseFeed","CollaborationGroupFeed","ContactFeed","ContentDocumentFeed","ContractFeed","DashboardFeed","EventFeed","LeadFeed","OrderFeed","OpportunityFeed","OrderItemFeed","Product2Feed","ReportFeed","TaskFeed","SolutionFeed","TopicFeed","UserFeed","DashboardComponentFeed","CaseTeamMember","CaseTeamRole","CaseTeamTemplate","CaseTeamTemplateMember","CaseTeamTemplateRecord","","AcceptedEventRelation","DeclinedEventRelation","UndecidedEventRelation","OpenActivity","TaskPriority","CombinedAttachment","NoteAndAttachment","OwnedContentDocument","AttachedContentDocument","Interviewer__Share","Position__Share","Applicant__Share","UserRecordAccess","RecentlyViewed","Name","WebLinkLocalization","RecordTypeLocalization","ScontrolLocalization","CategoryNodeLocalization","AggregateResult"});
 	static List<String> excludedObjects = Arrays.asList(new String[]{"AcceptedEventRelation","AuthProvider","BrandTemplate","Calendar","ConnectedApplication","ContentWorkspace","ContentWorkspaceDoc","CorsWhitelistEntry","CustomNotDeployed__c", "CustomNotDeployed__OwnerSharingRule", "DeclinedEventRelation","EmailDomainKey","EmailServicesAddress","EmailServicesFunction","EmailTemplate","EnvironmentHub","EnvironmentHubInvitation","EnvironmentHubMemberRel","EventRecurrenceException","EventRelation","FeedPollChoice","FeedPollVote","LoginHistory","OrgWideEmailAddress","OutboundField","PackageLicense","PartnerNetworkSyncLog","SelfServiceUser","SsoUserMapping", "TaskRecurrenceException","UndecidedEventRelation","UserLogin","UserPackageLicense","WebLink","WebLinkLocalization","CollaborationGroupRecord","ContentDocumentLink", "IdeaComment", "Vote"});
 	
-	/** The Constant sfdcFieldTypeToJavaClassMap. */
 	static final HashMap<FieldType,Class<?>> sfdcFieldTypeToJavaClassMap = new HashMap<FieldType,Class<?>>();
 	static {		
 		sfdcFieldTypeToJavaClassMap.put(FieldType.string, java.lang.String.class);
@@ -120,7 +109,6 @@ public class SfdcUtils {
 		sfdcFieldTypeToJavaClassMap.put(FieldType.location, java.lang.String.class);
 	}	
 	
-	/** The Constant excludedSfdcFieldTypeMap. */
 	static final HashMap<FieldType,Class<?>> excludedSfdcFieldTypeMap = new HashMap<FieldType,Class<?>>();
 	static {
 		excludedSfdcFieldTypeMap.put(FieldType.address, java.lang.String.class);
@@ -132,13 +120,17 @@ public class SfdcUtils {
 	
 	
 	/**
-	 * Gets the object list.
-	 *
-	 * @param partnerConnection the partner connection
-	 * @param pattern the pattern
-	 * @param isWrite the is write
-	 * @return the object list
-	 * @throws ConnectionException the connection exception
+	 * Gets a list of all Objects in Salesforce
+	 * 
+	 * @param partnerConnection
+	 * @param pattern
+	 *            Regex pattern to search for salesforce objects (.*) will match
+	 *            all object
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Salesforce Objects
+	 * @throws ConnectionException 
 	 */
 	public static Map<String,String> getObjectList(PartnerConnection partnerConnection, Pattern pattern, boolean isWrite) throws ConnectionException
 	{
@@ -193,14 +185,18 @@ public class SfdcUtils {
 	
 
 	/**
-	 * Gets the related object list.
-	 *
-	 * @param partnerConnection the partner connection
-	 * @param primaryObject the primary object
-	 * @param primaryObjectType the primary object type
-	 * @param isWrite the is write
-	 * @return the related object list
-	 * @throws ConnectionException the connection exception
+	 * Gets a list of all Objects related to input Object from Salesforce
+	 * 
+	 * @param partnerConnection
+	 *            Salesforce connection
+	 * @param primary
+	 *            record The record to get the related objects for
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Salesforce Objects that are related to the input primary
+	 *         Record
+	 * @throws ConnectionException 
 	 */
 	public static Map<String,String> getRelatedObjectList(
 			PartnerConnection partnerConnection, String primaryObject,String primaryObjectType, boolean isWrite) throws ConnectionException  {
@@ -268,21 +264,26 @@ public class SfdcUtils {
 
 	
 	/**
-	 * Gets the field list.
-	 *
-	 * @param sObjectType the s object type
-	 * @param partnerConnection the partner connection
-	 * @param isWrite the is write
-	 * @return the field list
-	 * @throws ConnectionException the connection exception
+	 * When the user selects an object from the source/target dropdown this
+	 * method is called to get fields in the selected Object. The Selected
+	 * Object Name and CanonicalName is passed in the RecordInfo object
+	 * 
+	 * @param recordInfo
+	 *            The selected Object from the dropdown
+	 * @param partnerConnection
+	 *            The connection to use for getting Object metadata
+	 * @param isWrite
+	 *            Flag to determine if this methods is being called in source or
+	 *            target
+	 * @return List of Fields in the object
+	 * @throws ConnectionException 
 	 */
 	public static List<com.sforce.dataset.loader.file.schema.ext.FieldType> getFieldList(String sObjectType,
 			PartnerConnection partnerConnection, boolean isWrite) throws ConnectionException
 	{
 
 			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList = new ArrayList<com.sforce.dataset.loader.file.schema.ext.FieldType>();
-	    	com.sforce.dataset.Preferences userPref = DatasetUtilConstants.getPreferences(partnerConnection.getUserInfo().getOrganizationId());
-
+			
 			
 			DescribeSObjectResult dsr = partnerConnection.describeSObject(sObjectType);			
 			if (dsr != null) 
@@ -339,7 +340,7 @@ public class SfdcUtils {
 						bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetMeasureKeyDataType(field.getName(), precision, scale, 0L);
 					}else if(clazz.getCanonicalName().equals(java.sql.Timestamp.class.getCanonicalName()))
 					{
-						bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetDateKeyDataType(field.getName(), "MM/dd/yyyy hh:mm:ss a", null, userPref);						
+						bField = com.sforce.dataset.loader.file.schema.ext.FieldType.GetDateKeyDataType(field.getName(), "MM/dd/yyyy hh:mm:ss a", null);						
 					}else
 					{
 						if(field.getType().equals(FieldType.multipicklist))
@@ -383,17 +384,17 @@ public class SfdcUtils {
 		
 
 	/**
-	 * Read.
-	 *
-	 * @param partnerConnection the partner connection
-	 * @param recordInfo the record info
-	 * @param fieldList the field list
-	 * @param pagesize the pagesize
-	 * @param dataDir the data dir
-	 * @return true, if successful
-	 * @throws ConnectionException the connection exception
-	 * @throws UnsupportedEncodingException the unsupported encoding exception
-	 * @throws IOException Signals that an I/O exception has occurred.
+	 * This method reads data from Object specified in recordInfo and passed the
+	 * data into the OutputBuffer
+	 * 
+	 * @param partnerConnection
+	 * @param recordInfo
+	 * @param fieldList
+	 * @param pagesize
+	 * @param dataDir
+	 * @return
+	 * @throws ConnectionException
+	 * @throws UnsupportedEncodingException
 	 */
 	public static boolean read(PartnerConnection partnerConnection,String recordInfo,
 			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList,
@@ -531,11 +532,11 @@ public class SfdcUtils {
     
 
 	/**
-	 * Gets the precision.
-	 *
-	 * @param fld the fld
-	 * @param sfdcClazz the sfdc clazz
-	 * @return the precision
+	 * Determines the precision of the input field
+	 * 
+	 * @param fld
+	 * @param sfdcClazz
+	 * @return The field Precision (int)
 	 */
     private static int getPrecision(com.sforce.soap.partner.Field fld,Class<?> sfdcClazz) 
     {
@@ -615,11 +616,10 @@ public class SfdcUtils {
 
     
     /**
-     * Gets the scale.
-     *
-     * @param fld the fld
-     * @param sfdcClazz the sfdc clazz
-     * @return the scale
+     * Determines the scale of the input field
+     * @param fld
+     * @param sfdcClazz
+     * @return The scale of the input field
      */
     private static int getScale(com.sforce.soap.partner.Field fld, Class<?> sfdcClazz) 
     {
@@ -641,12 +641,12 @@ public class SfdcUtils {
 	
 	
 	/**
-	 * Generate soql.
-	 *
-	 * @param recordInfo the record info
-	 * @param fieldList the field list
-	 * @param pagesize the pagesize
-	 * @return the string
+	 * Builds a SOQL query String using the ObjectName, FieldList
+	 * 
+	 * @param recordInfo
+	 * @param fieldList
+	 * @param pagesize
+	 * @return
 	 */
 	private static String generateSOQL(String recordInfo,
 			List<com.sforce.dataset.loader.file.schema.ext.FieldType> fieldList, long pagesize)
@@ -686,10 +686,11 @@ public class SfdcUtils {
 
 	
 	/**
-	 * Gets the error message.
-	 *
-	 * @param errors the errors
-	 * @return the error message
+	 * This method will format the error message so that it can be logged in the error csv
+	 * 
+	 * @param errors
+	 *            Array of com.sforce.soap.partner.Error[]
+	 * @return formated Error String
 	 */
 	@SuppressWarnings("unused")
 	private static String getErrorMessage(com.sforce.soap.partner.Error[] errors)
@@ -712,11 +713,15 @@ public class SfdcUtils {
 	
 	
 	/**
-	 * Gets the field value from query result.
-	 *
-	 * @param fieldName the field name
-	 * @param record the record
-	 * @return the field value from query result
+	 * This method will traverse the query results and return the Field value
+	 * from the result
+	 * 
+	 * @param fieldName
+	 *            The fully qualified field Name, for Example: Account.Id or
+	 *            Contact.Account.Id
+	 * @param record
+	 *            Salesforce query result record (type SObject)
+	 * @return The field value from the result
 	 */
 	public static Object getFieldValueFromQueryResult(String fieldName,SObject record)
 	{
@@ -761,10 +766,9 @@ public class SfdcUtils {
 
 
 	/**
-	 * Gets the top level s object name.
-	 *
-	 * @param fullyQualifiedObjectName the fully qualified object name
-	 * @return the top level s object name
+	 * @param fullyQualifiedObjectName
+	 *            Example Contact.Account.Owner
+	 * @return Top level Sobject example Contact
 	 */
 	private static String getTopLevelSObjectName(String fullyQualifiedObjectName)
 	{
@@ -779,12 +783,6 @@ public class SfdcUtils {
 		return topLevelSOBject;
 	}
 	
-	/**
-	 * Gets the java class from field type.
-	 *
-	 * @param fieldType the field type
-	 * @return the java class from field type
-	 */
 	public static Class<?> getJavaClassFromFieldType(
 			com.sforce.soap.partner.FieldType fieldType) {
 		

@@ -69,9 +69,10 @@ import com.sforce.ws.ConnectorConfig;
 
 public class DataFlowUtil {
 	
-	//private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("EEEE MMMM d HH:mm:ss z yyyy"); //Mon Jun 15 00:12:03 GMT 2015
-	private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX"); //Mon Jun 15 00:12:03 GMT 2015
+	private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("EEEE MMMM d HH:mm:ss z yyyy"); //Mon Jun 15 00:12:03 GMT 2015
 	private  static final String dataflowURL = "/insights/internal_api/v1.0/esObject/workflow/%s/json";
+	
+		
 	
 	@SuppressWarnings("rawtypes")
 	public static void uploadAndStartDataFlow(PartnerConnection partnerConnection, Map wfdef, String workflowName) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
@@ -362,45 +363,32 @@ public class DataFlowUtil {
 				{
 					for(Map flow:flows)
 					{
-						String workflowType = (String) flow.get("DataflowType");
+						String workflowType = (String) flow.get("WorkflowType");
 						String name = (String) flow.get("name");
 						if(name != null && workflowType != null)
 						{
 							DataFlow df = new DataFlow();
-							String workflowStatus = null;
 							df.setName(name);
 							df.set_uid((String) flow.get("_uid"));
 							df.set_url((String) flow.get("_url"));
 							df.set_type((String) flow.get("_type"));
 
-							Object temp =  (String) flow.get("WorkflowStatus");
-							if(temp != null && temp instanceof String)
+							Object temp = flow.get("RefreshFrequencySec");
+							if(temp != null && temp instanceof Number)
 							{
-								workflowStatus = temp.toString();
-								df.setStatus(workflowStatus);
+								df.setRefreshFrequencySec(((Number)temp).intValue());
 							}
-							
-							
-							if(workflowStatus != null && workflowStatus.equalsIgnoreCase("active"))
+
+							df.setNextRun((String) flow.get("nextRun"));
+							if(df.getNextRun() != null)
 							{
-								temp = flow.get("RefreshFrequencySec");
-								if(temp != null && temp instanceof Number)
-								{
-									df.setRefreshFrequencySec(((Number)temp).intValue());
-								}
-								
-								df.setNextRun((String) flow.get("nextRun"));
-								if(df.getNextRun() != null)
-								{
-									try {
-//										System.out.println(defaultDateFormat.toPattern() + " : " + df.nextRun);
-										df.setNextRunTime(defaultDateFormat.parse(df.getNextRun()).getTime());
-									} catch (ParseException e) {
-										e.printStackTrace();
-									}
+								try {
+//									System.out.println(defaultDateFormat.toPattern() + " : " + df.nextRun);
+									df.setNextRunTime(defaultDateFormat.parse(df.getNextRun()).getTime());
+								} catch (ParseException e) {
+									e.printStackTrace();
 								}
 							}
-							
 							df.setMasterLabel((String) flow.get("MasterLabel"));
 							df.setWorkflowType(workflowType); 
 

@@ -46,7 +46,6 @@ import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
 import com.sforce.dataset.flow.monitor.JobEntry;
 import com.sforce.dataset.flow.monitor.Session;
-import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.soap.partner.GetServerTimestampResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
@@ -134,11 +133,8 @@ public class DataflowJob  implements Job {
 				session.setType("Dataflow");
 				session.start();
 				runDataflow(task,partnerConnection);
-				if(!session.isDone())
-				{
-					session.end();
-					session.setParam(DatasetUtilConstants.serverStatusParam,"COMPLETED");
-				}
+				session.end();
+				session.setParam(DatasetUtilConstants.serverStatusParam,"COMPLETED");
 			} catch (Exception e) {
 //				e.printStackTrace();
 				session.fail(e.getMessage());
@@ -242,13 +238,7 @@ public class DataflowJob  implements Job {
 					if(job.getStatus()==0)
 					{
 						if(jobEntry!=null)
-						{
-							System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} Failed");		
-							ThreadContext tx = ThreadContext.get();
-							Session session = tx.getSession();
-							session.fail(job.getErrorMessage());
-							session.setParam(DatasetUtilConstants.serverStatusParam,"FAILED");
-						}
+							System.out.println(new Date()+ " Scheduled job {"+dataFlowName+"} Failed");
 						return false;
 					} else if(job.getStatus()==1)
 					{

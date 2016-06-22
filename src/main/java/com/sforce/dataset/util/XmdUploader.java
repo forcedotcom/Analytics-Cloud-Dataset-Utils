@@ -50,25 +50,18 @@ import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 
-/**
- * The Class XmdUploader.
- */
 public class XmdUploader {
 	
 
 	/**
-	 * Upload xmd.
-	 *
-	 * @param userXmdFile the user xmd file
-	 * @param datasetAlias the dataset alias
-	 * @param datasetId the dataset id
-	 * @param datasetVersion the dataset version
-	 * @param partnerConnection the partner connection
-	 * @return true, if successful
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 * @throws ConnectionException the connection exception
+	 * @param userXmd
+	 * @param EM_NAME
+	 * @param username
+	 * @param password
+	 * @param endpoint
+	 * @param token
+	 * @throws ConnectionException 
+	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static boolean uploadXmd(String userXmdFile, String datasetAlias, String datasetId,String datasetVersion, PartnerConnection partnerConnection) throws URISyntaxException, ClientProtocolException, IOException, ConnectionException
@@ -266,13 +259,6 @@ public class XmdUploader {
 		return false;
 	}
 	
-	/**
-	 * Gets the alias.
-	 *
-	 * @param emarts the emarts
-	 * @param alias the alias
-	 * @return the alias
-	 */
 	@SuppressWarnings("rawtypes")
 	static Map getAlias(List<Map> emarts, String alias)
 	{

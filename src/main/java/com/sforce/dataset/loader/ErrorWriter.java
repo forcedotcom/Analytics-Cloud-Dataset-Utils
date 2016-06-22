@@ -44,63 +44,29 @@ import org.supercsv.util.CsvContext;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.FileUtilsExt;
 
-/**
- * The Class ErrorWriter.
- */
 public class ErrorWriter {
 			
-	/** The delimiter. */
 	private String delimiter = ",";
-	
-	/** The Header line. */
 	private String HeaderLine = "";	 
-	
-	/** The header columns. */
 	private String[] headerColumns = null;	 
-	
-	/** The Header suffix. */
 	private String HeaderSuffix = "Error";
-	
-	/** The error file suffix. */
 	public static String errorFileSuffix = "_err.";
-	
-	/** The error csv. */
 	private File errorCsv;
-	
-	/** The writer. */
 	private BufferedWriter fWriter = null;
-	
-	/** The context. */
 	private CsvContext context = new CsvContext(1, 1, 1);
-	
-	/** The preference. */
 	private CsvPreference preference = CsvPreference.STANDARD_PREFERENCE;
-	
-	/** The csv encoder. */
 	private DefaultCsvEncoder csvEncoder = new DefaultCsvEncoder();
 
-	/** The Constant LF. */
 	public static final char LF = '\n';
 
-	/** The Constant CR. */
 	public static final char CR = '\r';
 
-	/** The Constant QUOTE. */
 	public static final char QUOTE = '"';
 
-	/** The Constant COMMA. */
 	public static final char COMMA = ',';
 
 	
 
-	/**
-	 * Instantiates a new error writer.
-	 *
-	 * @param inputCsv the input csv
-	 * @param delimiter the delimiter
-	 * @param pref the pref
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	public ErrorWriter(File inputCsv,String delimiter, CsvPreference pref)
 			throws IOException 
 	{
@@ -149,12 +115,6 @@ public class ErrorWriter {
 		}		
 	}
 	
-	/**
-	 * Adds the error.
-	 *
-	 * @param values the values
-	 * @param error the error
-	 */
 	public void addError(String[] values, String error)
 	{
 		try 
@@ -179,21 +139,11 @@ public class ErrorWriter {
 		}
 	}
 		
-	/**
-	 * Gets the error file.
-	 *
-	 * @return the error file
-	 */
 	public File getErrorFile() 
 	{
 		return this.errorCsv;
 	}
 	
-	/**
-	 * Finish.
-	 *
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	public void finish() throws IOException
 	{
 		if (fWriter != null) {
@@ -204,10 +154,10 @@ public class ErrorWriter {
 	}
 	
 	/**
-	 * Gets the CSV friendly string.
-	 *
-	 * @param content the content
-	 * @return the CSV friendly string
+	 * This method will return a sanitized version of the string that can be safely written to a csv file
+	 * It will strip all (commas, CR, CRLF and quotes) from the string
+	 * @param content the string that needs to be cleaned
+	 * @return the clean string
 	 */
 	public static String getCSVFriendlyString(String content)
 	{
@@ -223,12 +173,10 @@ public class ErrorWriter {
 	
 	
 	/**
-	 * Replace string.
-	 *
-	 * @param original the original
-	 * @param pattern the pattern
-	 * @param replace the replace
-	 * @return the string
+	 * @param original String
+	 * @param pattern String to Search
+	 * @param replace String to replace
+	 * @return
 	 */
 	public static String replaceString(String original, String pattern, String replace) 
 	{

@@ -54,23 +54,8 @@ import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.FileUtilsExt;
 
-/**
- * The Class CsvExternalSort.
- */
 public class CsvExternalSort extends ExternalSort {
 	
-    /**
-     * Sort file.
-     *
-     * @param inputCsv the input csv
-     * @param cs the cs
-     * @param distinct the distinct
-     * @param headersize the headersize
-     * @param schema the schema
-     * @param pref the pref
-     * @return the file
-     * @throws IOException Signals that an I/O exception has occurred.
-     */
     public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema, CsvPreference pref) throws IOException
     {
     	if(inputCsv==null || !inputCsv.canRead())
@@ -110,16 +95,31 @@ public class CsvExternalSort extends ExternalSort {
     }
 
     /**
-     * Sort in batch.
-     *
-     * @param inputCsv the input csv
-     * @param cs the cs
-     * @param cmp the cmp
-     * @param distinct the distinct
-     * @param numHeader the num header
-     * @param pref the pref
-     * @return the list
-     * @throws IOException Signals that an I/O exception has occurred.
+     * @param fbr
+     *                data source
+     * @param datalength
+     *                estimated data volume (in bytes)
+     * @param cmp
+     *                string comparator
+     * @param maxtmpfiles
+     *                maximal number of temporary files
+     * @param maxMemory
+     *                maximum amount of memory to use (in bytes)
+     * @param cs
+     *                character set to use (can use
+     *                Charset.defaultCharset())
+     * @param tmpdirectory
+     *                location of the temporary files (set to null for
+     *                default location)
+     * @param distinct
+     *                Pass <code>true</code> if duplicate lines should be
+     *                discarded.
+     * @param numHeader
+     *                number of lines to preclude before sorting starts
+     * @param usegzip
+     *                use gzip compression for the temporary files
+     * @return a list of temporary flat files
+     * @throws IOException
      */
     public static List<File> sortInBatch(File inputCsv, final Charset cs, CsvRowComparator cmp, final boolean distinct,final int numHeader, CsvPreference pref) throws IOException 
     {
@@ -167,16 +167,26 @@ public class CsvExternalSort extends ExternalSort {
     }
 
     /**
-     * Sort and save.
-     *
-     * @param tmplist the tmplist
-     * @param cmp the cmp
-     * @param cs the cs
-     * @param tmpdirectory the tmpdirectory
-     * @param distinct the distinct
-     * @param pref the pref
-     * @return the file
-     * @throws IOException Signals that an I/O exception has occurred.
+     * Sort a list and save it to a temporary file
+     * 
+     * @return the file containing the sorted data
+     * @param tmplist
+     *                data to be sorted
+     * @param cmp
+     *                string comparator
+     * @param cs
+     *                charset to use for output (can use
+     *                Charset.defaultCharset())
+     * @param tmpdirectory
+     *                location of the temporary files (set to null for
+     *                default location)
+     * @param distinct
+     *                Pass <code>true</code> if duplicate lines should be
+     *                discarded.
+     * @param usegzip
+     *                set to true if you are using gzip compression for the
+     *                temporary files
+     * @throws IOException
      */
 	private static File sortAndSave(List<List<String>> tmplist,
 			CsvRowComparator cmp, Charset cs, File tmpdirectory, boolean distinct, CsvPreference pref)  throws IOException {
@@ -202,18 +212,31 @@ public class CsvExternalSort extends ExternalSort {
     
 
     /**
-     * Merge sorted files.
-     *
-     * @param files the files
-     * @param outputfile the outputfile
-     * @param cmp the cmp
-     * @param cs the cs
-     * @param distinct the distinct
-     * @param inputfile the inputfile
-     * @param headersize the headersize
-     * @param pref the pref
-     * @return the int
-     * @throws IOException Signals that an I/O exception has occurred.
+     * This merges a bunch of temporary flat files
+     * 
+     * @param files
+     *                The {@link List} of sorted {@link File}s to be merged.
+     * @param distinct
+     *                Pass <code>true</code> if duplicate lines should be
+     *                discarded. (elchetz@gmail.com)
+     * @param outputfile
+     *                The output {@link File} to merge the results to.
+     * @param cmp
+     *                The {@link Comparator} to use to compare
+     *                {@link String}s.
+     * @param cs
+     *                The {@link Charset} to be used for the byte to
+     *                character conversion.
+     * @param pref 
+     * @param append
+     *                Pass <code>true</code> if result should append to
+     *                {@link File} instead of overwrite. Default to be false
+     *                for overloading methods.
+     * @param usegzip
+     *                assumes we used gzip compression for temporary files
+     * @return The number of lines sorted. (P. Beaudoin)
+     * @throws IOException
+     * @since v0.1.4
      */
     public static int mergeSortedFiles(List<File> files, File outputfile,
             final Comparator<List<String>> cmp, Charset cs, boolean distinct, File inputfile,final int headersize, CsvPreference pref) throws IOException {
@@ -232,14 +255,21 @@ public class CsvExternalSort extends ExternalSort {
     
     
     /**
-     * Merge sorted files.
-     *
-     * @param writer the writer
-     * @param cmp the cmp
-     * @param distinct the distinct
-     * @param buffers the buffers
-     * @return the int
-     * @throws IOException Signals that an I/O exception has occurred.
+     * This merges several BinaryFileBuffer to an output writer.
+     * 
+     * @param fbw
+     *                A buffer where we write the data.
+     * @param cmp
+     *                A comparator object that tells us how to sort the
+     *                lines.
+     * @param distinct
+     *                Pass <code>true</code> if duplicate lines should be
+     *                discarded. (elchetz@gmail.com)
+     * @param buffers
+     *                Where the data should be read.
+     * @return The number of lines sorted. (P. Beaudoin)
+     * @throws IOException
+     * 
      */
     public static int mergeSortedFiles(CsvListWriter writer,
             final Comparator<List<String>> cmp, boolean distinct,
@@ -284,14 +314,31 @@ public class CsvExternalSort extends ExternalSort {
     
     
     /**
-     * Copy header.
-     *
-     * @param inputCsv the input csv
-     * @param writer the writer
-     * @param cs the cs
-     * @param numHeader the num header
-     * @param pref the pref
-     * @throws IOException Signals that an I/O exception has occurred.
+     * @param fbr
+     *                data source
+     * @param datalength
+     *                estimated data volume (in bytes)
+     * @param cmp
+     *                string comparator
+     * @param maxtmpfiles
+     *                maximal number of temporary files
+     * @param maxMemory
+     *                maximum amount of memory to use (in bytes)
+     * @param cs
+     *                character set to use (can use
+     *                Charset.defaultCharset())
+     * @param tmpdirectory
+     *                location of the temporary files (set to null for
+     *                default location)
+     * @param distinct
+     *                Pass <code>true</code> if duplicate lines should be
+     *                discarded.
+     * @param numHeader
+     *                number of lines to preclude before sorting starts
+     * @param usegzip
+     *                use gzip compression for the temporary files
+     * @return a list of temporary flat files
+     * @throws IOException
      */
     public static void copyHeader(File inputCsv, CsvListWriter writer, Charset cs, final int numHeader, CsvPreference pref) throws IOException 
     {

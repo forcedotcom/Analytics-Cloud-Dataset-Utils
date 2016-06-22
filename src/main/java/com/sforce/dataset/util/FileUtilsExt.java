@@ -37,20 +37,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
 
 
-/**
- * The Class FileUtilsExt.
- */
 public class FileUtilsExt {
 
-	/** The Constant p. */
 	public static final Pattern p = Pattern.compile("copy\\d+$");
 	
-	/**
-	 * Gets the unique file.
-	 *
-	 * @param file the file
-	 * @return the unique file
-	 */
 	public static File getUniqueFile(File file)
 	{
 		if(file==null)
@@ -118,12 +108,6 @@ public class FileUtilsExt {
 		return file;
 	}
 	
-	/**
-	 * Delete quietly.
-	 *
-	 * @param file the file
-	 * @return true, if successful
-	 */
 	public static boolean deleteQuietly(File file)
 	{
 		if(file != null)

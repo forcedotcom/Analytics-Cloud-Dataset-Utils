@@ -210,9 +210,8 @@ public class EbinFormatWriter {
 			
 			if(_dataTypes.get(key_value_count).isComputedField)
 			{
-					 
 	            Bindings bindings = new SimpleBindings();
-	            CompiledScript cs = _dataTypes.get(key_value_count).getCompiledScript();	            
+	            CompiledScript cs = _dataTypes.get(key_value_count).getCompiledScript();
 	            try
 	            {
 	            if(cs!=null)

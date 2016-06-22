@@ -87,51 +87,22 @@ import com.sforce.soap.partner.fault.LoginFault;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 
-/**
- * The Class DatasetUtils.
- */
 public class DatasetUtils {
 	
-	/** The Constant EOF. */
 	private static final int EOF = -1;
-	
-	/** The Constant LF. */
 	private static final char LF = '\n';
-	
-	/** The Constant CR. */
 	private static final char CR = '\r';
-	
-	/** The Constant QUOTE. */
 	private static final char QUOTE = '"';
-	
-	/** The Constant COMMA. */
 	private static final char COMMA = ',';
 
-	/** The Constant DEFAULT_BUFFER_SIZE. */
 	public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-	
-	/** The Constant sfdcDateTimeFormat. */
 	private static final  SimpleDateFormat sfdcDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	
-	/** The Constant utf8Charset. */
 	public static final Charset utf8Charset = Charset.forName("UTF-8");
 
 	
-	/** The has logged in. */
 	private static boolean hasLoggedIn = false;
 
-	/**
-	 * Delete dataset.
-	 *
-	 * @param alias the alias
-	 * @param datasetId the dataset id
-	 * @param partnerConnection the partner connection
-	 * @return true, if successful
-	 * @throws ConnectionException the connection exception
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	public static boolean deleteDataset(String alias, String datasetId,PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  
 	{		
 		if(datasetId==null || datasetId.trim().isEmpty())
@@ -195,17 +166,6 @@ public class DatasetUtils {
 		return true;
 	}
 	
-	/**
-	 * List public dataset.
-	 *
-	 * @param connection the connection
-	 * @param isCurrent the is current
-	 * @return the map
-	 * @throws ConnectionException the connection exception
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	@SuppressWarnings("rawtypes")
 	public static Map<String,Map> listPublicDataset(PartnerConnection connection, boolean isCurrent) throws ConnectionException, ClientProtocolException, URISyntaxException, IOException 
 	{
@@ -233,17 +193,6 @@ public class DatasetUtils {
 
 	}
 	
-	/**
-	 * List dataset.
-	 *
-	 * @param partnerConnection the partner connection
-	 * @param isCurrent the is current
-	 * @return the map
-	 * @throws ConnectionException the connection exception
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
@@ -295,17 +244,6 @@ public class DatasetUtils {
 }
 
 
-	/**
-	 * List datasets.
-	 *
-	 * @param connection the connection
-	 * @param isCurrent the is current
-	 * @return the list
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws ConnectionException the connection exception
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	@SuppressWarnings("rawtypes")
 	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException 
 	{
@@ -349,16 +287,6 @@ public class DatasetUtils {
 		return datasetList;
 	}
 	
-	/**
-	 * List folders.
-	 *
-	 * @param partnerConnection the partner connection
-	 * @return the list
-	 * @throws ConnectionException the connection exception
-	 * @throws URISyntaxException the URI syntax exception
-	 * @throws ClientProtocolException the client protocol exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<FolderType> listFolders(PartnerConnection partnerConnection) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException {
 		List<FolderType> folderList = new LinkedList<FolderType>();
@@ -473,32 +401,11 @@ public class DatasetUtils {
 		return folderList;
 }
 
-	/**
-	 * List sessions.
-	 *
-	 * @param connection the connection
-	 * @return the list
-	 * @throws Exception the exception
-	 */
 	public static List<Session> listSessions(PartnerConnection connection) throws Exception 
 	{
 		return Session.listSessions(connection.getUserInfo().getOrganizationId());
 	}
 	
-	/**
-	 * Login.
-	 *
-	 * @param retryCount the retry count
-	 * @param username the username
-	 * @param password the password
-	 * @param token the token
-	 * @param endpoint the endpoint
-	 * @param sessionId the session id
-	 * @param debug the debug
-	 * @return the partner connection
-	 * @throws ConnectionException the connection exception
-	 * @throws MalformedURLException the malformed url exception
-	 */
 	public static PartnerConnection login(int retryCount,String username,String password, String token, String endpoint, String sessionId, boolean debug) throws ConnectionException, MalformedURLException  {
 
 		if(sessionId==null)
@@ -635,12 +542,7 @@ public class DatasetUtils {
 //    }
 
 
-    /**
- * Gets the connector config.
- *
- * @return the connector config
- */
-protected static ConnectorConfig getConnectorConfig() {
+    protected static ConnectorConfig getConnectorConfig() {
         ConnectorConfig cc = new ConnectorConfig();
         cc.setTransport(HttpClientTransport.class);
         
@@ -699,13 +601,6 @@ protected static ConnectorConfig getConnectorConfig() {
     }
 
 	
-	/**
-	 * Gets the alias.
-	 *
-	 * @param emarts the emarts
-	 * @param alias the alias
-	 * @return the alias
-	 */
 	@SuppressWarnings("rawtypes")
 	static Map getAlias(List<Map> emarts, String alias)
 	{
@@ -725,15 +620,7 @@ protected static ConnectorConfig getConnectorConfig() {
 	}
 	
 	
-	 /**
- 	 * Sort by value.
- 	 *
- 	 * @param <K> the key type
- 	 * @param <V> the value type
- 	 * @param map the map
- 	 * @return the map
- 	 */
- 	public static <K, V extends Comparable<? super V>> Map<K, V> 
+	 public static <K, V extends Comparable<? super V>> Map<K, V> 
      sortByValue( Map<K, V> map )
  {
      List<Map.Entry<K, V>> list =
@@ -755,12 +642,6 @@ protected static ConnectorConfig getConnectorConfig() {
  }
 	 
 	 
-	/**
-	 * Read input from console.
-	 *
-	 * @param prompt the prompt
-	 * @return the string
-	 */
 	public static String readInputFromConsole(String prompt) {
 		String line = null;
 		Console c = System.console();
@@ -779,12 +660,6 @@ protected static ConnectorConfig getConnectorConfig() {
 		return line;
 	}
 	
-	/**
-	 * Read password from console.
-	 *
-	 * @param prompt the prompt
-	 * @return the string
-	 */
 	public static String readPasswordFromConsole(String prompt) {
 		String line = null;
 		Console c = System.console();
@@ -806,12 +681,6 @@ protected static ConnectorConfig getConnectorConfig() {
 	}
 
 	
-	/**
-	 * Replace special characters.
-	 *
-	 * @param inString the in string
-	 * @return the string
-	 */
 	public static String replaceSpecialCharacters(String inString) {
 		String outString = inString;
 		try 
@@ -839,12 +708,6 @@ protected static ConnectorConfig getConnectorConfig() {
 		return outString;
 	}
 	
-	/**
-	 * Gets the CSV friendly string.
-	 *
-	 * @param content the content
-	 * @return the CSV friendly string
-	 */
 	public static String getCSVFriendlyString(String content)
 	{
 		if(content!=null && !content.isEmpty())
@@ -858,14 +721,6 @@ protected static ConnectorConfig getConnectorConfig() {
 	}
 
 	
-	/**
-	 * Replace string.
-	 *
-	 * @param original the original
-	 * @param pattern the pattern
-	 * @param replace the replace
-	 * @return the string
-	 */
 	private static String replaceString(String original, String pattern, String replace) 
 	{
 		if(original != null && !original.isEmpty() && pattern != null && !pattern.isEmpty() && replace !=null)
@@ -895,13 +750,6 @@ protected static ConnectorConfig getConnectorConfig() {
 	}
 	
 	
-	/**
-	 * To java primitive type.
-	 *
-	 * @param value the value
-	 * @return the object
-	 * @throws UnsupportedEncodingException the unsupported encoding exception
-	 */
 	public  static Object toJavaPrimitiveType(Object value) throws UnsupportedEncodingException 
 	{
 		if(value==null)
@@ -944,10 +792,9 @@ protected static ConnectorConfig getConnectorConfig() {
 
 	
 	/**
-	 * To string.
-	 *
-	 * @param input the input
-	 * @return the string
+	 * Converts Reader to String
+	 * @param the input reader
+	 * @return the string read from the reader
 	 */
 	public static String toString(Reader input) {
 		if(input == null)
@@ -981,11 +828,10 @@ protected static ConnectorConfig getConnectorConfig() {
 	}
 	
 	/**
-	 * To bytes.
-	 *
-	 * @param input the input
-	 * @return the byte[]
-	 * @throws IOException Signals that an I/O exception has occurred.
+	 * Converts an Input Stream to byte[]
+	 * @param the input stream
+	 * @return the byte[] read from the input stream
+	 * @throws IOException
 	 */
 	public static byte[] toBytes(InputStream input) throws IOException {
 		if(input == null)
@@ -1013,13 +859,6 @@ protected static ConnectorConfig getConnectorConfig() {
 		}
 	} 
 	
-    /**
-     * Serialize.
-     *
-     * @param obj the obj
-     * @return the byte[]
-     * @throws IOException Signals that an I/O exception has occurred.
-     */
     public static byte[] serialize(Object obj) throws IOException {
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         ObjectOutputStream o = new ObjectOutputStream(b);
@@ -1028,35 +867,15 @@ protected static ConnectorConfig getConnectorConfig() {
     }
 
 
-    /**
-     * Pad right.
-     *
-     * @param s the s
-     * @param n the n
-     * @return the string
-     */
     public static String padRight(String s, int n) {
         return String.format("%1$-" + n + "s", s);  
    }
 
-   /**
-    * Pad left.
-    *
-    * @param s the s
-    * @param n the n
-    * @return the string
-    */
    public static String padLeft(String s, int n) {
        return String.format("%1$" + n + "s", s);  
    }
    
    
-	/**
-	 * Utf8 encoder.
-	 *
-	 * @param codingErrorAction the coding error action
-	 * @return the charset encoder
-	 */
 	public static CharsetEncoder utf8Encoder(CodingErrorAction codingErrorAction) {
 	    try 
 	    {
@@ -1073,13 +892,6 @@ protected static ConnectorConfig getConnectorConfig() {
 	    }
 }
 
-/**
- * Utf8 decoder.
- *
- * @param codingErrorAction the coding error action
- * @param fileCharset the file charset
- * @return the charset decoder
- */
 public static CharsetDecoder utf8Decoder(CodingErrorAction codingErrorAction, Charset fileCharset) {
     try 
     {
@@ -1098,13 +910,6 @@ public static CharsetDecoder utf8Decoder(CodingErrorAction codingErrorAction, Ch
     }
 }
 
-/**
- * To bytes.
- *
- * @param value the value
- * @param codingErrorAction the coding error action
- * @return the byte[]
- */
 public static byte[] toBytes(String value, CodingErrorAction codingErrorAction) {
 	if(value != null)
 	{
@@ -1126,11 +931,6 @@ public static byte[] toBytes(String value, CodingErrorAction codingErrorAction) 
 }
 
 
-/**
- * Configure log4j.
- *
- * @return true, if successful
- */
 public synchronized static boolean configureLog4j() 
 {
 	try
@@ -1156,20 +956,12 @@ public synchronized static boolean configureLog4j()
 	return true;
 }
 
-/**
- * Shutdown log4j.
- */
 public synchronized static void shutdownLog4j() {
     if (isLog4jConfigured()) {
         LogManager.shutdown();
     }
 }
 
-/**
- * Checks if is log4j configured.
- *
- * @return true, if is log4j configured
- */
 private static boolean isLog4jConfigured() {
 try
 {
@@ -1192,13 +984,6 @@ return false;
 }				  
 
 
-/**
- * Gets the files.
- *
- * @param directory the directory
- * @param fileFilter the file filter
- * @return the files
- */
 public static File[] getFiles(File directory, IOFileFilter fileFilter) {
 	Collection<File> list = FileUtils.listFiles(directory, fileFilter,
 			TrueFileFilter.INSTANCE);

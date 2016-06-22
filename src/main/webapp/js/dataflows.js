@@ -119,16 +119,19 @@ function copyDataflow(dataflowAlias,dataflowId){
 	    		runTime = new Date(data[i].nextRunTime).toLocaleString();
 	    	}
     	   
-        	var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
-
-	   	   if(data[i].status != "Active") 
+    	   var statusLabel = "<span class=\"label label-success\">Active</span>";
+    	   var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
+    	   if(data[i].status != "Active") 
     	   { 
-    		   statusLabel = "<span class=\"label label-danger\">"+data[i].status+"</span>";
-    	   }else
-    	   {
-    	   	   statusLabel = "<span class=\"label label-success\">"+data[i].status+"</span>";
+    		   statusLabel = "<span class=\"label label-danger\">Defunct</span>";
+    		   linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
     	   }
     	   
+    	   var deleteText = "class=\"disabled\"";
+    	   if(data[i].workflowType === 'Local')
+    	   {
+    		   deleteText = "";
+    	   }
     	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
@@ -147,6 +150,12 @@ function copyDataflow(dataflowAlias,dataflowId){
     	   <ul class=\"dropdown-menu pull-right\"> \
     	   <li>  \
     	   <a href=\"#\" onclick='startDataflow(\""+data[i].name+"\");'>Start Now</a> \
+    	   </li> \
+    	   <li "+ deleteText +">  \
+    	   <a href=\"#\" onclick='deleteDataflow(\""+data[i].name+"\");'>Delete</a> \
+    	   </li> \
+    	   <li>  \
+    	   <a href=\"#\" onclick='copyDataflow(\""+data[i].name+"\",\""+data[i]._uid+"\");'>Copy</a> \
     	   </li> \
     	   </ul> \
     	   </div> \

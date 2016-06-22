@@ -104,7 +104,7 @@ public class PreviewUtil {
 		return data;
 	}
 	
-	public static List<Header> getFileHeader(File inputFile, String orgId) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
+	public static List<Header> getFileHeader(File inputFile) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
 			Charset tmp = null;
 			try 
@@ -118,7 +118,7 @@ public class PreviewUtil {
 			{
 				tmp = Charset.forName("UTF-8");
 			}
-			ExternalFileSchema schema = ExternalFileSchema.init(inputFile, null, null, System.out, orgId);
+			ExternalFileSchema schema = ExternalFileSchema.init(inputFile, null, System.out);
 			List<Header> columns = convertSchemaToHeader(schema);
 			if(columns==null || columns.isEmpty())
 			{
@@ -127,7 +127,7 @@ public class PreviewUtil {
 			return columns;
 	}
 	
-	public static List<Map<String, Object>> getFileData(File inputFile, String orgId) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
+	public static List<Map<String, Object>> getFileData(File inputFile) throws JsonParseException, JsonMappingException, IOException, DatasetLoaderException
 	{
 			Charset tmp = null;
 			try 
@@ -142,7 +142,7 @@ public class PreviewUtil {
 				tmp = Charset.forName("UTF-8");
 			}
 
-			ExternalFileSchema schema = ExternalFileSchema.init(inputFile, null,tmp, System.out, orgId);
+			ExternalFileSchema schema = ExternalFileSchema.init(inputFile, tmp, System.out);
 			CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(CodingErrorAction.REPORT, tmp )), pref);				
 

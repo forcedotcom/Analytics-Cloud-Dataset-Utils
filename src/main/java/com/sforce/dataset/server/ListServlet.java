@@ -76,7 +76,7 @@ public class ListServlet extends HttpServlet {
 					{
 						throw new IllegalArgumentException("type is required param");
 					}
-										
+					
 					PartnerConnection conn = AuthFilter.getConnection(request);
 					if(conn==null)
 					{
