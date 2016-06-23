@@ -200,6 +200,7 @@ public class FieldType extends com.sforce.dataset.loader.file.schema.FieldType {
 	 * @param name the name
 	 * @param format the format
 	 * @param defaultValue the default value
+	 * @param userPref the user pref
 	 * @return the field type
 	 */
 	public static FieldType GetDateKeyDataType(String name, String format, String defaultValue, Preferences userPref)

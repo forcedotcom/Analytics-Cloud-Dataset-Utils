@@ -88,7 +88,7 @@ public class ErrorWriter {
 	 *
 	 * @param inputCsv the input csv
 	 * @param delimiter the delimiter
-	 * @param pref the pref
+	 * @param inputFileCharset the input File Charset
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public ErrorWriter(File inputCsv,char delimiter,Charset inputFileCharset)

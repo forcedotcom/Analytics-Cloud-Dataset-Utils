@@ -71,7 +71,7 @@ public class CsvExternalSort extends ExternalSort {
      * @param distinct the distinct
      * @param headersize the headersize
      * @param schema the schema
-     * @param pref the pref
+     * @param delim the delim
      * @return the file
      * @throws IOException Signals that an I/O exception has occurred.
      */
@@ -121,7 +121,7 @@ public class CsvExternalSort extends ExternalSort {
      * @param cmp the cmp
      * @param distinct the distinct
      * @param numHeader the num header
-     * @param pref the pref
+     * @param delim the delim
      * @return the list
      * @throws IOException Signals that an I/O exception has occurred.
      */
@@ -218,7 +218,7 @@ public class CsvExternalSort extends ExternalSort {
      * @param distinct the distinct
      * @param inputfile the inputfile
      * @param headersize the headersize
-     * @param pref the pref
+     * @param delim the delim
      * @return the int
      * @throws IOException Signals that an I/O exception has occurred.
      */
@@ -299,7 +299,7 @@ public class CsvExternalSort extends ExternalSort {
      * @param writer the writer
      * @param cs the cs
      * @param numHeader the num header
-     * @param pref the pref
+     * @param delim the delim
      * @throws IOException Signals that an I/O exception has occurred.
      */
     public static void copyHeader(File inputCsv, CsvWriter writer, Charset cs, final int numHeader, char delim) throws IOException 
