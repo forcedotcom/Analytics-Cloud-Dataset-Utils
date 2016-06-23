@@ -26,6 +26,7 @@
 package com.sforce.dataset.loader;
 
 import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,7 +37,7 @@ public class WriterThread implements Runnable {
 	
   private static final int max_error_threshhold = 10000;
 
-  private final BlockingQueue<String[]> queue;
+  private final BlockingQueue<List<String>> queue;
   @SuppressWarnings("deprecation")
 private final EbinFormatWriter ebinWriter;
   private final ErrorWriter errorwriter;
@@ -50,7 +51,7 @@ private final EbinFormatWriter ebinWriter;
 
 
 @SuppressWarnings("deprecation")
-WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintStream logger, Session session) 
+WriterThread(BlockingQueue<List<String>> q,EbinFormatWriter w,ErrorWriter ew, PrintStream logger, Session session) 
   { 
 	  if(q==null || w == null || ew == null || session == null)
 	  {
@@ -67,8 +68,8 @@ WriterThread(BlockingQueue<String[]> q,EbinFormatWriter w,ErrorWriter ew, PrintS
 public void run() {
  		logger.println("Start: " + Thread.currentThread().getName());
     try {
-       String[] row = queue.take();
-       while (row != null && row.length!=0) 
+       List<String> row = queue.take();
+       while (row != null && row.size()!=0) 
        {
     	   if(session.isDone())
 			{

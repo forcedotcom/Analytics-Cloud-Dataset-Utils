@@ -26,10 +26,11 @@
 package com.sforce.dataset.util;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -43,9 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
-
-import org.supercsv.io.CsvListWriter;
-import org.supercsv.prefs.CsvPreference;
 
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.soap.partner.DescribeGlobalResult;
@@ -404,7 +402,7 @@ public class SfdcUtils {
 			// passed back to your calls. You can comment these out if you like
 			BufferedOutputStream bos = null;
 //			CsvWriter writer = null;
-			CsvListWriter writer = null;
+			CsvWriter writer = null;
 			File csvFile = new File(dataDir,recordInfo+".csv");
 			
 			if(pagesize==0)
@@ -435,13 +433,15 @@ public class SfdcUtils {
 					}
 				}
 				
-				writer = new CsvListWriter(new FileWriter(csvFile),CsvPreference.STANDARD_PREFERENCE);
+//				writer = new CsvListWriter(new FileWriter(csvFile),CsvPreference.STANDARD_PREFERENCE);
+		        writer = new CsvWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StringUtilsExt.utf8Charset),DatasetUtilConstants.DEFAULT_BUFFER_SIZE),',','"');
+
 				List<String> hdr = new LinkedList<String>();
 				for(com.sforce.dataset.loader.file.schema.ext.FieldType field:fieldList)
 				{
 					hdr.add(field.getName());
 				}
-				writer.write(hdr);
+				writer.writeRecord(hdr);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -457,7 +457,7 @@ public class SfdcUtils {
 				while (!done) {
 					SObject[] records = qr.getRecords();
 					for (int i = 0; i < records.length; ++i) {
-						Object[] rowData = new Object[fieldList.size()];
+						String[] rowData = new String[fieldList.size()];
 						for (int var = 0; var < fieldList.size(); var++) {
 							String fieldName = fieldList.get(var).getFullyQualifiedName(); //This is full path of the field
 							Object value = getFieldValueFromQueryResult(fieldName,records[i]);
@@ -467,7 +467,7 @@ public class SfdcUtils {
 								// first before setting it in rowData
 								value = DatasetUtils.toJavaPrimitiveType(value);
 							}
-							rowData[var] = value;
+//							rowData[var] = value;
 							if(value==null)
 							{
 								rowData[var] = null;
@@ -488,8 +488,8 @@ public class SfdcUtils {
 						if(writer!=null)
 						{
 							try {
-								writer.write(rowData);
-							} catch (IOException e) {
+								writer.writeRecord(rowData);
+							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						}
@@ -514,7 +514,7 @@ public class SfdcUtils {
 			if(writer!=null)
 				try {
 					writer.close();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			if(bos!=null)

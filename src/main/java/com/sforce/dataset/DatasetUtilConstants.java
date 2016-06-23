@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,6 +55,7 @@ public class DatasetUtilConstants {
 	public static final int DEFAULT_BUFFER_SIZE = 8*1024*1024;
 	
 //	public static boolean createNewDateParts = false;
+	public static CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 
 	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/37.0";
 	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/37.0";
@@ -88,6 +90,8 @@ public class DatasetUtilConstants {
 	public static final String serverStatusParam = "SERVER_STATUS";
 	public static final String clientId = "com.sforce.dataset.utils";
 	
+	public static final int max_error_threshhold = 10000;
+
 	
 	
 	public static final File getOrgDir(String orgId)

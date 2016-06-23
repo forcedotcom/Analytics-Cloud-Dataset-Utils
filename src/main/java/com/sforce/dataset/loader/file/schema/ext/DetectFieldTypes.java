@@ -28,7 +28,6 @@ package com.sforce.dataset.loader.file.schema.ext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -37,18 +36,15 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
-
 import com.sforce.dataset.DatasetUtilConstants;
-import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.CSVReader;
 
 
 public class DetectFieldTypes {
@@ -61,11 +57,11 @@ public class DetectFieldTypes {
 //	public static final Pattern text = Pattern.compile("^[a-zA-z0-9]*$");
 	public static final String[] additionalDatePatterns  = {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","yyyy-MM-dd'T'HH:mm:ss'Z'","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss","MM/dd/yyyy HH:mm:ss","MM/dd/yy HH:mm:ss","MM-dd-yyyy HH:mm:ss","MM-dd-yy HH:mm:ss","dd/MM/yyyy HH:mm:ss","dd/MM/yy HH:mm:ss","dd-MM-yyyy HH:mm:ss","dd-MM-yy HH:mm:ss","MM/dd/yyyy","MM/dd/yy","dd/MM/yy","dd/MM/yyyy","MM-dd-yyyy","MM-dd-yy","dd-MM-yyyy","dd-MM-yy","M/d/yyyy HH:mm:ss","M/d/yy HH:mm:ss","M-d-yyyy HH:mm:ss","M-d-yy HH:mm:ss","d/M/yyyy HH:mm:ss","d/M/yy HH:mm:ss","d-M-yyyy HH:mm:ss","d-M-yy HH:mm:ss","M/d/yy","M/d/yyyy","d/M/yy","d/M/yyyy","M-d-yy","M-d-yyyy","d-M-yy","d-M-yyyy","M/dd/yyyy HH:mm:ss","M/dd/yy HH:mm:ss","M-dd-yyyy HH:mm:ss","M-dd-yy HH:mm:ss","dd/M/yyyy HH:mm:ss","dd/M/yy HH:mm:ss","dd-M-yyyy HH:mm:ss","dd-M-yy HH:mm:ss","M/dd/yy","dd/M/yy","M-dd-yy","dd-M-yy","M/dd/yyyy","dd/M/yyyy","M-dd-yyyy","dd-M-yyyy","MM/d/yyyy HH:mm:ss","MM/d/yy HH:mm:ss","MM-d-yyyy HH:mm:ss","MM-d-yy HH:mm:ss","d/MM/yyyy HH:mm:ss","d/MM/yy HH:mm:ss","d-MM-yyyy HH:mm:ss","d-MM-yy HH:mm:ss","MM/d/yy","d/MM/yy","MM-d-yy","d-MM-yy","MM/d/yyyy","d/MM/yyyy","MM-d-yyyy","d-MM-yyyy"};
 	
-	public List<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, CsvPreference pref, PrintStream logger, String orgId) throws IOException
+	public List<FieldType> detect(File inputCsv, ExternalFileSchema userSchema, Charset fileCharset, char delim, PrintStream logger, String orgId) throws IOException
 	{
-		CsvListReader reader = null;
+		CSVReader reader = null;
 		LinkedList<FieldType> types = null;
-		String[] header = null;
+		ArrayList<String> header = null;
     	com.sforce.dataset.Preferences userPref = DatasetUtilConstants.getPreferences(orgId);
 
 		
@@ -84,12 +80,13 @@ public class DetectFieldTypes {
 		
 		try 
 		{
-			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
-			header = reader.getHeader(true);
+//			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
+			reader = new CSVReader(new FileInputStream(inputCsv),fileCharset.name() ,new char[]{delim});
+			header = reader.nextRecord();
 			
 			if(reader!=null)
 			{
-				reader.close();
+				reader.finalise();
 				reader = null;
 			}
 			
@@ -108,9 +105,9 @@ public class DetectFieldTypes {
 								fieldCount++;
 						}
 						
-						if(header.length!=fieldCount)
+						if(header.size()!=fieldCount)
 						{
-							throw new IllegalArgumentException("Input file header count {"+header.length+"} does not match json field count {"+fieldCount+"}");
+							throw new IllegalArgumentException("Input file header count {"+header.size()+"} does not match json field count {"+fieldCount+"}");
 						}
 						
 						return fields;
@@ -126,19 +123,19 @@ public class DetectFieldTypes {
 			if(header==null)
 				return types;
 			
-			if(header.length>5000)
+			if(header.size()>5000)
 			{
-				throw new IllegalArgumentException("Input file cannot contain more than 5000 columns. found {"+header.length+"} columns");
+				throw new IllegalArgumentException("Input file cannot contain more than 5000 columns. found {"+header.size()+"} columns");
 			}
 
 			String devNames[] = ExternalFileSchema.createUniqueDevName(header);
 			boolean first = true;
-			for (int i=0; i< header.length; i++) 
+			for (int i=0; i< header.size(); i++) 
 			{
 				if(i==0)
 				{
-					if(header[i] != null && header[i].startsWith("#"))
-						header[i] = header[i].replace("#", "");
+					if(header.get(i) != null && header.get(i).startsWith("#"))
+						header.set(i, header.get(i).replace("#", ""));
 				}
 
 //				boolean found = false;
@@ -174,8 +171,8 @@ public class DetectFieldTypes {
 				boolean fetchedExtraRows = false;
 				LinkedList<String> columnValues = new LinkedList<String>();			
 				LinkedHashSet<String> uniqueColumnValues = new LinkedHashSet<String>();			
-				logger.print("Column: "+ header[i]);
-				long rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize, maxRowsToSample, columnValues, 0);
+				logger.print("Column: "+ header.get(i));
+				long rowCount = getColumnValuefromCsv(inputCsv, fileCharset, delim, i, sampleSize, maxRowsToSample, columnValues, 0, logger);
 //				try
 //				{
 //					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
@@ -239,7 +236,7 @@ public class DetectFieldTypes {
 					getUniqueColumnValues(columnValues, uniqueColumnValues);
 					if(uniqueColumnValues.size() == columnValues.size())
 					{
-						rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount);
+						rowCount = getColumnValuefromCsv(inputCsv, fileCharset, delim, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount, logger);
 						fetchedExtraRows=true;
 						if(columnValues.size() == (rowCount-1))
 						{
@@ -287,7 +284,7 @@ public class DetectFieldTypes {
 							{
 								if(!fetchedExtraRows)
 								{
-									rowCount = getColumnValuefromCsv(inputCsv, fileCharset, pref, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount);
+									rowCount = getColumnValuefromCsv(inputCsv, fileCharset, delim, i, sampleSize*5, maxRowsToSample*5, columnValues, rowCount, logger);
 									fetchedExtraRows=true;
 									if(columnValues.size() == (rowCount-1))
 									{
@@ -314,16 +311,16 @@ public class DetectFieldTypes {
 				}
 				if(newField!=null)
 				{
-					if(header[i]!=null && !header[i].trim().isEmpty())
+					if(header.get(i)!=null && !header.get(i).trim().isEmpty())
 					{	
-						if(header[i].length()>255)
+						if(header.get(i).length()>255)
 						{
-							newField.setLabel(header[i].substring(0,255));
-							newField.setDescription(header[i].substring(0,255));
+							newField.setLabel(header.get(i).substring(0,255));
+							newField.setDescription(header.get(i).substring(0,255));
 						}else
 						{
-							newField.setLabel(header[i]);
-							newField.setDescription(header[i]);							
+							newField.setLabel(header.get(i));
+							newField.setDescription(header.get(i));							
 						}
 					}
 					types.add(newField);
@@ -338,7 +335,7 @@ public class DetectFieldTypes {
 		} finally  {
 			logger.println("");
 			if(reader!=null)
-					reader.close();
+					reader.finalise();
 		}
 		return types;
 	}
@@ -630,43 +627,57 @@ public class DetectFieldTypes {
 	    return false;
 	}
 	
-	private long getColumnValuefromCsv(File inputCsv, Charset fileCharset, CsvPreference pref, int columnIndex, long sampleSize, long maxRowsToSample, LinkedList<String> columnValues, long rowCountToSkip)
+	private long getColumnValuefromCsv(File inputCsv, Charset fileCharset, char delim, int columnIndex, long sampleSize, long maxRowsToSample, LinkedList<String> columnValues, long rowCountToSkip, PrintStream logger)
 	{
-		CsvListReader reader = null;
-		String[] header = null;
+		CSVReader reader = null;
+		ArrayList<String> header = null;
 		long rowCount = 0L;
 		try
 		{
-			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
-			header = reader.getHeader(true);
-			if(columnIndex>=header.length)
-				return rowCount;
-			rowCount++;
-			List<String> nextLine = null;
-			while ((nextLine = reader.read()) != null) {
-				rowCount++;
-				if(rowCount<=rowCountToSkip)
-					continue;
-				if(columnIndex>=nextLine.size())
-					continue; //This line does not have enough columns
-				if(nextLine.get(columnIndex) != null && !nextLine.get(columnIndex).trim().isEmpty())
+			reader = new CSVReader(new FileInputStream(inputCsv),fileCharset.name() ,new char[]{delim});
+//			reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , fileCharset)), delim);
+				boolean hasmore = true;
+
+				header = reader.nextRecord();
+				if(columnIndex>=header.size())
+					return rowCount;
+
+				while (hasmore) 
 				{
-					columnValues.add(nextLine.get(columnIndex).trim());
+					rowCount++;
+
+					if(rowCount<=rowCountToSkip)
+						continue;
+
+					try
+					{
+						List<String> nextLine = reader.nextRecord();
+						if(columnIndex>=nextLine.size())
+							continue; //This line does not have enough columns
+						if(nextLine.get(columnIndex) != null && !nextLine.get(columnIndex).trim().isEmpty())
+						{
+							columnValues.add(nextLine.get(columnIndex).trim());
+						}
+					}catch(Throwable t)
+					{
+						logger.println("Line {"+(rowCount)+"} has error {"+t+"}");
+					}
+					
+					if(columnValues.size()>=sampleSize || rowCount > maxRowsToSample)
+					{
+						break;
+					}
 				}
-				if(columnValues.size()>=sampleSize || rowCount > maxRowsToSample)
-				{
-					break;
-				}
-			}
+
 		}catch(Throwable t)
 		{
-			t.printStackTrace();
+			logger.println("Line {"+(rowCount)+"} has error {"+t+"}");
 		}finally
 		{
 			if(reader!=null)
 			{
 				try {
-					reader.close();
+					reader.finalise();
 				} catch (IOException e) {
 				}
 			}

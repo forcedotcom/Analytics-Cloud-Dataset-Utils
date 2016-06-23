@@ -34,13 +34,13 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,15 +62,11 @@ import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
 
 import com.sforce.async.AsyncApiException;
 import com.sforce.async.BatchInfo;
 import com.sforce.async.BatchStateEnum;
 import com.sforce.async.BulkConnection;
-import com.sforce.async.CSVReader;
 import com.sforce.async.ContentType;
 import com.sforce.async.JobInfo;
 import com.sforce.async.JobStateEnum;
@@ -81,6 +77,7 @@ import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.loader.file.sort.CsvExternalSort;
+import com.sforce.dataset.util.CSVReader;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.FileUtilsExt;
@@ -93,6 +90,8 @@ import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 import com.sforce.ws.util.Base64;
+//import org.supercsv.io.CsvListReader;
+//import org.supercsv.prefs.CsvPreference;
 
 /**
  * The Class DatasetLoader.
@@ -199,7 +198,7 @@ public class DatasetLoader {
 		Session session = tx.getSession();
 		
 		//we only want a small capacity otherwise the reader thread will runaway
-		BlockingQueue<String[]> q = new LinkedBlockingQueue<String[]>(10);  
+		BlockingQueue<List<String>> q = new LinkedBlockingQueue<List<String>>(10);  
 
 		
 		if(uploadFormat==null||uploadFormat.trim().isEmpty())
@@ -363,7 +362,7 @@ public class DatasetLoader {
 //				}
 //			}
 			
-			CsvPreference pref = null;				
+//			CsvPreference pref = null;				
 			String fileExt = FilenameUtils.getExtension(inputFile.getName());
 			boolean isParsable = false;
 			if(fileExt != null && (fileExt.equalsIgnoreCase("csv") || fileExt.equalsIgnoreCase("txt") ))
@@ -436,7 +435,7 @@ public class DatasetLoader {
 					throw new DatasetLoaderException("Schema File {"+ExternalFileSchema.getSchemaFile(inputFile, logger) +"} has a uniqueId set. Choose 'Upsert' operation instead");
 				}
 				
-			   pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+//			   pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 
 			}
 			
@@ -513,7 +512,7 @@ public class DatasetLoader {
 			{	
 				long sortStartTime = System.currentTimeMillis();
 				File unsortedFile = inputFile;
-				inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema, pref);
+				inputFile = CsvExternalSort.sortFile(inputFile, inputFileCharset, false, 1, schema,schema.getFileFormat().getFieldsDelimitedBy().charAt(0));
 				long sortEndTime = System.currentTimeMillis();
 				if(unsortedFile != inputFile)
 				{
@@ -565,11 +564,12 @@ public class DatasetLoader {
 				long errorRowCount = 0;
 				long startTime = System.currentTimeMillis();
 				EbinFormatWriter ebinWriter = new EbinFormatWriter(out, schema.getObjects().get(0).getFields().toArray(new FieldType[0]), logger);
-				ErrorWriter errorWriter = new ErrorWriter(inputFile,",", pref);
+				ErrorWriter errorWriter = new ErrorWriter(inputFile,schema.getFileFormat().getFieldsDelimitedBy().charAt(0), inputFileCharset);
 				
 				session.setParam(DatasetUtilConstants.errorCsvParam, errorWriter.getErrorFile().getAbsolutePath()); 
 				
-				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), pref);				
+//				CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(codingErrorAction , inputFileCharset )), pref);				
+				CSVReader reader = new CSVReader(new FileInputStream(inputFile),inputFileCharset.name() , new char[]{schema.getFileFormat().getFieldsDelimitedBy().charAt(0)});
 				WriterThread writer = new WriterThread(q, ebinWriter, errorWriter, logger,session);
 				Thread th = new Thread(writer,"Writer-Thread");
 				th.setDaemon(true);
@@ -592,21 +592,22 @@ public class DatasetLoader {
 							}
 							try
 							{
-								row = reader.read();
+								totalRowCount++;
+								row = reader.nextRecord();
 								if(row!=null && !writer.isDone() && !writer.isAborted())
 								{
-									totalRowCount++;
 									if(totalRowCount==1)
 										continue;
-									if(row.size()!=0 )
+									if(row.size()!=0)
 									{
-										q.put(row.toArray(new String[row.size()]));
+										q.put(row);
 									}else
 									{
 										errorRowCount++;
 									}
 								}else
 								{
+									totalRowCount--;
 									hasmore = false;
 								}
 							}catch(Exception t)
@@ -617,9 +618,11 @@ public class DatasetLoader {
 //									logger.println();
 //								}
 								logger.println("Line {"+(totalRowCount)+"} has error {"+t+"}");
-								if(t instanceof MalformedInputException)
+								
+
+								if(t instanceof MalformedInputException || errorRowCount>=DatasetUtilConstants.max_error_threshhold)
 								{
-									q.put(new String[0]);
+									q.put(new ArrayList<String>(0));
 									int retryCount = 0;
 									while(!writer.isDone())
 									{
@@ -629,7 +632,7 @@ public class DatasetLoader {
 											Thread.sleep(1000);
 											if(retryCount%10==0)
 											{
-												q.put(new String[0]);
+												q.put(new ArrayList<String>(0));
 												logger.println("Waiting for writer to finish");
 											}
 										}catch(InterruptedException in)
@@ -637,12 +640,24 @@ public class DatasetLoader {
 											in.printStackTrace();
 										}
 									}
-									logger.println("\n*******************************************************************************");
-									logger.println("The input file is not utf8 encoded. Please save it as UTF8 file first");
-									logger.println("*******************************************************************************\n");								
+									
 									status = false;
 									hasmore = false;
-									throw new DatasetLoaderException("The input file is not utf8 encoded");
+
+									if(errorRowCount>=DatasetUtilConstants.max_error_threshhold)
+									{
+										logger.println("\n*******************************************************************************");
+										logger.println("Max error threshold reached. Aborting processing");
+										logger.println("*******************************************************************************\n");								
+										throw new DatasetLoaderException("Max error threshold reached. Aborting processing");
+									}else if(t instanceof MalformedInputException)
+									{
+										logger.println("\n*******************************************************************************");
+										logger.println("The input file is not utf8 encoded. Please save it as UTF8 file first");
+										logger.println("*******************************************************************************\n");								
+										throw new DatasetLoaderException("The input file is not utf8 encoded");
+									}
+
 								}
 							}finally
 							{
@@ -660,7 +675,7 @@ public class DatasetLoader {
 							{
 								if(retryCount%10==0)
 								{
-									q.put(new String[0]);
+									q.put(new ArrayList<String>(0));
 									logger.println("Waiting for writer to finish");
 								}
 								Thread.sleep(1000);
@@ -675,7 +690,7 @@ public class DatasetLoader {
 				}finally
 				{
 					if(reader!=null)
-						IOUtils.closeQuietly(reader);
+						reader.finalise();
 					if(out!=null)
 						IOUtils.closeQuietly(out);
 					if(gzos!=null)
@@ -1667,8 +1682,8 @@ public class DatasetLoader {
     	@SuppressWarnings("unchecked")
     	LinkedHashMap<BatchInfo,File> tmp = (LinkedHashMap<BatchInfo, File>) batchInfoList.clone();
         for (BatchInfo b : tmp.keySet()) {
-            CSVReader rdr =
-              new CSVReader(connection.getBatchResultStream(job.getId(), b.getId()));
+            com.sforce.async.CSVReader rdr =
+              new com.sforce.async.CSVReader(connection.getBatchResultStream(job.getId(), b.getId()));
             List<String> resultHeader = rdr.nextRecord();
             int resultCols = resultHeader.size();
 

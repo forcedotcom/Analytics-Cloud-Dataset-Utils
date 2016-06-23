@@ -29,20 +29,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.CodingErrorAction;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.encoder.DefaultCsvEncoder;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
-import org.supercsv.util.CsvContext;
 
-import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.util.CSVReader;
+import com.sforce.dataset.util.CsvWriter;
 import com.sforce.dataset.util.FileUtilsExt;
+import com.sforce.dataset.util.Logger;
 
 /**
  * The Class ErrorWriter.
@@ -50,13 +49,13 @@ import com.sforce.dataset.util.FileUtilsExt;
 public class ErrorWriter {
 			
 	/** The delimiter. */
-	private String delimiter = ",";
+	private char delimiter = ',';
 	
 	/** The Header line. */
 	private String HeaderLine = "";	 
 	
 	/** The header columns. */
-	private String[] headerColumns = null;	 
+	private ArrayList<String> headerColumns = null;	 
 	
 	/** The Header suffix. */
 	private String HeaderSuffix = "Error";
@@ -70,15 +69,6 @@ public class ErrorWriter {
 	/** The writer. */
 	private BufferedWriter fWriter = null;
 	
-	/** The context. */
-	private CsvContext context = new CsvContext(1, 1, 1);
-	
-	/** The preference. */
-	private CsvPreference preference = CsvPreference.STANDARD_PREFERENCE;
-	
-	/** The csv encoder. */
-	private DefaultCsvEncoder csvEncoder = new DefaultCsvEncoder();
-
 	/** The Constant LF. */
 	public static final char LF = '\n';
 
@@ -101,7 +91,7 @@ public class ErrorWriter {
 	 * @param pref the pref
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public ErrorWriter(File inputCsv,String delimiter, CsvPreference pref)
+	public ErrorWriter(File inputCsv,char delimiter,Charset inputFileCharset)
 			throws IOException 
 	{
 		if(inputCsv==null|| !inputCsv.exists())
@@ -109,16 +99,19 @@ public class ErrorWriter {
 			throw new IOException("inputCsv file {"+inputCsv+"} does not exist");
 		}
 		
-		if(delimiter == null || delimiter.isEmpty())
-		{
-			delimiter = ",";
-		}
+//		if(delimiter == null || delimiter.isEmpty())
+//		{
+//			delimiter = ",";
+//		}
 
 		this.delimiter = delimiter;
 
-		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(CodingErrorAction.IGNORE, null)), pref);
-		headerColumns = reader.getHeader(true);		
-		reader.close();
+//		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(CodingErrorAction.IGNORE, null)), pref);
+//		headerColumns = reader.getHeader(true);		
+//		reader.close();
+		CSVReader reader = new CSVReader(new FileInputStream(inputCsv),inputFileCharset.name() , delimiter);
+		headerColumns = reader.nextRecord();
+		reader.finalise();
 		
 		StringBuffer hdrLine = new StringBuffer();
 		hdrLine.append(HeaderSuffix);
@@ -149,36 +142,35 @@ public class ErrorWriter {
 		}		
 	}
 	
-	/**
-	 * Adds the error.
-	 *
-	 * @param values the values
-	 * @param error the error
-	 */
-	public void addError(String[] values, String error)
+	public void addError(List<String> values, String error)
 	{
 		try 
 		{
 			if(fWriter == null)
 			{
-				fWriter = new BufferedWriter(new FileWriter(this.errorCsv));
+				fWriter = new BufferedWriter(new FileWriter(this.errorCsv),DatasetUtilConstants.DEFAULT_BUFFER_SIZE);
+				if(this.HeaderLine!=null)
 					fWriter.write(this.HeaderLine+"\n");
 			}
 			if(error==null)
 				error="null";
 			fWriter.write(getCSVFriendlyString(error));
-			for(String val:values)
+			if(values!=null)
 			{
-				fWriter.write(this.delimiter);	
-				if(val!=null)
-					fWriter.write(csvEncoder.encode(val, context, preference));
+				for(String val:values)
+				{
+					fWriter.write(this.delimiter);	
+					if(val!=null)
+						fWriter.write(CsvWriter.encode(val, this.delimiter , QUOTE));
+				}
 			}
 			fWriter.write("\n");
 		} catch (Throwable t) {
-			t.printStackTrace();
+			t.printStackTrace(Logger.out);
 		}
 	}
-		
+	
+	
 	/**
 	 * Gets the error file.
 	 *

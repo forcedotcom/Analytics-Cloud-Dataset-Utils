@@ -29,11 +29,9 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,9 +40,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -264,12 +259,14 @@ public class SfdcExtracter {
 				List<String> userFields = new ArrayList<String>();
 				if(csvFile.exists() && csvFile.canRead())
 				{
-					CsvListReader reader = null;
+					CSVReader reader = null;
 						try 
 						{
-							reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(csvFile), false), DatasetUtils.utf8Decoder(null, null)), CsvPreference.STANDARD_PREFERENCE);
-							String[] header = reader.getHeader(true);
-							userFields = Arrays.asList(header);
+							 reader = new CSVReader(new FileInputStream(csvFile),null , new char[]{','});
+
+//							reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(csvFile), false), DatasetUtils.utf8Decoder(null, null)), CsvPreference.STANDARD_PREFERENCE);
+							ArrayList<String> header = reader.nextRecord();
+							userFields = header;
 //							reader = new CsvReader(new InputStreamReader(new BOMInputStream(new FileInputStream(csvFile), false), DatasetUtils.utf8Decoder(null, null)));
 //							if(reader.readHeaders())
 //							{
@@ -289,7 +286,7 @@ public class SfdcExtracter {
 							if(reader!=null)
 							{
 								try {
-									reader.close();
+									reader.finalise();
 								} catch (Throwable e) {
 								}
 								reader = null;

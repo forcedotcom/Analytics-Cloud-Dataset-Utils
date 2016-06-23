@@ -31,14 +31,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -46,6 +45,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.loader.DatasetLoaderException;
+import com.sforce.dataset.util.CSVReader;
 import com.sforce.dataset.util.DatasetUtils;
 import com.sforce.dataset.util.SeparatorGuesser;
 
@@ -228,10 +228,10 @@ public class ExternalFileSchema  {
 				}
 		}
 
-		CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), delim, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+//		CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), delim, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 		
 			DetectFieldTypes detEFT = new DetectFieldTypes();
-			List<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset,pref, logger, orgId);
+			List<FieldType> fields = detEFT.detect(csvFile, userSchema, fileCharset,delim, logger, orgId);
 			FileFormat fileFormat = new FileFormat();
 			fileFormat.setFieldsDelimitedBy(delim+"");
 
@@ -317,20 +317,22 @@ public class ExternalFileSchema  {
 				
 		if(isParsable && userSchema!=null && userSchema.getFileFormat() != null && userSchema.getFileFormat().getNumberOfLinesToIgnore()==1)
 		{
-				String[] header = null;
-				CsvListReader reader = null;
-				CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+				ArrayList<String> header = null;
+				CSVReader reader = null;
+//				CsvListReader reader = null;
+//				CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
 
 				try 
 				{
-					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
-					header = reader.getHeader(true);
+					reader = new CSVReader(new FileInputStream(inputCSV),fileCharset.name() ,new char[]{userSchema.getFileFormat().getFieldsDelimitedBy().charAt(0)});
+//					reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCSV), false), DatasetUtils.utf8Decoder(null , fileCharset)), pref);
+					header = reader.nextRecord();
 				}catch(Throwable t){t.printStackTrace();}
 				finally{
 					if(reader!=null)
 					{
 						try {
-							reader.close();
+							reader.finalise();
 							reader = null;
 						} catch (Throwable e) {
 						}
@@ -353,9 +355,9 @@ public class ExternalFileSchema  {
 					}
 				}
 				
-				if(header != null && header.length > 0 && header.length != SchemaFieldCount)
+				if(header != null && header.size() > 0 && header.size() != SchemaFieldCount)
 				{
-					throw new IllegalArgumentException("CSV header count ["+header.length+"] does not match JSON Field count ["+SchemaFieldCount+"]");
+					throw new IllegalArgumentException("CSV header count ["+header.size()+"] does not match JSON Field count ["+SchemaFieldCount+"]");
 				}
 				
 			/*
@@ -876,21 +878,21 @@ public class ExternalFileSchema  {
 	}
 	
 	
-	public static String[] createUniqueDevName(String[] headers) 
+	public static String[] createUniqueDevName(List<String> headers) 
 	{
 		if(headers==null)
 			return null;
 		LinkedList<String> originalColumnNames = new LinkedList<String>();
 		LinkedList<String> uniqueColumnNames = new LinkedList<String>();
 		LinkedList<String> devNames = new LinkedList<String>();
-		for(int i=0;i<headers.length;i++)
+		for(int i=0;i<headers.size();i++)
 		{
-			originalColumnNames.add(headers[i]);
-			String devName = createDevName(headers[i], "Column", i, true);
+			originalColumnNames.add(headers.get(i));
+			String devName = createDevName(headers.get(i), "Column", i, true);
 				devNames.add(devName);
 		}
 			
-		for(int i=0;i<headers.length;i++)
+		for(int i=0;i<headers.size();i++)
 		{
 			String newName = devNames.get(i);
 			if(uniqueColumnNames.contains(newName))
@@ -915,7 +917,7 @@ public class ExternalFileSchema  {
 			}else
 			{
 				//Did we change the column name? if yes check if have a collision with existing columns
-				if((headers[i] == null || !newName.equals(headers[i])) && originalColumnNames.subList(i+1, devNames.size()).contains(newName))
+				if((headers.get(i) == null || !newName.equals(headers.get(i))) && originalColumnNames.subList(i+1, devNames.size()).contains(newName))
 				{
 					int index = 1;
 					while(true)

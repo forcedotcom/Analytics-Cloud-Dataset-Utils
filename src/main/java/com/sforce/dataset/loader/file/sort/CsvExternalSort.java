@@ -31,9 +31,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,16 +42,13 @@ import java.util.PriorityQueue;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.io.CsvListWriter;
-import org.supercsv.prefs.CsvPreference;
 
 import com.google.code.externalsorting.ExternalSort;
 import com.sforce.dataset.flow.monitor.Session;
 import com.sforce.dataset.flow.monitor.ThreadContext;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
-import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.CSVReader;
+import com.sforce.dataset.util.CsvWriter;
 import com.sforce.dataset.util.FileUtilsExt;
 
 /**
@@ -59,7 +56,14 @@ import com.sforce.dataset.util.FileUtilsExt;
  */
 public class CsvExternalSort extends ExternalSort {
 	
-    /**
+	public static final int DEFAULT_BUFFER_SIZE = 64*1024;
+	private static final int defaultQueueSize = 1000;
+	public static int maxBatchSize = 500000;
+	private static final int maxBlockSize =  96*1024*1024;	//Tuned for 2GB heap space and 2 sort thread
+	private static final int numberOfSortThreads = 2;
+	public static final NumberFormat nf = NumberFormat.getIntegerInstance();
+
+	/**
      * Sort file.
      *
      * @param inputCsv the input csv
@@ -71,7 +75,7 @@ public class CsvExternalSort extends ExternalSort {
      * @return the file
      * @throws IOException Signals that an I/O exception has occurred.
      */
-    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema, CsvPreference pref) throws IOException
+    public static File sortFile(File inputCsv, final Charset cs, final boolean distinct,final int headersize, ExternalFileSchema schema, char delim) throws IOException
     {
     	if(inputCsv==null || !inputCsv.canRead())
     	{
@@ -103,9 +107,9 @@ public class CsvExternalSort extends ExternalSort {
 		session.setStatus("SORTING");
 			
 			
-		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize, pref);
+		List<File> l = sortInBatch(inputCsv, cs, cmp, distinct, headersize, delim);
 //		System.out.println("CsvExternalSort created " + l.size() + " tmp files");
-		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize, pref);
+		mergeSortedFiles(l, outputFile, cmp, cs, distinct, inputCsv, headersize, delim);
 		return outputFile;
     }
 
@@ -121,11 +125,12 @@ public class CsvExternalSort extends ExternalSort {
      * @return the list
      * @throws IOException Signals that an I/O exception has occurred.
      */
-    public static List<File> sortInBatch(File inputCsv, final Charset cs, CsvRowComparator cmp, final boolean distinct,final int numHeader, CsvPreference pref) throws IOException 
+    public static List<File> sortInBatch(File inputCsv, final Charset cs, CsvRowComparator cmp, final boolean distinct,final int numHeader, char delim) throws IOException 
     {
             List<File> files = new ArrayList<File>();
             long blocksize = estimateBestSizeOfBlocks(inputCsv.length(), DEFAULTMAXTEMPFILES, estimateAvailableMemory());// in bytes
-			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
+//			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), delim);				
+            CSVReader reader = new CSVReader(new FileInputStream(inputCsv), cs.name(),new char[]{delim});
 			File tmpdirectory = new File(inputCsv.getParent(),"archive");
 			try
 			{
@@ -142,7 +147,7 @@ public class CsvExternalSort extends ExternalSort {
     						List<String> row = new ArrayList<String>();
                             while (row != null) {
                                     long currentblocksize = 0;// in bytes                                    
-                                    while ((currentblocksize < blocksize) && ((row = reader.read()) != null)) // as long as you have enough memory 
+                                    while ((currentblocksize < blocksize) && ((row = reader.nextRecord()) != null)) // as long as you have enough memory 
                                     {
                                             if (counter < numHeader) {
                                                     counter++;
@@ -151,17 +156,17 @@ public class CsvExternalSort extends ExternalSort {
                                             tmplist.add(row);
                                             currentblocksize += row.size()*300;
                                     }
-                                    files.add(sortAndSave(tmplist, cmp, cs, tmpdirectory, distinct, pref));
+                                    files.add(sortAndSave(tmplist, cmp, cs, tmpdirectory, distinct, delim));
                                     tmplist.clear();
                             }
                     } catch (EOFException oef) {
                             if (tmplist.size() > 0) {
-                                    files.add(sortAndSave(tmplist, cmp, cs,tmpdirectory, distinct, pref));
+                                    files.add(sortAndSave(tmplist, cmp, cs,tmpdirectory, distinct, delim));
                                     tmplist.clear();
                             }
                     }
             } finally {
-            	reader.close();
+            	reader.finalise();
             }
             return files;
     }
@@ -179,18 +184,20 @@ public class CsvExternalSort extends ExternalSort {
      * @throws IOException Signals that an I/O exception has occurred.
      */
 	private static File sortAndSave(List<List<String>> tmplist,
-			CsvRowComparator cmp, Charset cs, File tmpdirectory, boolean distinct, CsvPreference pref)  throws IOException {
+			CsvRowComparator cmp, Charset cs, File tmpdirectory, boolean distinct, char delim)  throws IOException {
         Collections.sort(tmplist, cmp);
         File newtmpfile = File.createTempFile("sortInBatch",
                 "flatfile", tmpdirectory);
         newtmpfile.deleteOnExit();
-        CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newtmpfile), cs)),pref);
+//        CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newtmpfile), cs)),delim);
+        CsvWriter writer = new CsvWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newtmpfile), cs),DEFAULT_BUFFER_SIZE),delim,'"');
+
         List<String> lastLine = null;
         try {
                 for (List<String> rowData : tmplist) {
                         // Skip duplicate lines
                         if (!distinct || !rowData.equals(lastLine)) {
-                        	writer.write(rowData);
+                        	writer.writeRecord(rowData);
                             lastLine = rowData;
                         }
                 }
@@ -216,14 +223,16 @@ public class CsvExternalSort extends ExternalSort {
      * @throws IOException Signals that an I/O exception has occurred.
      */
     public static int mergeSortedFiles(List<File> files, File outputfile,
-            final Comparator<List<String>> cmp, Charset cs, boolean distinct, File inputfile,final int headersize, CsvPreference pref) throws IOException {
+            final Comparator<List<String>> cmp, Charset cs, boolean distinct, File inputfile,final int headersize, char delim) throws IOException {
             ArrayList<CsvFileBuffer> bfbs = new ArrayList<CsvFileBuffer>();
             for (File f : files) {
-            	CsvFileBuffer bfb = new CsvFileBuffer(f, cs, pref);
+            	CsvFileBuffer bfb = new CsvFileBuffer(f, cs, delim);
             	bfbs.add(bfb);
             }
-            CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputfile), cs)),pref);
-            copyHeader(inputfile, writer, cs, headersize, pref);
+//            CsvListWriter writer = new CsvListWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputfile), cs)),delim);
+            CsvWriter writer = new CsvWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputfile), cs),DEFAULT_BUFFER_SIZE),delim,'"');
+
+            copyHeader(inputfile, writer, cs, headersize, delim);
             int rowcounter = mergeSortedFiles(writer, cmp, distinct, bfbs);
             for (File f : files)
             	FileUtilsExt.deleteQuietly(f);
@@ -241,7 +250,7 @@ public class CsvExternalSort extends ExternalSort {
      * @return the int
      * @throws IOException Signals that an I/O exception has occurred.
      */
-    public static int mergeSortedFiles(CsvListWriter writer,
+    public static int mergeSortedFiles(CsvWriter writer,
             final Comparator<List<String>> cmp, boolean distinct,
             List<CsvFileBuffer> buffers) throws IOException {
             PriorityQueue<CsvFileBuffer> pq = new PriorityQueue<CsvFileBuffer>(
@@ -263,7 +272,7 @@ public class CsvExternalSort extends ExternalSort {
                             List<String> r = bfb.pop();
                             // Skip duplicate lines
                             if (!distinct || !r.equals(lastLine)) {
-                            		writer.write(r);
+                            		writer.writeRecord(r);
                                     lastLine = r;
                             }
                             ++rowcounter;
@@ -293,36 +302,42 @@ public class CsvExternalSort extends ExternalSort {
      * @param pref the pref
      * @throws IOException Signals that an I/O exception has occurred.
      */
-    public static void copyHeader(File inputCsv, CsvListWriter writer, Charset cs, final int numHeader, CsvPreference pref) throws IOException 
+    public static void copyHeader(File inputCsv, CsvWriter writer, Charset cs, final int numHeader, char delim) throws IOException 
     {
-		CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
+        CSVReader csvReader = new CSVReader(new FileInputStream(inputCsv), cs.name(),new char[]{delim});
 		try {
 			int counter = 0;
 			List<String> row = new ArrayList<String>();
-			while ((counter < numHeader) && ((row = reader.read()) != null))
+			while ((counter < numHeader) && ((row = csvReader.nextRecord()) != null))
 			{
-				writer.write(row);
+				writer.writeRecord(row);
 				counter++;
 			}
 		} catch (EOFException oef) {
 		} finally {
-			reader.close();
+			csvReader.finalise();
 		}
     }
 }
 
 
+
+
 /**
- * This is essentially a thin wrapper on top of a CsvListReader... which keeps
+ * This is essentially a thin wrapper on top of a CSVReader... which keeps
  * the last line in memory.
  */
 final class CsvFileBuffer {
-        public CsvFileBuffer(File inputCsv, Charset cs, CsvPreference pref) throws IOException {
-			this.reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), DatasetUtils.utf8Decoder(null , cs )), pref);				
+        public CsvFileBuffer(File inputCsv, Charset cs, char delimiter) throws IOException {
+//    		InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), StringUtilsExt.utf8Decoder(null , cs ));
+            CSVReader csvReader = new CSVReader(new FileInputStream(inputCsv), cs.name(),new char[]{delimiter});
+//			this.reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputCsv), false), StringUtilsExt.utf8Decoder(null , cs )), pref);	
+            this.csvReader = csvReader;
+//            this.reader = reader;
             reload();
         }
         public void close() throws IOException {
-                this.reader.close();
+                this.csvReader.finalise();
         }
 
         public boolean empty() {
@@ -340,10 +355,10 @@ final class CsvFileBuffer {
         }
 
         private void reload() throws IOException {
-                this.cache = reader.read();
+                this.cache = csvReader.nextRecord();
         }
 
-        public CsvListReader reader;
+        public CSVReader csvReader;
         private List<String> cache;
-
+//        InputStreamReader reader;
 }

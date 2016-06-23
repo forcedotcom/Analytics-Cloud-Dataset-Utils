@@ -28,18 +28,11 @@ package com.sforce.dataset.server.preview;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.charset.CodingErrorAction;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.BOMInputStream;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.prefs.CsvPreference;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -47,8 +40,8 @@ import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.loader.file.schema.ext.ObjectType;
+import com.sforce.dataset.util.CSVReader;
 import com.sforce.dataset.util.CharsetChecker;
-import com.sforce.dataset.util.DatasetUtils;
 
 public class PreviewUtil {
 
@@ -72,7 +65,7 @@ public class PreviewUtil {
 			{
 				throw new IllegalArgumentException("Invalid query, empty resultset");
 			}
-			String[] hdrs = ExternalFileSchema.createUniqueDevName(hdrList.toArray(new String[0]));
+			String[] hdrs = ExternalFileSchema.createUniqueDevName(hdrList);
 			columns = new LinkedList<Header>();
 			for(int i = 0; i < hdrs.length ; i++)
 			{
@@ -143,8 +136,9 @@ public class PreviewUtil {
 			}
 
 			ExternalFileSchema schema = ExternalFileSchema.init(inputFile, null,tmp, System.out, orgId);
-			CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
-			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(CodingErrorAction.REPORT, tmp )), pref);				
+//			CsvPreference pref = new CsvPreference.Builder((char) CsvPreference.STANDARD_PREFERENCE.getQuoteChar(), schema.getFileFormat().getFieldsDelimitedBy().charAt(0), CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+//			CsvListReader reader = new CsvListReader(new InputStreamReader(new BOMInputStream(new FileInputStream(inputFile), false), DatasetUtils.utf8Decoder(CodingErrorAction.REPORT, tmp )), pref);				
+			CSVReader reader = new CSVReader(new FileInputStream(inputFile),tmp.name() , new char[]{schema.getFileFormat().getFieldsDelimitedBy().charAt(0)});
 
 			boolean hasmore = true;
 			int totalRowCount = 0;
@@ -155,7 +149,7 @@ public class PreviewUtil {
 			{
 				try
 				{
-					List<String> row = reader.read();
+					List<String> row = reader.nextRecord();
 					if(row!=null)
 					{
 						totalRowCount++;
@@ -207,7 +201,7 @@ public class PreviewUtil {
 				}
 			}//end while
 			if(reader!=null)
-				IOUtils.closeQuietly(reader);
+				reader.finalise();
 			return data;
 	}
 

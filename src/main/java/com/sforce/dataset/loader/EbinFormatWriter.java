@@ -160,7 +160,7 @@ public class EbinFormatWriter {
  	}
 
 
-	public void addrow(String[] values)  throws IOException,NumberFormatException, ParseException
+	public void addrow(List<String> values)  throws IOException,NumberFormatException, ParseException
 	{
 		LinkedList<Long> measure_values = new LinkedList<Long>();
 		LinkedList<String> dim_keys = new LinkedList<String>();
@@ -171,9 +171,9 @@ public class EbinFormatWriter {
 		int key_value_count = 0;
 
 		totalRowCount++;
-		if (values.length != this.numColumns) {
+		if (values.size() != this.numColumns) {
 			String message = "Row " + totalRowCount + " contains an invalid number of Values, expected " + 
-					this.numColumns + " Value(s), got " + values.length + ".";
+					this.numColumns + " Value(s), got " + values.size() + ".";
 			throw new IOException(message);
 		}
 				
@@ -232,9 +232,9 @@ public class EbinFormatWriter {
 	            }
 			}else
 			{
-				if(values[count]!=null)
+				if(values.get(count)!=null)
 				{
-					columnValue = values[count];
+					columnValue = values.get(count);
 				}
 			}
 

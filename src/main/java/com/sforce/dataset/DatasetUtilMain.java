@@ -297,6 +297,7 @@ public class DatasetUtilMain {
 						{
 							params.codingErrorAction = CodingErrorAction.REPLACE;
 						}
+						DatasetUtilConstants.codingErrorAction = params.codingErrorAction;
 					}
 				}else
 				{
