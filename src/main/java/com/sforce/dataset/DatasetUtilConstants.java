@@ -369,7 +369,9 @@ public class DatasetUtilConstants {
 			
 			for(String dateformat:dateFormatsList)
 			{
-				dateFormats.add(new SimpleDateFormat(dateformat));
+				SimpleDateFormat tmp = new SimpleDateFormat(dateformat);
+				tmp.setLenient(false);
+				dateFormats.add(tmp);
 			}
 		}
 		return dateFormats;		
