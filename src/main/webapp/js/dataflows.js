@@ -121,15 +121,24 @@ function copyDataflow(dataflowAlias,dataflowId){
     	   
         	var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
 
+    	   var actions = " \
+        	   <li><a href=\"#\" onclick='startDataflow(\""+data[i].name+"\");'>Start Now</a></li> \
+        	   ";
+        	   
 	   	   if(data[i].status != "Active") 
     	   { 
     		   statusLabel = "<span class=\"label label-danger\">"+data[i].status+"</span>";
+
+        	   actions = " \
+            	   <li></li> \
+            	   ";
+
     	   }else
     	   {
     	   	   statusLabel = "<span class=\"label label-success\">"+data[i].status+"</span>";
+
     	   }
-    	   
-    	  
+    	       	       	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
     	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i]._lastModifiedBy.name+"</span> </td> \
@@ -144,11 +153,7 @@ function copyDataflow(dataflowAlias,dataflowId){
     	   <span class=\"caret\"> \
     	   </span> \
     	   </button> \
-    	   <ul class=\"dropdown-menu pull-right\"> \
-    	   <li>  \
-    	   <a href=\"#\" onclick='startDataflow(\""+data[i].name+"\");'>Start Now</a> \
-    	   </li> \
-    	   </ul> \
+    	   <ul class=\"dropdown-menu pull-right\">"+ actions +"</ul> \
     	   </div> \
     	   </td>"
     	   
