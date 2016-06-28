@@ -231,6 +231,7 @@ public class JsonServlet extends HttpServlet {
 						mapper.writeValue(response.getOutputStream(), status);
 					}
 		 }catch (Throwable t) {
+			 	t.printStackTrace();
 				response.setContentType("application/json");
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				ResponseStatus status = new ResponseStatus("error",t.getMessage());

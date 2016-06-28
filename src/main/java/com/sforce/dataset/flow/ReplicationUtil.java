@@ -45,13 +45,46 @@ public class ReplicationUtil {
 		DataFlow df = null;
 		LinkedHashMap replicationFlow = new LinkedHashMap();
 		List<DataFlow> flows = DataFlowUtil.listDataFlow(partnerConnection);
+
 		for(DataFlow flow:flows)
 		{
-			if(!flow.getWorkflowType().equalsIgnoreCase("User"))
+			if(flow.getWorkflowType().equalsIgnoreCase("SfdcExtract"))
+			{
+				df = DataFlowUtil.getDataFlow(partnerConnection, flow.getName(), flow.get_uid());
+				Map def = df.getWorkflowDefinition();
+				for(Object key:def.keySet())
+				{
+					Object val = def.get(key);
+					if(val instanceof Map)
+					{
+						String object = null;
+						Map node = (Map)val;
+						String action = (String) node.get("action");
+						if(action != null && action.equalsIgnoreCase("sfdcDigest"))
+						{
+							Object params = node.get("parameters");
+							if(params instanceof Map)
+							{
+								object = (String) ((Map)params).get("object");
+								if(object==null)
+									continue;
+							}else
+							{
+								continue;
+							}
+							
+							replicationFlow.put(object, val);
+						}
+					}
+				}
+				break; //There can be only one replication dataflow
+			}
+		}
+
+		for(DataFlow flow:flows)
+		{
+			if(!flow.getWorkflowType().equalsIgnoreCase("User") || !flow.getStatus().equalsIgnoreCase("Active") )
 				continue;
-			
-			if(!flow.getWorkflowType().equalsIgnoreCase("SfdcExtract"))
-				df = flow;
 			
 			DataFlow userWf = DataFlowUtil.getDataFlow(partnerConnection, flow.getName(), flow.get_uid());
 			Map def = userWf.getWorkflowDefinition();
@@ -78,7 +111,7 @@ public class ReplicationUtil {
 						
 						if(replicationFlow.containsKey(object))
 						{
-							val = mergeNode((Map)replicationFlow.get(object),node);
+							val = mergeNode((Map)replicationFlow.get(object),node, object);
 						}
 						replicationFlow.put(object, val);
 					}
@@ -93,7 +126,7 @@ public class ReplicationUtil {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static Map mergeNode(Map first, Map second) {
+	private static Map mergeNode(Map first, Map second, String Object) {
 		List<Map<String,String>> flds = new LinkedList<Map<String,String>>();
 		List<Map<String,String>> firstList = (List<Map<String, String>>) first.get("fields");
 		List<Map<String,String>> secondList = (List<Map<String, String>>) second.get("fields");
@@ -111,7 +144,9 @@ public class ReplicationUtil {
 						{
 							if(name1.equalsIgnoreCase(name2))
 							{
-								fld1.putAll(fld2);
+								//fld1.putAll(fld2);
+								fld2.putAll(fld1);
+								fld1 = fld2;
 							}
 						}
 					}
@@ -150,42 +185,42 @@ public class ReplicationUtil {
 				{
 					if(!first.get("complexFilterConditions").equals(second.get("complexFilterConditions")))
 					{
-						System.out.println("Filter mismatch on object, dropping filters");
-						first.remove("complexFilterConditions");
+						System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
+						//first.remove("complexFilterConditions");
 					}
 				}else
 				{
-					System.out.println("Filter mismatch on object, dropping filters");
-					first.remove("complexFilterConditions");
+					System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
+					//first.remove("complexFilterConditions");
 				}
 			}else
 			{
 				if(second.containsKey("complexFilterConditions"))
 				{
-					System.out.println("Filter mismatch on object, dropping filters");
+					System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
+				}
+			}
+
+			if(first.containsKey("filterConditions"))
+			{
+				if(second.containsKey("filterConditions"))
+				{
+						System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
+				}else
+				{
+						System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
+				}
+			}else
+			{
+				if(second.containsKey("filterConditions"))
+				{
+						System.out.println("Filter mismatch for object {"+Object+"}, Please merge filter manually");
 				}
 			}
 			
-			if(first.containsKey("complexFilterConditions"))
+			if(second.containsKey("schema"))
 			{
-				if(second.containsKey("complexFilterConditions"))
-				{
-					if(!first.get("complexFilterConditions").equals(second.get("complexFilterConditions")))
-					{
-						System.out.println("Filter mismatch on object, dropping filters");
-						first.remove("complexFilterConditions");
-					}
-				}else
-				{
-					System.out.println("Filter mismatch on object, dropping filters");
-					first.remove("complexFilterConditions");
-				}
-			}else
-			{
-				if(second.containsKey("complexFilterConditions"))
-				{
-					System.out.println("Filter mismatch on object, dropping filters");
-				}
+					System.out.println("Please manually merge schema for object {"+Object+"}");
 			}
 			
 		}
