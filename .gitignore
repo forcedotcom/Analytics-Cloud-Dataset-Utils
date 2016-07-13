@@ -34,3 +34,5 @@ release.properties
 /Org-*/
 /mapred/
 pom - Copy.xml
+src/main/resources/config.properties
+src/main/resources/config.properties
