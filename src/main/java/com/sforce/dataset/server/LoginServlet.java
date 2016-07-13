@@ -26,6 +26,7 @@
 package com.sforce.dataset.server;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -34,8 +35,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sforce.dataset.DatasetUtilConstants;
 import com.sforce.dataset.listeners.ListenerUtil;
 import com.sforce.dataset.scheduler.SchedulerUtil;
 import com.sforce.dataset.server.auth.AuthFilter;
@@ -52,19 +55,28 @@ import com.sforce.ws.ConnectorConfig;
 public class LoginServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-	
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
 		try
 		{
-			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
+			String loginType = request.getParameter("loginType");
 			String userName = request.getParameter("UserName");
 			String password = request.getParameter("Password");
 			String authEndpoint = request.getParameter("AuthEndpoint");
+			String access_token = request.getParameter("access_token");
+			String instance_url = request.getParameter("instance_url");
+//			String refresh_token = request.getParameter("refresh_token");
+//			String scope = request.getParameter("scope");
 
+			boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+			if (isMultipart) {
+			List<FileItem> items = MultipartRequestHandler.getUploadRequestFileItems(request);
 			for (FileItem item : items) {
 				if (item.isFormField()) {
+					if (item.getFieldName().equals("loginType")) {
+						loginType =  item.getString();
+					}
 					if (item.getFieldName().equals("UserName")) {
 						userName =  item.getString();
 					}
@@ -74,30 +86,75 @@ public class LoginServlet extends HttpServlet {
 					if (item.getFieldName().equals("AuthEndpoint")) {
 						authEndpoint =  item.getString();
 					}
+					if (item.getFieldName().equals("access_token")) {
+						access_token =  item.getString();
+					}
+					if (item.getFieldName().equals("instance_url")) {
+						instance_url =  item.getString();
+					}
+//					if (item.getFieldName().equals("refresh_token")) {
+//						refresh_token =  item.getString();
+//					}
+//					if (item.getFieldName().equals("scope")) {
+//						scope =  item.getString();
+//					}
 				}
+			}
 			}
 			
 			String sessionId = null;
-				    
-			if(userName==null || userName.trim().isEmpty())
+			
+			if(loginType!=null && loginType.equalsIgnoreCase("oauth"))
 			{
-				throw new IllegalArgumentException("UserName is a required param");
-			}
+				if(authEndpoint==null || authEndpoint.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("AuthEndpoint is a required param");
+				}
+				
+		        String authUrl =  authEndpoint + "/services/oauth2/authorize?response_type=token&client_id=" +
+		        		DatasetUtilConstants.getOauthClientId() + "&redirect_uri=" +
+		                URLEncoder.encode(DatasetUtilConstants.getOauthRedirectURI(), "UTF-8");
 
-			if(password==null || password.trim().isEmpty())
-			{
-				throw new IllegalArgumentException("Password is a required param");
-			}
 
-			if(authEndpoint==null || authEndpoint.trim().isEmpty())
+				ResponseStatus status = new ResponseStatus("success",authUrl);
+				response.setContentType("application/json");
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.writeValue(response.getOutputStream(), status);
+				// Set standard HTTP/1.1 no-cache headers.
+				response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+				// Set standard HTTP/1.0 no-cache header.
+				
+				response.setHeader("Pragma", "no-cache");
+			}
+				
+			if(access_token==null)
 			{
-				throw new IllegalArgumentException("AuthEndpoint is a required param");
+				if(userName==null || userName.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("UserName is a required param");
+				}
+	
+				if(password==null || password.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("Password is a required param");
+				}
+	
+				if(authEndpoint==null || authEndpoint.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("AuthEndpoint is a required param");
+				}
+				
+				if(userName.equals("-1"))
+				{
+					sessionId = password;
+				}
+
+			}else
+			{
+				sessionId = access_token;
+				authEndpoint = instance_url;
 			}
 			
-			if(userName.equals("-1"))
-			{
-				sessionId = password;
-			}
 			PartnerConnection conn = DatasetUtils.login(0, userName, password, null, authEndpoint, sessionId, false);
 			ConnectorConfig config = conn.getConfig();
 

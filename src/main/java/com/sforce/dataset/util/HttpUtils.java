@@ -26,15 +26,21 @@
 package com.sforce.dataset.util;
 
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpHost;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -93,4 +99,16 @@ public class HttpUtils {
 			       .build();
 		return requestConfig;
 	}
+	
+    public static Map<String, String> getQueryParameters(String url) throws URISyntaxException {
+        url = url.replace("#","?");
+        Map<String, String> params = new HashMap<>();
+        List<NameValuePair> kvp = new URIBuilder(url).getQueryParams();
+		for(NameValuePair j:kvp)
+		{
+			 params.put(j.getName(), j.getValue());			
+		}
+        return params;
+    }
+
 }

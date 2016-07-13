@@ -43,26 +43,19 @@
           </button>
           <span class="navbar-brand" style="color: white;"><a href="finder.html" style="color: white;"><i style="font-size:1.5em;"  class="glyphicon glyphicon-home"></i></a><span>&nbsp;&nbsp;&nbsp;</span>Salesforce Analytics Cloud Dataset Utils</span>
         </div>
-        <div id="header2" class="spinner">
-			<img src="/img/ajax-loader.gif" id="loading-indicator" style="display:none" />
-		</div>
-        
-        <!--
         <div id="navbar-collapse1" class="collapse navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
+          	<li>
+				<img src="/img/ajax-loader-3.gif" id="loading-indicator" style="display:none" />
+          	</li>
              <li>
                 <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i class="glyphicon glyphicon-th-list"></i></a>
                 <ul class="dropdown-menu">
-                <li><a class="navlink" href="csvupload.html" target="_top">CSV Upload</a></li>
-				<li><a class="navlink" href="logs.html" target="_top">Logs</a></li>
-				<li><a class="navlink" href="xmdeditor.html" target="_top">XMD Editor</a></li>
-				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
 				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
                 </ul>
              </li>
            </ul>
         </div>
-         -->    
      </div>	
 </div>
 
@@ -80,6 +73,14 @@
 						<!-- class="form-signin"  -->
 					<form method="post" action="login" id="loginForm" enctype="multipart/form-data">
 						<div class="form-group">
+							<div id="login_type_selection" style="text-align: right; ">
+					            <input type="radio" id="loginType_std" name="loginType" value="std" checked>
+					            <label for="loginType_std">Standard</label>
+					            <input type="radio" id="loginType_oauth" name="loginType" value="oauth">
+		            			<label for="loginType_oauth">OAuth</label>
+		                    </div>
+	                    </div>
+						<div class="form-group" id="UserNameDiv">
 							<label for="UserName">User Name</label>
 							<div class="input-group">
 								<input type="text" class="form-control" name="UserName"
@@ -88,7 +89,7 @@
 									class="glyphicon glyphicon-remove"></span></span>
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="form-group" id="PasswordDiv">
 							<label for="Password">Password</label>
 							<div class="input-group">
 								<input type="password" class="form-control" name="Password"

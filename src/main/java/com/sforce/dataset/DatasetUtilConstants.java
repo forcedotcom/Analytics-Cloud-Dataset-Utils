@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
@@ -234,6 +235,33 @@ public class DatasetUtilConstants {
 		File debugFile = new File(logsDir,debugFileName);
 		return debugFile;
 	}
+	
+	
+	public static String getOauthClientId()
+	{
+        try {
+            Properties versionProps = new Properties();
+            versionProps.load(DatasetUtilMain.class.getClassLoader().getResourceAsStream("config.properties"));
+            if(versionProps.containsKey("oauth.client_id"))
+            	return versionProps.getProperty("oauth.client_id");
+        } catch (Throwable t) {
+        	t.printStackTrace();
+        }
+        throw new IllegalStateException("OAuth is not supported in this build");
+     }
+	
+	public static String getOauthRedirectURI()
+	{
+        try {
+            Properties versionProps = new Properties();
+            versionProps.load(DatasetUtilMain.class.getClassLoader().getResourceAsStream("config.properties"));
+            if(versionProps.containsKey("oauth.redirect_uri"))
+            	return versionProps.getProperty("oauth.redirect_uri");
+        } catch (Throwable t) {
+        	t.printStackTrace();
+        }
+        throw new IllegalStateException("OAuth is not supported in this build");
+     }
 
 	public static final Config getSystemConfig()
 	{

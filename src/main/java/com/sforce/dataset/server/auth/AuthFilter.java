@@ -60,6 +60,8 @@ public class AuthFilter implements Filter {
     //logout specific parameters
     private String logoutUrl = "";
     private String loginUrl = "/login.html";
+    private String oauthCallbackUrl = "/oauthcallback.html";
+    
     private SecurityContextSessionStore securityContextSessionStore = null;
     
     /**
@@ -116,6 +118,11 @@ public class AuthFilter implements Filter {
 		if (isLoginUrl(request)) {
 			chain.doFilter(request, response);
 			return;
+		}
+		
+		if( isOauthCallbackUrl(request)) {
+			chain.doFilter(request, response);
+			return;			
 		}
         
 		// if this isn't the callback from an OAuth handshake
@@ -218,6 +225,15 @@ public class AuthFilter implements Filter {
         if (loginUrl != null
                 && !"".equals(loginUrl)
                 && loginUrl.equals(request.getServletPath())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isOauthCallbackUrl(HttpServletRequest request) {        
+        if (oauthCallbackUrl != null
+                && !"".equals(oauthCallbackUrl)
+                && oauthCallbackUrl.equals(request.getServletPath())) {
             return true;
         }
         return false;
