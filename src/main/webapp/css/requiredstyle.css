@@ -48,7 +48,7 @@ input[readonly] {
 
 .spinner {
     position: fixed;
-    top: 50%;
+    top: 10%;
     left: 50%;
     margin-left: -50px; /* half width of the spinner gif */
     margin-top: -50px; /* half height of the spinner gif */

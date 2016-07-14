@@ -319,6 +319,7 @@ public class DatasetUtilMain {
 
 		if(params.server)
 		{
+			DatasetUtilConstants.server = true;
 			System.out.println();
 			System.out.println("\n*******************************************************************************");					
 	        try {

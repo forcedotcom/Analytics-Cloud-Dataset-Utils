@@ -67,7 +67,6 @@ public class DatasetUtilConstants {
 	
 	public static final String defaultAppName = "My Private App";
 
-	public static File currentDir =  new File("").getAbsoluteFile();
 	public static final String logsDirName = "logs";
 	public static final String successDirName = "success";
 	public static final String errorDirName = "error";
@@ -93,13 +92,35 @@ public class DatasetUtilConstants {
 	
 	public static final int max_error_threshhold = 10000;
 
+	public static boolean server = true;
+	private static File currentDir =  new File("").getAbsoluteFile();
+	private static File userDir =  new File(System.getProperty("user.home"), "DatasetUtils").getAbsoluteFile();
+	static
+	{
+		if(!userDir.exists())
+		{
+			try {
+				FileUtils.forceMkdir(userDir);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
+	public static final File getAppDir()
+	{
+		if(server && userDir.isDirectory())
+		{	
+			return userDir;
+		}
+		return currentDir;
+	}
 	
 	public static final File getOrgDir(String orgId)
 	{
 		if(orgId == null || orgId.isEmpty())
 			throw new IllegalArgumentException("orgId is null");
-		File orgDir = new File(DatasetUtilConstants.currentDir,"Org-"+orgId);
+		File orgDir = new File(DatasetUtilConstants.getAppDir(),"Org-"+orgId);
 		try {
 			FileUtils.forceMkdir(orgDir);
 		} catch (IOException e) {
@@ -226,7 +247,7 @@ public class DatasetUtilConstants {
 	
 	public static final File getDebugFile()
 	{
-		File logsDir = new File(DatasetUtilConstants.currentDir,logsDirName);
+		File logsDir = new File(DatasetUtilConstants.getAppDir(),logsDirName);
 		try {
 			FileUtils.forceMkdir(logsDir);
 		} catch (IOException e) {
@@ -266,7 +287,7 @@ public class DatasetUtilConstants {
 	public static final Config getSystemConfig()
 	{
 		Config conf = new Config();
-		File configDir = new File(DatasetUtilConstants.currentDir,configDirName);
+		File configDir = new File(DatasetUtilConstants.getAppDir(),configDirName);
 		try {
 			FileUtils.forceMkdir(configDir);
 		} catch (IOException e) {
@@ -339,7 +360,7 @@ public class DatasetUtilConstants {
 	public static LinkedHashSet<SimpleDateFormat> getSuportedDateFormats() 
 	{
 		LinkedHashSet<SimpleDateFormat> dateFormats = new LinkedHashSet<SimpleDateFormat>();
-		File configDir = new File(DatasetUtilConstants.currentDir,configDirName);
+		File configDir = new File(DatasetUtilConstants.getAppDir(),configDirName);
 		try {
 			FileUtils.forceMkdir(configDir);
 		} catch (IOException e) {
