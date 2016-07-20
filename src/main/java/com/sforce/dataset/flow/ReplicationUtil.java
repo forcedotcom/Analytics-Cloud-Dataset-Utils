@@ -62,6 +62,8 @@ public class ReplicationUtil {
 						String action = (String) node.get("action");
 						if(action != null && action.equalsIgnoreCase("sfdcDigest"))
 						{
+							
+							cleanupNode(node);
 							Object params = node.get("parameters");
 							if(params instanceof Map)
 							{
@@ -123,6 +125,40 @@ public class ReplicationUtil {
 			df.setWorkflowDefinition(replicationFlow);
 		}
 		return df;
+	}
+
+
+	private static void cleanupNode(Map<String,Object> node) 
+	{
+		try
+		{
+			List<String> invalidKeys = new LinkedList<String>();
+			if(node ==null)
+				return;
+			for(String key:node.keySet())
+			{
+				if(key.equalsIgnoreCase("id"))
+				{
+					invalidKeys.add(key);
+				}else if(key.equalsIgnoreCase("debug"))
+				{
+					invalidKeys.add(key);
+				}else if(key.equalsIgnoreCase("logging"))
+				{
+					invalidKeys.add(key);
+				}
+			}
+			
+			for(String key:invalidKeys)
+			{
+				node.remove(key);
+			}
+			
+		}catch(Throwable t)
+		{
+			t.printStackTrace();
+		}
+		
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
