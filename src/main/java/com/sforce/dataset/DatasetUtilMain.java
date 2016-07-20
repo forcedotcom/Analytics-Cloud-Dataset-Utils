@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.text.DecimalFormat;
@@ -75,6 +76,7 @@ public class DatasetUtilMain {
 	public static void main(String[] args) {
 
 		printBanner();
+		printClasspath();
 
 		DatasetUtilParams params = new DatasetUtilParams();
 
@@ -1177,7 +1179,7 @@ public class DatasetUtilMain {
 			System.out.println();
 		System.out.println("\n\t\t**************************************************");
 		System.out.println("\t\tSalesforce Analytics Cloud Dataset Utils - " + getAppversion());
-		System.out.println("\t\t**************************************************\n");					
+		System.out.println("\t\t**************************************************\n");			
 	}
 	
 	public static String getAppversion()
@@ -1192,5 +1194,19 @@ public class DatasetUtilMain {
 		return "0.0.0";
 	}
 
+    public static void printClasspath() 
+    {
+		System.out.println("\n*******************************************************************************");					
+		System.out.println("java.version:"+System.getProperty("java.version"));
+		System.out.println("java.class.path:"+System.getProperty("java.class.path"));
+		System.out.print("SystemClassLoader:");
+        ClassLoader sysClassLoader = ClassLoader.getSystemClassLoader();
+        URL[] urls = ((URLClassLoader)sysClassLoader).getURLs(); 
+        for(int i=0; i< urls.length; i++)
+        {
+            System.out.println(urls[i].getFile());
+        }       
+        System.out.println("*******************************************************************************\n");					 
+    }
 			
 }
