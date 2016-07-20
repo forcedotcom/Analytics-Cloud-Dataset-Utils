@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
+import java.nio.charset.MalformedInputException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.util.CSVReader;
 
 public class DetectFieldTypes {
@@ -655,6 +657,7 @@ public class DetectFieldTypes {
 		CSVReader reader = null;
 		ArrayList<String> header = null;
 		long rowCount = 0L;
+		long errorRowCount=0L;
 		try {
 			reader = new CSVReader(new FileInputStream(inputCsv),
 					fileCharset.name(), new char[] { delim });
@@ -684,8 +687,22 @@ public class DetectFieldTypes {
 						columnValues.add(nextLine.get(columnIndex).trim());
 					}
 				} catch (Throwable t) {
-					logger.println("Line {" + (rowCount) + "} has error {" + t
-							+ "}");
+						if(errorRowCount>=DatasetUtilConstants.max_error_threshhold)
+						{
+							logger.println("\n*******************************************************************************");
+							logger.println("Max error threshold reached. Aborting processing");
+							logger.println("*******************************************************************************\n");								
+							throw new DatasetLoaderException("Max error threshold reached. Aborting processing");
+						}else if(t instanceof MalformedInputException)
+						{
+							logger.println("\n*******************************************************************************");
+							logger.println("The input file is not utf8 encoded. Please save it as UTF8 file first");
+							logger.println("*******************************************************************************\n");								
+							throw new DatasetLoaderException("The input file is not utf8 encoded");
+						}else
+						{
+							logger.println("Line {" + (rowCount) + "} has error {" +t+ "}");
+						}
 				}
 
 				if (columnValues.size() >= sampleSize
