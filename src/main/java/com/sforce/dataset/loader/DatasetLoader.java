@@ -623,6 +623,9 @@ public class DatasetLoader {
 
 								if(t instanceof MalformedInputException || errorRowCount>=DatasetUtilConstants.max_error_threshhold)
 								{
+									status = false;
+									hasmore = false;
+
 									q.put(new ArrayList<String>(0));
 									int retryCount = 0;
 									while(!writer.isDone())
@@ -642,8 +645,6 @@ public class DatasetLoader {
 										}
 									}
 									
-									status = false;
-									hasmore = false;
 
 									if(errorRowCount>=DatasetUtilConstants.max_error_threshhold)
 									{
