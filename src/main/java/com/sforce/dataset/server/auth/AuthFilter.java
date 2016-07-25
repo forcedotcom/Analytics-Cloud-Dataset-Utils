@@ -124,6 +124,12 @@ public class AuthFilter implements Filter {
 			chain.doFilter(request, response);
 			return;			
 		}
+		
+		if( isSettingsUrl(request)) {
+			chain.doFilter(request, response);
+			return;			
+		}
+		
         
 		// if this isn't the callback from an OAuth handshake
         // get the security context from the session
@@ -234,6 +240,13 @@ public class AuthFilter implements Filter {
         if (oauthCallbackUrl != null
                 && !"".equals(oauthCallbackUrl)
                 && oauthCallbackUrl.equals(request.getServletPath())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isSettingsUrl(HttpServletRequest request) {        
+        if ("/settings.html".equals(request.getServletPath()) || "/settings".equals(request.getServletPath())) {
             return true;
         }
         return false;

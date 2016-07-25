@@ -29,8 +29,8 @@ package com.sforce.dataset;
 
 
 public class Preferences {
-    public String notificationLevel = null;
-	public String notificationEmail = null;
+    public String notificationLevel = "warnings";
+	public String notificationEmail = "";
 	public int fiscalMonthOffset = 0; //The month in which the fiscal quarter starts
 	public int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
 	public  boolean isYearEndFiscalYear = true; //Optional	public String proxyNtlmDomain = null;

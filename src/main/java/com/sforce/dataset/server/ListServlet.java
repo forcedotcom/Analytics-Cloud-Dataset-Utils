@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.DatasetUtilConstants;
+import com.sforce.dataset.Preferences;
 import com.sforce.dataset.flow.DataFlow;
 import com.sforce.dataset.flow.DataFlowUtil;
 import com.sforce.dataset.flow.monitor.DataFlowMonitorUtil;
@@ -83,8 +84,22 @@ public class ListServlet extends HttpServlet {
 					   	response.sendRedirect(request.getContextPath() + "/login.html");
 					   	return;
 					}
+					
+					String orgId = conn.getUserInfo().getOrganizationId();
 
-					if(value.equalsIgnoreCase("dataflow"))
+
+					if(value.equalsIgnoreCase("preferences"))
+					{
+						Preferences pref = DatasetUtilConstants.getPreferences(orgId);
+						if(pref.notificationEmail==null || pref.notificationEmail.trim().isEmpty())
+						{
+							pref.notificationEmail = "current.user@yourdomain.com";
+						}
+					    response.setContentType("application/json");
+				    	ObjectMapper mapper = new ObjectMapper();
+				    	mapper.writeValue(response.getOutputStream(), pref);
+					}
+					else if(value.equalsIgnoreCase("dataflow"))
 					{
 						List<DataFlow> flowList = DataFlowUtil.listDataFlow(conn);
 					    response.setContentType("application/json");
@@ -328,7 +343,7 @@ public class ListServlet extends HttpServlet {
 					}else if(value.equalsIgnoreCase("sessionHistory"))
 					{
 						List<JobEntry> jobs = DataFlowMonitorUtil.getDataFlowJobs(conn, null, null);
-						String orgId = conn.getUserInfo().getOrganizationId();
+//						String orgId = conn.getUserInfo().getOrganizationId();
 						long twoDayAgo = System.currentTimeMillis() - 2*24*60*60*1000;
 						for(JobEntry job:jobs)
 						{
@@ -437,7 +452,74 @@ public class ListServlet extends HttpServlet {
 			   	return;
 			}
 			
-			if(type.equalsIgnoreCase("schedule"))
+			String orgId = conn.getUserInfo().getOrganizationId();
+			
+			if(type.equalsIgnoreCase("preferences"))
+			{
+				
+				String notificationLevel = request.getParameter("notificationLevel");
+				if(notificationLevel==null || notificationLevel.trim().isEmpty())
+				{
+						throw new IllegalArgumentException("notificationLevel is a required parameter");
+				}
+
+				String notificationEmail = request.getParameter("notificationEmail");
+				if(notificationEmail==null || notificationEmail.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("notificationEmail is a required parameter");
+				}
+				
+				 int fiscalMonthOffset = 0; //The month in which the fiscal quarter starts
+				String temp = request.getParameter("fiscalMonthOffset");
+				if(temp==null || temp.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("fiscalMonthOffset is a required parameter");
+				}else
+				{
+					try
+					{
+						fiscalMonthOffset = (new BigDecimal(temp.trim())).intValue();
+					}catch(Throwable t)
+					{
+						throw new IllegalArgumentException("fiscalMonthOffset '"+fiscalMonthOffset+"' is not a valid value");						
+					}
+				}
+
+				 int firstDayOfWeek = -1; //1=SUNDAY, 2=MONDAY etc.. -1 the week starts on 1st day of year and is always 7 days long
+				temp = request.getParameter("firstDayOfWeek");
+				if(temp==null || temp.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("firstDayOfWeek is a required param");
+				}else
+				{
+					try
+					{
+						firstDayOfWeek = (new BigDecimal(temp.trim())).intValue();
+					}catch(Throwable t)
+					{
+						throw new IllegalArgumentException("firstDayOfWeek '"+firstDayOfWeek+"' is not a valid value");						
+					}
+				}
+
+				boolean isYearEndFiscalYear = true; //Optional	public String proxyNtlmDomain = null;
+				temp = request.getParameter("isYearEndFiscalYear");
+				if(temp==null || temp.trim().isEmpty())
+				{
+					throw new IllegalArgumentException("isYearEndFiscalYear is a required param");
+				}else
+				{
+					try
+					{
+						isYearEndFiscalYear = (new Boolean(temp.trim())).booleanValue();
+					}catch(Throwable t)
+					{
+						throw new IllegalArgumentException("isYearEndFiscalYear '"+isYearEndFiscalYear+"' is not a valid value");						
+					}					
+				}
+				
+				DatasetUtilConstants.setPreferences(orgId, notificationLevel, notificationEmail, fiscalMonthOffset, firstDayOfWeek, isYearEndFiscalYear);
+				
+			} else if(type.equalsIgnoreCase("schedule"))
 			{
 				String scheduleAlias = request.getParameter("scheduleAlias");
 				if(scheduleAlias==null || scheduleAlias.trim().isEmpty())

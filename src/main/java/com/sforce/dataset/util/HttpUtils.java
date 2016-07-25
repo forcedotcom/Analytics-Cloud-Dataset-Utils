@@ -25,21 +25,30 @@
  */
 package com.sforce.dataset.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -51,9 +60,12 @@ import com.sforce.dataset.DatasetUtilConstants;
 
 public class HttpUtils {
 	
-	static final com.sforce.dataset.Config conf = DatasetUtilConstants.getSystemConfig();
-
 	public static CloseableHttpClient getHttpClient() throws UnknownHostException
+	{
+		return getHttpClient(DatasetUtilConstants.getSystemConfig());
+	}
+	
+	public static CloseableHttpClient getHttpClient(com.sforce.dataset.Config conf) throws UnknownHostException
 	{
         if (conf.proxyHost != null && conf.proxyHost.length() > 0 && conf.proxyPort > 0) 
         {
@@ -109,6 +121,35 @@ public class HttpUtils {
 			 params.put(j.getName(), j.getValue());			
 		}
         return params;
+    }
+    
+    public static void testProxyConfig(com.sforce.dataset.Config conf) throws URISyntaxException, ClientProtocolException, IOException
+    {
+    	CloseableHttpClient client = getHttpClient(conf);
+		RequestConfig requestConfig = HttpUtils.getRequestConfig();
+		   
+		URI u = new URI("https://login.salesforce.com/");
+		
+		HttpGet testGet = new HttpGet(u);
+	
+		testGet.setConfig(requestConfig);
+	
+		CloseableHttpResponse emresponse1 = client.execute(testGet);
+	
+		String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
+		int statusCode = emresponse1.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			throw new IOException(String.format("ProxyConfig Test failed: %d %s",statusCode,reasonPhrase));
+		}
+	
+		HttpEntity emresponseEntity1 = emresponse1.getEntity();
+		InputStream emis1 = emresponseEntity1.getContent();
+		String loginPage = IOUtils.toString(emis1, "UTF-8");
+		//TODO Check if its salesforce login page or proxy login page
+		emis1.close();
+		client.close();
+
+    	
     }
 
 }

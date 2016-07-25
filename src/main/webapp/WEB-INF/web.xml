@@ -16,6 +16,10 @@
 		</init-param>
 	</servlet>
 	<servlet>
+		<servlet-name>settings</servlet-name>
+		<servlet-class>com.sforce.dataset.server.SettingsServlet</servlet-class>
+	</servlet>
+	<servlet>
 		<servlet-name>upload</servlet-name>
 		<servlet-class>com.sforce.dataset.server.FileUploadServlet</servlet-class>
 	</servlet>
@@ -62,6 +66,10 @@
 	<servlet-mapping>
 		<servlet-name>preview</servlet-name>
 		<url-pattern>/preview</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>settings</servlet-name>
+		<url-pattern>/settings</url-pattern>
 	</servlet-mapping>
 	<filter>
 		<filter-name>AuthFilter</filter-name>
