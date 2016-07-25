@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.text.SimpleDateFormat;
@@ -42,10 +43,13 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.BOMInputStream;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sforce.dataset.loader.file.schema.ext.DetectFieldTypes;
 import com.sforce.dataset.util.DatasetUtils;
+import com.sforce.dataset.util.HttpUtils;
 import com.sforce.dataset.util.SortSimpleDateFormat;
 
 
@@ -93,6 +97,9 @@ public class DatasetUtilConstants {
 	public static final int max_error_threshhold = 10000;
 
 	public static boolean server = true;
+	
+	static com.sforce.dataset.Config systemConfig = null;
+	
 	private static File currentDir =  new File("").getAbsoluteFile();
 	private static File userDir =  new File(System.getProperty("user.home"), "DatasetUtils").getAbsoluteFile();
 	static
@@ -286,7 +293,66 @@ public class DatasetUtilConstants {
 
 	public static final Config getSystemConfig()
 	{
+		if(systemConfig==null)
+		{
+			Config conf = new Config();
+			File configDir = new File(DatasetUtilConstants.getAppDir(),configDirName);
+			try {
+				FileUtils.forceMkdir(configDir);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			File configFile = new File(configDir,configFileName);
+			ObjectMapper mapper = new ObjectMapper();	
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			if(configFile != null && configFile.exists())
+			{
+				InputStreamReader reader = null;
+				try {
+					reader = new InputStreamReader(new BOMInputStream(new FileInputStream(configFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
+					conf  =  mapper.readValue(reader, Config.class);						
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}finally
+				{
+					IOUtils.closeQuietly(reader);
+				}
+			}else
+			{
+				try
+				{
+					mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, conf);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+			systemConfig = conf;
+		}
+		return systemConfig;
+	}
+	
+	public static final void setSystemConfig(String proxyUsername,
+	String proxyPassword,
+	String proxyNtlmDomain,
+	String proxyHost,
+	int proxyPort,
+	int timeoutSecs,
+	int connectionTimeoutSecs,
+	boolean noCompression,
+	boolean debugMessages) throws JsonGenerationException, JsonMappingException, IOException, URISyntaxException
+	{
 		Config conf = new Config();
+		conf.proxyUsername = proxyUsername;
+		conf.proxyPassword = proxyPassword;
+		conf.proxyNtlmDomain = proxyNtlmDomain;
+		conf.proxyHost = proxyHost;
+		conf.proxyPort = proxyPort;
+		conf.timeoutSecs = timeoutSecs;
+		conf.noCompression = noCompression;
+		conf.debugMessages = debugMessages;
+		
+		HttpUtils.testProxyConfig(conf);
+		
 		File configDir = new File(DatasetUtilConstants.getAppDir(),configDirName);
 		try {
 			FileUtils.forceMkdir(configDir);
@@ -295,31 +361,65 @@ public class DatasetUtilConstants {
 		}
 		File configFile = new File(configDir,configFileName);
 		ObjectMapper mapper = new ObjectMapper();	
-		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		if(configFile != null && configFile.exists())
+		mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, conf);
+		
+		systemConfig = conf;
+	}
+	
+	public static final void setPreferences(String orgId,
+	String notificationLevel,
+	String notificationEmail,
+	int fiscalMonthOffset,
+	int firstDayOfWeek,
+	boolean isYearEndFiscalYear) throws JsonGenerationException, JsonMappingException, IOException
+	{
+		
+		if(notificationLevel!=null)
 		{
-			InputStreamReader reader = null;
-			try {
-				reader = new InputStreamReader(new BOMInputStream(new FileInputStream(configFile), false), DatasetUtils.utf8Decoder(null , Charset.forName("UTF-8")));
-				conf  =  mapper.readValue(reader, Config.class);						
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}finally
+			if(!notificationLevel.equalsIgnoreCase("always") && 
+					!notificationLevel.equalsIgnoreCase("failures") &&
+					!notificationLevel.equalsIgnoreCase("warnings") &&
+					!notificationLevel.equalsIgnoreCase("never"))
 			{
-				IOUtils.closeQuietly(reader);
+				throw new IllegalArgumentException("notificationLevel '"+notificationLevel+"' is not a valid value");
 			}
 		}else
 		{
-			try
-			{
-				mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, conf);
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
+			throw new IllegalArgumentException("notificationLevel '"+notificationLevel+"' is not a valid value");
 		}
-		return conf;
+
+		if(notificationEmail!=null)
+		{
+			if(notificationEmail.equals("current.user@yourdomain.com"))
+				notificationEmail = null;
+		}
+		
+		if(fiscalMonthOffset<0 || fiscalMonthOffset>11)
+		{
+			throw new IllegalArgumentException("fiscalMonthOffset '"+fiscalMonthOffset+"' is not a valid value");						
+		}
+			
+		if(firstDayOfWeek<-1 && firstDayOfWeek>6)
+		{
+			throw new IllegalArgumentException("firstDayOfWeek '"+firstDayOfWeek+"' is not a valid value");						
+		}
+
+		Preferences pref = new Preferences();
+		pref.firstDayOfWeek = firstDayOfWeek;
+		pref.fiscalMonthOffset = fiscalMonthOffset;
+		pref.isYearEndFiscalYear = isYearEndFiscalYear;
+		pref.notificationEmail = notificationEmail;
+		pref.notificationLevel = notificationLevel;
+
+		File configDir = DatasetUtilConstants.getConfigDir(orgId);
+		if(!configDir.isDirectory())
+		{
+			FileUtils.forceMkdir(configDir);
+		}
+		File configFile = new File(configDir,preferenceFileName);
+		ObjectMapper mapper = new ObjectMapper();	
+		mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, pref);
 	}
-	
 	
 	public static final Preferences getPreferences(String orgId)
 	{
