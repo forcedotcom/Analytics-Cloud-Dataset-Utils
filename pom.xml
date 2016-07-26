@@ -16,7 +16,7 @@
 	<properties>
 		<force.version>37.0.3</force.version>
 		<force.partner.version>37.0.3</force.partner.version>
-		<java.compile.version>1.7</java.compile.version>
+		<java.compile.version>1.8</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<distributionManagement>
