@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.force.ac</groupId>
 	<name>DatasetUtils</name>
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>37.0.1-SNAPSHOT</version>
+	<version>37.0.2-SNAPSHOT</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
@@ -212,8 +211,7 @@
 							<finalName>${project.build.finalName}</finalName>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>com.sforce.dataset.DatasetUtilMain</mainClass>
 								</transformer>
 							</transformers>
@@ -333,18 +331,11 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<mkdir
-									dir="${project.build.directory}/archive/${project.artifactId}" />
-								<copy
-									file="${project.build.directory}/${project.build.finalName}.${project.packaging}"
-									todir="${project.build.directory}/archive/${project.artifactId}" />
-								<copy file="${basedir}/run.bat"
-									todir="${project.build.directory}/archive/${project.artifactId}" />
-								<copy file="${basedir}/run.command"
-									todir="${project.build.directory}/archive/${project.artifactId}" />
-								<zip basedir="${project.build.directory}/archive"
-									destfile="${project.build.directory}/${project.artifactId}.zip"
-									update="true" />
+								<mkdir dir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}" todir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${basedir}/run.bat" todir="${project.build.directory}/archive/${project.artifactId}" />
+								<copy file="${basedir}/run.command" todir="${project.build.directory}/archive/${project.artifactId}" />
+								<zip basedir="${project.build.directory}/archive" destfile="${project.build.directory}/${project.artifactId}.zip" update="true" />
 							</tasks>
 						</configuration>
 						<goals>
