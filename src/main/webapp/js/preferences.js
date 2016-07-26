@@ -70,7 +70,7 @@ $(document).ready(function() {
 			    async: true,
 			    success: function() {
 					$('#submit-xmd-btn').button('reset');
-					self.location.href = 'finder.html';
+					self.location.href = 'csvupload.html';
 			    },
 	            error: function(jqXHR, status, error) {
 					$('#submit-xmd-btn').button('reset');
