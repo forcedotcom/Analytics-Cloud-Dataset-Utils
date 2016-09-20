@@ -83,7 +83,7 @@ public class DatasetDownloader {
 
 		String serviceEndPoint = config.getServiceEndpoint();
 		URI u = new URI(serviceEndPoint);
-		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
+		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true&alias="+EM_NAME,null);			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
 		listEMPost.setConfig(requestConfig);
@@ -111,72 +111,16 @@ public class DatasetDownloader {
 					{
 						_alias = (String) resp.get("_alias");
 						id = (String) resp.get("_uid");
-//						Integer _createdDateTime = (Integer) resp.get("_createdDateTime");
-//						//System.out.println("_createdDateTime: "+ _createdDateTime);
-//						if(_createdDateTime != null)
-//						{
-//							createdDateTime = new Date(1000L*_createdDateTime);
-//						}
-//						Map folder = (Map) resp.get("folder");
-//						if(folder != null)
-//						{
-//							folderID = (String) folder.get("_uid");
-//						}
 						Map edgemartData = (Map) resp.get("edgemartData");
 						if(edgemartData != null)
 						{
 							versionID = (String) edgemartData.get("_uid");
 						}
 //						System.out.println("Found EM {"+_alias+"}, Version {"+versionID+"}, Created: {"+createdDateTime+"}");
-//						System.out.println("Downloading EM File.. \n");
-						Map _files = (Map) resp.get("_files");
-						if(_files != null)
-						{
-							for(Object filename:_files.keySet())
-							{
-								if(filename==null)
-									continue;
-										
-								if(!filename.toString().equalsIgnoreCase("main.xmd.json"))
-									continue;
-								
-								CloseableHttpClient httpClient1 = HttpUtils.getHttpClient();
-								String url = (String) _files.get(filename);
-								URI listEMURI1 = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), url, null,null);			
-								HttpGet listEMPost1 = new HttpGet(listEMURI1);
-
-//								System.out.println("Downloading file {"+filename+"}");
-								listEMPost1.setConfig(requestConfig);
-								listEMPost1.addHeader("Authorization","OAuth "+sessionID);			
-
-								CloseableHttpResponse emresponse1 = httpClient1.execute(listEMPost1);
-
-							   String reasonPhrase = emresponse1.getStatusLine().getReasonPhrase();
-						       int statusCode = emresponse1.getStatusLine().getStatusCode();
-						       if (statusCode != HttpStatus.SC_OK) {
-						           System.out.println("Method failed: " + reasonPhrase);
-							       throw new IllegalArgumentException(String.format("%s download failed: %d %s", filename,statusCode,reasonPhrase));
-						       }
-
-								HttpEntity emresponseEntity1 = emresponse1.getEntity();
-								InputStream emis1 = emresponseEntity1.getContent();
-								String xmd = IOUtils.toString(emis1, "UTF-8");
-								emis1.close();
-								httpClient1.close();
-
-								Map xmdObject =  mapper.readValue(xmd, Map.class);
-								mainXmd = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(xmdObject);
-								LinkedHashMap map = new LinkedHashMap();
-								map.put("datasetAlias", _alias);
-								map.put("datasetVersion", versionID);
-								map.put("datasetId", id);
-								map.put("mainXmd", mainXmd);
-								return map;
-							}
-						}else
-						{
-							throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
-						}
+						if(versionID!=null && id != null && !id.trim().isEmpty() && !versionID.trim().isEmpty())
+							return getXMD(_alias, id, versionID, partnerConnection);
+						else
+							throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");											
 					}else
 					{
 						throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
@@ -191,9 +135,7 @@ public class DatasetDownloader {
 		}else
 		{
 			throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
-		}
-		
-		throw new IllegalArgumentException("Dataset {"+EM_NAME+"} not found");
+		}		
 	}
 
 	/**
@@ -282,7 +224,7 @@ public class DatasetDownloader {
 			   
 			URI u = new URI(serviceEndPoint);
 
-			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true",null);			
+			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true&alias="+EM_NAME,null);			
 			HttpGet listEMPost = new HttpGet(listEMURI);
 
 			listEMPost.setConfig(requestConfig);

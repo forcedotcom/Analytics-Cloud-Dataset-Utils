@@ -40,14 +40,20 @@ import com.sforce.dataset.loader.DatasetLoaderException;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.loader.file.schema.ext.FieldType;
 import com.sforce.dataset.loader.file.schema.ext.ObjectType;
+import com.sforce.dataset.metadata.DatasetXmd;
 import com.sforce.dataset.util.CSVReader;
 import com.sforce.dataset.util.CharsetChecker;
 
 public class PreviewUtil {
 
 	
-	public static List<Header> getSaqlHeader(List<Map<String,Object>> data) 
+	public static List<Header> getSaqlHeader(List<Map<String,Object>> data,DatasetXmd datasetXmd) 
 	{
+		@SuppressWarnings("unchecked")
+		Map<String,String> dims = (Map<String,String>) datasetXmd.labels.get("dimensions");
+		@SuppressWarnings("unchecked")
+		Map<String, String> measures = (Map<String,String>) datasetXmd.labels.get("measures");
+
 		List<Header> columns = null;
 		List<String> hdrList = null;
 			for(Map<String,Object> rec:data)
@@ -72,7 +78,13 @@ public class PreviewUtil {
 				Header temp = new Header();
 				temp.setField(hdrs[i]);
 				temp.setId(hdrs[i]);
-				temp.setName(hdrList.get(i)); //label
+				//Label
+				String label = dims.get(hdrList.get(i));
+				if(label==null)
+					label = measures.get(hdrList.get(i));
+				if(label==null)
+					label = hdrList.get(i);
+				temp.setName(label); //label
 				temp.setWidth(160);							
 				columns.add(temp);						
 			}

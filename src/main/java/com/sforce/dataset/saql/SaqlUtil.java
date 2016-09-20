@@ -81,14 +81,18 @@ public class SaqlUtil {
 		CloseableHttpResponse emresponse = httpClient.execute(httpPatch);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
-       if (statusCode != HttpStatus.SC_OK) {
-	       throw new IOException(String.format("Saql failed: %d %s", statusCode,reasonPhrase));
-       }
 		HttpEntity emresponseEntity = emresponse.getEntity();
 		InputStream emis = emresponseEntity.getContent();			
 		String response = IOUtils.toString(emis, "UTF-8");
 		emis.close();
 		httpClient.close();
+
+		if (statusCode != HttpStatus.SC_OK) {
+			if(response!=null && !response.trim().isEmpty())
+				throw new IOException(String.format("Saql failed: %s", response));
+			else
+		       throw new IOException(String.format("Saql failed: %d %s ", statusCode,reasonPhrase));
+	       }
 
 		if(response!=null && !response.isEmpty())
 		{
@@ -140,7 +144,7 @@ public class SaqlUtil {
 			{
 				q.append(", ");
 			}
-			q.append(String.format(columnString, dim,dims.get(dim)));
+			q.append(String.format(columnString, dim,dim));
 		}
 		for(String meas:measures.keySet())
 		{
@@ -152,7 +156,7 @@ public class SaqlUtil {
 			{
 				q.append(", ");
 			}
-			q.append(String.format(columnString, meas,measures.get(meas)));
+			q.append(String.format(columnString, meas,meas));
 		}
 		return String.format(saqlQuery,datasetId,datasetVersion,q.toString());
 

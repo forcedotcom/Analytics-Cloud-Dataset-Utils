@@ -65,7 +65,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   }
     	   
     	   var tablerow =  "<td> \
-    	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+"\"><span class=\"name\">"+data[i].name+"</span></a> \
+    	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+ "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\"><span class=\"name\">"+data[i].name+"</span></a> \
     	   </td> \
     	   <td class=\"hidden-phone\">"+app+"</td> \
     	   <td> \

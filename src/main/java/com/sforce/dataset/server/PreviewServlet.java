@@ -165,6 +165,9 @@ public class PreviewServlet extends HttpServlet {
 						throw new IllegalArgumentException("name is a required param");
 					}
 
+					String datasetId = request.getParameter("datasetId");
+					String datasetVersion = request.getParameter("datasetVersion");
+
 					PartnerConnection conn = AuthFilter.getConnection(request);
 					if(conn==null)
 					{
@@ -197,18 +200,18 @@ public class PreviewServlet extends HttpServlet {
 				    	mapper.writeValue(response.getOutputStream(), resp);
 					}else if(type.equalsIgnoreCase("dataset"))
 					{
-						Map<String, String> xmd = DatasetDownloader.getXMD(name, conn);
+						Map<String, String> xmd = DatasetDownloader.getXMD(name, datasetId, datasetVersion, conn);
 						if(xmd==null || xmd.isEmpty())
 						{
 							throw new IllegalArgumentException("Internal server error fetching dataset {"+name+"}");
 						}
+						ObjectMapper mapper = new ObjectMapper();	
+						mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+						DatasetXmd xmdValue = mapper.readValue(xmd.get("mainXmd"),DatasetXmd.class);
 
 						saql = request.getParameter("saql");
 						if(saql==null)
 						{
-							ObjectMapper mapper = new ObjectMapper();	
-							mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-							DatasetXmd xmdValue = mapper.readValue(xmd.get("mainXmd"),DatasetXmd.class);
 							saql = SaqlUtil.generateSaql(conn, xmd.get("datasetId"), xmd.get("datasetVersion"), xmdValue);
 						}
 
@@ -220,12 +223,11 @@ public class PreviewServlet extends HttpServlet {
 						
 						PreviewData resp = new PreviewData();
 
-						List<Header> hdr = PreviewUtil.getSaqlHeader(data);
+						List<Header> hdr = PreviewUtil.getSaqlHeader(data, xmdValue);
 						resp.setColumns(hdr);
 						resp.setData(PreviewUtil.getSaqlData(data,hdr));
 						resp.setSaql(saql);
 						response.setContentType("application/json");
-				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), resp);
 					}else
 					{

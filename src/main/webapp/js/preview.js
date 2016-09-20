@@ -20,6 +20,9 @@ $(document).ready(function() {
 		self.location.href = 'csvupload2.html';
 	}
 
+	var datasetId = decodeURIComponent(urlParam('datasetId'));
+	var datasetVersion = decodeURIComponent(urlParam('datasetVersion'));
+
 	if(type == 'dataset')
 	{
 		  $('#uploadButton').remove();	
@@ -34,7 +37,7 @@ $(document).ready(function() {
 	    handle: ".modal-header"
 	});
 
-	preview(type,name);	
+	preview(type,name,datasetId,datasetVersion);	
 });
 
 
@@ -133,9 +136,9 @@ function sendSaql(event){
 }
 
 
-function preview(type,name)
+function preview(type,name,datasetId,datasetVersion)
 {
-	full_url = "/preview?type="+type+"&name="+name;
+	full_url = "/preview?type="+type+"&name="+name+"&datasetId="+datasetId+"&datasetVersion="+datasetVersion;
 	$.getJSON(full_url, {}, function(data) {
 				var columns = data.columns;
 				var pdata = data.data

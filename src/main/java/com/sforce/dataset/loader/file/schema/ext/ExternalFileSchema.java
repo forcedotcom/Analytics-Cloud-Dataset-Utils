@@ -889,7 +889,7 @@ public class ExternalFileSchema  {
 		{
 			originalColumnNames.add(headers.get(i));
 			String devName = createDevName(headers.get(i), "Column", i, true);
-				devNames.add(devName);
+			devNames.add(devName);
 		}
 			
 		for(int i=0;i<headers.size();i++)
