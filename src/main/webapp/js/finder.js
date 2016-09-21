@@ -11,6 +11,7 @@ $(document).ready(function() {
 function listDatasets(){
     $.getJSON('list?type=datasetAndApps&current=true',{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
+	        $("#header-count").text('Dataset Count: '+data.length);
         	printTable(data);
     	}else
     	{
@@ -62,6 +63,13 @@ function deleteDataset(datasetAlias,datasetId){
     		   buttonClass = buttonClass + " disabled";
     	   }
     	   
+    	   var lastAccessed = "n/a";
+	    	if(data[i]._lastAccessed>0)
+	    	{	    	
+	    		lastAccessed = new Date(data[i]._lastAccessed).toLocaleString();
+	    	}
+ 
+    	   
     	   var tablerow =  "<td> \
     	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+ "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\"><span class=\"name\">"+data[i].name+"</span></a> \
     	   </td> \
@@ -70,9 +78,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   <span class=\"name\">"+data[i]._createdBy.name+"</span> \
     	   </td> \
     	   <td class=\"hidden-phone\">"+new Date(data[i].edgemartData._createdDateTime).toLocaleString()+"</td> \
-    	   <td class=\"hidden-phone\"> \
-    	   <span class=\"label label label-success\">Current</span> \
-    	   </td> \
+    	   <td class=\"hidden-phone\">"+lastAccessed+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
     	   <button data-toggle=\"dropdown\" class=\""+buttonClass+"\" data-original-title=\"\" title=\"\"> \
