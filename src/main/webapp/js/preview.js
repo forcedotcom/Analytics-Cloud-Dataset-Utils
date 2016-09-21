@@ -183,8 +183,8 @@ function preview(type,name,datasetId,datasetVersion)
 		              		$('#queryText').val(err.statusData.saql);
 		              	}
                		}
- 	        	    $("#modal-title2").addClass("alert alert-danger");
-	              	$("#modal-title2").text(errorShown);	    
+ 	        	    $("#title2").addClass("alert alert-danger");
+	              	$("#title2").text(errorShown);	    
 	        }
         });
 }

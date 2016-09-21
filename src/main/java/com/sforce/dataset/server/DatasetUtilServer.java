@@ -91,7 +91,10 @@ public class DatasetUtilServer {
       try {
       	server.start();
       } catch (BindException e) {
-      	e.printStackTrace();
+ 		System.out.println("\n\t\t**************************************************");
+ 		System.out.println("Cannot start Datsetutils,maybe datasetutils is already running"); 
+ 		System.out.println("\t\t**************************************************\n");			
+      	//e.printStackTrace();
           throw e;
       }
       
