@@ -81,8 +81,7 @@ $(document).ready(function() {
 	               }
 	               else
 	               {
-		        	    var err = eval("(" + jqXHR.responseText + ")");
-		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
 	               }
 	          	 }
 			});
@@ -131,10 +130,7 @@ function cleanSystemFields(jsonObject){
 	keyToDelete = [];
 	for (var key in jsonObject) {
 	    if (jsonObject.hasOwnProperty(key)) {
-	    	console.log(key);
-	    	console.log(key.charAt(0));
 	        if (key.charAt(0) == "_"){
-	        	console.log("delete");
 	        	keyToDelete.push(key); 
 	        }
 	    }
@@ -173,8 +169,7 @@ function getJson(editor,datasetAlias,datasetId,datasetVersion){
                 self.location.href = 'login.html';
             }else
             {
-	        	   var err = eval("(" + jqXHR.responseText + ")");
-	            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
             }
         });
 }

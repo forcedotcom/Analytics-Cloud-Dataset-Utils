@@ -32,8 +32,7 @@ function listDataflows(){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
   }
@@ -54,8 +53,7 @@ function deleteDataflow(id){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
 }
@@ -71,8 +69,7 @@ function startDataflow(id){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
 }
@@ -96,8 +93,7 @@ function copyDataflow(dataflowAlias,dataflowId){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
 }

@@ -95,8 +95,7 @@ $(document).ready(function() {
 	               }
 	               else
 	               {
-		        	    var err = eval("(" + jqXHR.responseText + ")");
-		            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
 	               }
 	          	 }
 			});
@@ -187,8 +186,7 @@ function getSettings(){
 
     	}else
     	{
-     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Listener not found</td>");
-     	   $("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'> listener "+listenerAlias+" not found</i></h5>");
+     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Settings not found</td>");
     	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -197,9 +195,8 @@ function getSettings(){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
-        }
+ 			        	   handleError($("#title2").get(0),jqXHR.responseText);
+       }
     });
   }
 

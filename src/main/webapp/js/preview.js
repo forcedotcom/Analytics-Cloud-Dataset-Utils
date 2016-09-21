@@ -121,13 +121,20 @@ function sendSaql(event){
                }
                else
                {
-	        	    var err = eval("(" + jqXHR.responseText + ")");
-	        	    $("#modal-title2").addClass("alert alert-danger");
-	              	$("#modal-title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
-	              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
-	              	{
-	              		$('#queryText').val(err.statusData.saql);
-	              	}
+               		var errorShown = jqXHR.responseText;
+               		var err = parseJson(jqXHR.responseText);
+               		if ( err === null ) {
+               			errorShown = jqXHR.responseText;
+               		}else
+               		{
+               			errorShown = err.statusMessage;
+		              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
+		              	{
+		              		$('#queryText').val(err.statusData.saql);
+		              	}
+               		}
+ 	        	    $("#modal-title2").addClass("alert alert-danger");
+	              	$("#modal-title2").text(errorShown);	    
                }
           	 }
 		});
@@ -154,8 +161,7 @@ function preview(type,name,datasetId,datasetVersion)
 			                self.location.href = 'login.html';
 			            }else
 			            {
-				        	   var err = eval("(" + jqXHR.responseText + ")");
-				            	$('#status-label').text(err.statusMessage);
+			        	   handleError($('#status-label').get(0),jqXHR.responseText);
 			            }
 			        });
 		        */					
@@ -165,13 +171,20 @@ function preview(type,name,datasetId,datasetVersion)
                 self.location.href = 'login.html';
             }else
             {
-	        	   var err = eval("(" + jqXHR.responseText + ")");
-	        	    $("#title2").addClass("alert alert-danger");
-	              	$("#title2").append('').html("<h4 style='text-align:center'>"+err.statusMessage+"</h4>");
-	              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
-	              	{
-	              		$('#queryText').val(err.statusData.saql);
-	              	}
+               		var errorShown = jqXHR.responseText;
+               		var err = parseJson(jqXHR.responseText);
+               		if ( err === null ) {
+               			errorShown = jqXHR.responseText;
+               		}else
+               		{
+               			errorShown = err.statusMessage;
+		              	if(err.statusData!=null && err.statusData.hasOwnProperty('saql'))
+		              	{
+		              		$('#queryText').val(err.statusData.saql);
+		              	}
+               		}
+ 	        	    $("#modal-title2").addClass("alert alert-danger");
+	              	$("#modal-title2").text(errorShown);	    
 	        }
         });
 }

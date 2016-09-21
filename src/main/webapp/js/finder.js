@@ -26,8 +26,7 @@ function listDatasets(){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
   }
@@ -43,8 +42,7 @@ function deleteDataset(datasetAlias,datasetId){
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
   }
@@ -137,8 +135,7 @@ function loadDiv(selobj,url,nameattr,displayattr)
             self.location.href = 'login.html';
         }else
         {
-        	   var err = eval("(" + jqXHR.responseText + ")");
-            	$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err.statusMessage+"</i></h5>");
+			        	   handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
 }
