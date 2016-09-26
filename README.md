@@ -4,13 +4,7 @@ Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the
 
 ## Downloading DatasetUtils
 
-**Mac (UI version only)**
-
-download [datasetutils.dmg](https://org62.my.salesforce.com/sfc/p/000000000062/a/300000005VIO/dVshhdWXTn4v2V61Ju0eaW6c2UGbbjNxnjkBctGx5.E) 
-
-**Windows and command line** 
-
-Download the latest datasetutils.zip from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
+Download the latest version from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
 
 ## Running DatasetUtils
 
