@@ -25,7 +25,7 @@ function handleError(errorDiv,errorMessage)
 }
 
 function isEmpty(str) {
-    return (!str || 0 === str.length);
+    return (!str || 0 === str.length || str === 'null');
 }
 
 // Logic borrowed jquery parseJson, excepts this version does not throw an error

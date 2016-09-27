@@ -126,7 +126,7 @@ function printTable(data)
     	   <td class=\"hidden-phone\"><span class=\"name\">"+$('<div/>').text(data[i].lastModifiedBy.name).html()+"</span> </td> \
     	   <td class=\"hidden-phone\">"+$('<div/>').text(frequency).html()+"</td> \
     	   <td class=\"hidden-phone\">"+$('<div/>').text(runTime).html()+"</td> \
-    	   <td class=\"hidden-phone\">"+$('<div/>').text(statusLabel).html()+"</td> \
+    	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
     	   <button data-toggle=\"dropdown\" class=\"btn btn-xs dropdown-toggle\" data-original-title=\"\" title=\"\"> \

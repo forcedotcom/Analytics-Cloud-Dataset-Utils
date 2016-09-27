@@ -95,7 +95,7 @@ function printTable(data)
 		    }
 
 		    if (data[i].params.hasOwnProperty('inputFilePattern')) {
-		    	uri = uri + "(" + data[i].params['inputFilePattern'] + ")";
+		    	uri = uri + "(" + $('<div/>').text(data[i].params['inputFilePattern']).html() + ")";
 		    }else
 		    {
 		    	uri = uri + "(" + "*.csv" + ")";
