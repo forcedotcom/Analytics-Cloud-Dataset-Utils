@@ -203,7 +203,7 @@ function getJson(editor,dataflowAlias,dataflowId){
                 self.location.href = 'login.html';
             }else
             {
-			        	   handleError($("#title2").get(0),jqXHR.responseText);
+			    handleError($("#title2").get(0),jqXHR.responseText);
             }
         });
 }

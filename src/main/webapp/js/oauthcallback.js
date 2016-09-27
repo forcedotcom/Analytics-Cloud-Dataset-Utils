@@ -41,7 +41,8 @@ if(qs == null || !qs.hasOwnProperty('access_token'))
 		{
 			err = "OAUTH Flow failed";
 		}
-		$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'>"+err+"</i></h5>");
+		$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'><div id='errorMsg'></div></i></h5>");
+        $("#errorMsg").text(err);
 	}
 }else
 {

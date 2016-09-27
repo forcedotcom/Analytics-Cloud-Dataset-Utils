@@ -176,7 +176,7 @@ function loadlist(selobj,url,nameattr,displayattr,selectedValue)
         		$(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
-                        .html(obj[displayattr]));
+                        .text(obj[displayattr]));
         })
         
     	if(!isEmpty(selectedValue))
@@ -205,7 +205,7 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValue,sele
             $(selobj).append(
                     $('<option></option>')
                            .val(selectedValue)
-                           .html(selectedLabel));    		
+                           .text(selectedLabel));    		
     	}
 
         $.each(data, function(i,obj)
@@ -218,7 +218,7 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValue,sele
         		$(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
-                        .html(obj[displayattr]));
+                        .text(obj[displayattr]));
         	}
         })        
     })
@@ -302,8 +302,9 @@ function getListener(listenerAlias){
 		    		 );
     	}else
     	{
-     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Listener not found</td>");
-     	   $("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'> listener "+listenerAlias+" not found</i></h5>");
+			var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Listener not found</td>");
+			$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'><div id='errorMsg'></div></i></h5>");
+			$("#errorMsg").text("listener "+listenerAlias+" not found");
     	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -312,7 +313,7 @@ function getListener(listenerAlias){
             self.location.href = 'login.html';
         }else
         {
-			        	   handleError($("#title2").get(0),jqXHR.responseText);
+			handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
   }

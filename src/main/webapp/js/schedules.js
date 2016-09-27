@@ -89,10 +89,10 @@ function printTable(data)
 	    $("#result-body").empty();
 	    $.each(data, function(i,obj)
 	    {
-    	   var linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
+    	   var linkText = "<span class=\"name\">"+$('<div/>').text(data[i].masterLabel).html()+"</span>";
     	   if(data[i].disabled)
     	   {
-    		   linkText = "<a href=\"scheduleeditor.html?scheduleAlias="+data[i].devName+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
+    		   linkText = "<a href=\"scheduleeditor.html?scheduleAlias="+data[i].devName+"\"><span class=\"name\">"+$('<div/>').text(data[i].masterLabel).html()+"</span></a>";
     	   }
 
 	    	var frequency = "n/a";
@@ -123,10 +123,10 @@ function printTable(data)
     	       	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
-    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i].lastModifiedBy.name+"</span> </td> \
-    	   <td class=\"hidden-phone\">"+frequency+"</td> \
-    	   <td class=\"hidden-phone\">"+runTime+"</td> \
-    	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+$('<div/>').text(data[i].lastModifiedBy.name).html()+"</span> </td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(frequency).html()+"</td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(runTime).html()+"</td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(statusLabel).html()+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
     	   <button data-toggle=\"dropdown\" class=\"btn btn-xs dropdown-toggle\" data-original-title=\"\" title=\"\"> \

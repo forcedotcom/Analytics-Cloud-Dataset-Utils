@@ -94,7 +94,7 @@ $(document).ready(function() {
 	            $('#interval').append(
 		                 $('<option></option>')
 		                        .val(i)
-		                        .html(i));
+		                        .text(i));
 		    }
 //	    	$('#interval').prop("disabled", false);
 	//	    $('#interval').change();
@@ -105,7 +105,7 @@ $(document).ready(function() {
 	    		$('#interval').append(
 	                 $('<option></option>')
 	                        .val(i)
-	                        .html(i));
+	                        .text(i));
 	    	}
 //	    	$('#interval').prop("disabled", false);
 //		    $('#interval').change();
@@ -116,7 +116,7 @@ $(document).ready(function() {
 	            $('#interval').append(
 		                 $('<option></option>')
 		                        .val(i)
-		                        .html(i));
+		                        .text(i));
 	    	}
 //	    	$('#interval').change();
 //	    	$('#interval').prop("disabled", true);
@@ -251,7 +251,7 @@ function loadlist(selobj,url,nameattr,displayattr)
             $(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
-                        .html(obj[displayattr]));
+                        .text(obj[displayattr]));
         })
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -276,7 +276,7 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr,selectedValues)
 	            $(selobj).append(
 	                 $('<option></option>')
 	                        .val(obj[nameattr])
-	                        .html(obj[displayattr]));
+	                        .text(obj[displayattr]));
         	}
         })        
     })
@@ -343,8 +343,9 @@ function getSchedule(scheduleAlias){
 		    		 );
     	}else
     	{
-     	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Schedule not found</td>");
-     	   $("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'> schedule "+scheduleAlias+" not found</i></h5>");
+     	   	var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Schedule not found</td>");
+			$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'><div id='errorMsg'></div></i></h5>");
+			$("#errorMsg").text("schedule "+scheduleAlias+" not found");
     	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 

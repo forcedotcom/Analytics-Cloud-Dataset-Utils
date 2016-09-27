@@ -135,7 +135,7 @@ function loadlist(selobj,url,nameattr,displayattr)
             $(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
-                        .html(obj[displayattr]));
+                        .text(obj[displayattr]));
         })
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -158,7 +158,7 @@ function loadlistAndSelectize(selobj,url,nameattr,displayattr)
             $(selobj).append(
                  $('<option></option>')
                         .val(obj[nameattr])
-                        .html(obj[displayattr]));
+                        .text(obj[displayattr]));
         })        
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -190,7 +190,7 @@ function loadDiv(selobj,url,nameattr,displayattr)
                  		.attr('data-value',obj[nameattr])
                  		.attr('data-selectable','')
                  		.attr('class','option')
-            			.html(obj[displayattr]));
+            			.text(obj[displayattr]));
         })
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 

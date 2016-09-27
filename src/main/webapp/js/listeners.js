@@ -101,10 +101,10 @@ function printTable(data)
 		    	uri = uri + "(" + "*.csv" + ")";
 		    }
 
-		    var linkText = "<span class=\"name\">"+data[i].masterLabel+"</span>";
+		    var linkText = "<span class=\"name\">"+$('<div/>').text(data[i].masterLabel).html()+"</span>";
     	   if(data[i].disabled)
     	   {
-    		   linkText = "<a href=\"listenereditor.html?listenerAlias="+data[i].devName+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
+    		   linkText = "<a href=\"listenereditor.html?listenerAlias="+data[i].devName+"\"><span class=\"name\">"+$('<div/>').text(data[i].masterLabel).html()+"</span></a>";
     	   }
 
     	   
@@ -125,7 +125,7 @@ function printTable(data)
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
     	   <td class=\"hidden-phone\"><span class=\"name\">"+uri+"</span> </td> \
-    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i].lastModifiedBy.name+"</span> </td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+$('<div/>').text(data[i].lastModifiedBy.name).html()+"</span> </td> \
     	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \

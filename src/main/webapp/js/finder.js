@@ -71,11 +71,11 @@ function deleteDataset(datasetAlias,datasetId){
  
     	   
     	   var tablerow =  "<td> \
-    	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+ "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\"><span class=\"name\">"+data[i].name+"</span></a> \
+    	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+ "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\"><span class=\"name\">"+$('<div/>').text(data[i].name).html()+"</span></a> \
     	   </td> \
-    	   <td class=\"hidden-phone\">"+app+"</td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(app).html()+"</td> \
     	   <td> \
-    	   <span class=\"name\">"+data[i]._createdBy.name+"</span> \
+    	   <span class=\"name\">"+$('<div/>').text(data[i]._createdBy.name).html()+"</span> \
     	   </td> \
     	   <td class=\"hidden-phone\">"+new Date(data[i].edgemartData._createdDateTime).toLocaleString()+"</td> \
     	   <td class=\"hidden-phone\">"+lastAccessed+"</td> \

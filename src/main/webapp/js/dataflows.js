@@ -115,7 +115,7 @@ function copyDataflow(dataflowAlias,dataflowId){
 	    		runTime = new Date(data[i].nextRunTime).toLocaleString();
 	    	}
     	   
-        	var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+data[i].masterLabel+"</span></a>";
+        	var linkText = "<a href=\"datafloweditor.html?dataflowAlias="+data[i].name+"&dataflowId="+data[i]._uid+"\"><span class=\"name\">"+$('<div/>').text(data[i].masterLabel).html()+"</span></a>";
 
     	   var actions = " \
         	   <li><a href=\"#\" onclick='startDataflow(\""+data[i].name+"\");'>Start Now</a></li> \
@@ -123,7 +123,7 @@ function copyDataflow(dataflowAlias,dataflowId){
         	   
 	   	   if(data[i].status != "Active") 
     	   { 
-    		   statusLabel = "<span class=\"label label-danger\">"+data[i].status+"</span>";
+    		   statusLabel = "<span class=\"label label-danger\">"+$('<div/>').text(data[i].status).html()+"</span>";
 
         	   actions = " \
             	   <li></li> \
@@ -131,16 +131,16 @@ function copyDataflow(dataflowAlias,dataflowId){
 
     	   }else
     	   {
-    	   	   statusLabel = "<span class=\"label label-success\">"+data[i].status+"</span>";
+    	   	   statusLabel = "<span class=\"label label-success\">"+$('<div/>').text(data[i].status).html()+"</span>";
 
     	   }
     	       	       	  
     	   var tablerow =  " \
     	   <td class=\"hidden-phone\">"+linkText+"</td> \
-    	   <td class=\"hidden-phone\"><span class=\"name\">"+data[i]._lastModifiedBy.name+"</span> </td> \
-    	   <td class=\"hidden-phone\">"+frequency+"</td> \
-    	   <td class=\"hidden-phone\">"+runTime+"</td> \
-    	   <td class=\"hidden-phone\">"+data[i].workflowType+"</td> \
+    	   <td class=\"hidden-phone\"><span class=\"name\">"+$('<div/>').text(data[i]._lastModifiedBy.name).html()+"</span> </td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(frequency).html()+"</td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(runTime).html()+"</td> \
+    	   <td class=\"hidden-phone\">"+$('<div/>').text(data[i].workflowType).html()+"</td> \
     	   <td class=\"hidden-phone\">"+statusLabel+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \

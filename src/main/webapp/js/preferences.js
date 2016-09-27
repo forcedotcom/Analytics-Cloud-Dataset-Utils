@@ -145,7 +145,9 @@ function getPreferences(){
     	}else
     	{
      	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">Listener not found</td>");
-     	   $("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'> listener "+listenerAlias+" not found</i></h5>");
+			$("#title2").append('').html("<h5 style='text-align:center'><i style='color:#FF0000'><div id='errorMsg'></div></i></h5>");
+			$("#errorMsg").text("Preferences not found");
+
     	}
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
