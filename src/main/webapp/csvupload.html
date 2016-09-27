@@ -56,7 +56,6 @@
 				<li><a class="navlink" href="listeners.html" target="_top">Listener List</a></li>
                 <li class="disabled"><a class="navlink" href="#" target="_top">File Upload</a></li>
 				<li><a class="navlink" href="logs.html" target="_top">Process Monitor</a></li>
-				<li><a class="navlink" href="preferences.html" target="_top">Preferences</a></li>
 				<li><a class="navlink" href="logout" target="_top">Logout</a></li>
 				<li><a class="navlink" href="https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils" target="_ext">GitHub</a></li>
                 </ul>
@@ -67,13 +66,23 @@
 </div>
 
 
-<div class="container">
-	<div id="header" class="row">&nbsp;</div>
-</div>
+	<div class="container-fluid">
+		<div id="header" class="row-fluid">&nbsp;</div>
+		<div id="title2" class="row-fluid"></div>
+	</div>
 
-<div class="container">
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span1 pull-right">
+				<button id="createButton" type="button" class="btn  btn-primary" style="background-color: #00c0b7;border: 0;">Preferences</button>
+			</div>
+		</div>
+	</div>
+
+
+<div class="container-fluid">
     
-    <div class="row">
+    <div class="row-fluid">
         <div class="col-sm-offset-3 col-sm-6">
             <form method="post" action="upload" enctype="multipart/form-data" id="uploadForm">
 				<div class="form-group">
@@ -156,12 +165,9 @@
         </div>
     </div>
 
-	<div id="title2" class="row">
-	</div>
 
-
-    <div class="row">    
-	<table id="result" class="table">
+    <div class="row-fluid">    
+	<table id="result" class="table-responsive">
 	</table>
 	</div>
 	

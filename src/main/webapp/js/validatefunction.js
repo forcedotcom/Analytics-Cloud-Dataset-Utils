@@ -37,6 +37,11 @@ $(document).ready(function() {
     
     $('.input-group input[required], .input-group textarea[required], .input-group select[required]').trigger('change');
     
+    	$('#createButton').click(function() {
+			self.location.href = 'preferences.html'; 
+	});
+	
+	
     loadlistAndSelectize($('#DatasetName').get(0),/*the 'select' object*/
      		 'list?type=dataset',/*the url of the server-side script*/
      		 '_alias',/*The name of the field in the returned list*/
