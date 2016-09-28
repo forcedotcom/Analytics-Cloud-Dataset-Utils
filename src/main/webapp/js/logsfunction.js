@@ -78,7 +78,7 @@ $(document).ready(function() {
               
               var status1 = data[i].status;
               if(data[i].params.SERVER_STATUS)
-                status1 = data[i].status + "&nbsp;|&nbsp;" + data[i].params.SERVER_STATUS;
+                status1 = data[i].status + " | " + data[i].params.SERVER_STATUS;
               
               var tablerow = $('<tr/>');
               if (data[i].status == "FAILED" || data[i].params.SERVER_STATUS == "ERROR")
@@ -93,7 +93,7 @@ $(document).ready(function() {
                         .append($('<td/>').text(data[i].name))
                         .append($('<td/>').text(data[i].startTimeFormatted))
                         .append($('<td/>').text(endTime))
-                        .append($('<td/>').html(status1))
+                        .append($('<td/>').text(status1))
                         .append($('<td/>').text(data[i].targetTotalRowCount.toLocaleString()))
                         .append($('<td/>').html(link))
                         .append($('<td/>').text(data[i].message))

@@ -105,15 +105,15 @@ public class DatasetType implements Comparable<DatasetType> {
 	
 	@Override
 	public int compareTo(DatasetType o) {
-		if(this.edgemartData!=null && o.edgemartData!=null)
-		{
-			if (this.edgemartData._createdDateTime > o.edgemartData._createdDateTime)
-				return 1;
-			else if (this.edgemartData._createdDateTime < o.edgemartData._createdDateTime)
-				return -1;
-			else
-				return 0;
-		}
+//		if(this.edgemartData!=null && o.edgemartData!=null)
+//		{
+//			if (this.edgemartData._createdDateTime > o.edgemartData._createdDateTime)
+//				return 1;
+//			else if (this.edgemartData._createdDateTime < o.edgemartData._createdDateTime)
+//				return -1;
+//			else
+//				return 0;
+//		}
 		
 		if (this._createdDateTime > o._createdDateTime)
 			return 1;
@@ -196,9 +196,9 @@ public class DatasetType implements Comparable<DatasetType> {
 	
 	public static PermissionType getPermissionType(DatasetType obj,Map<String,?> input)
 	{
+		PermissionType ret = obj.new PermissionType();
 		if(input!=null && !input.isEmpty())
 		{
-			PermissionType ret = obj.new PermissionType();
 			Object var = input.get("modify");
 			if(var != null && var instanceof Boolean)
 			{
@@ -216,29 +216,27 @@ public class DatasetType implements Comparable<DatasetType> {
 			{
 				ret.view = ((Boolean)var).booleanValue();
 			}
-			return ret;
 		}
-		return null;
+		return ret;
 	}
 
 	public static FolderType getFolderType(DatasetType obj,Map<String,?> input)
 	{
+		FolderType ret = obj.new FolderType();
 		if(input!=null && !input.isEmpty())
 		{
-			FolderType ret = obj.new FolderType();
 			ret._uid = (String) input.get("_uid");
 			ret._type = (String) input.get("_type");
-			return ret;
 		}
-		return null;
+		return ret;
 	}
 
 	@SuppressWarnings("unchecked")
 	public static EdgemartDataType getEdgemartDataType(DatasetType obj,Map<String,?> input)
 	{
+		EdgemartDataType ret = obj.new EdgemartDataType();
 		if(input!=null && !input.isEmpty())
 		{
-			EdgemartDataType ret = obj.new EdgemartDataType();
 			ret._uid = (String) input.get("_uid");
 			Object temp = input.get("_createdDateTime");
 			if(temp != null && temp instanceof Number)
@@ -247,23 +245,21 @@ public class DatasetType implements Comparable<DatasetType> {
 			}			
 			ret._type = (String) input.get("_type");
 			ret._createdBy = DatasetType.getUserType(obj, (Map<String, String>) input.get("_createdBy"));
-			return ret;
 		}
-		return null;
+		return ret;
 	}
 
 	public static UserType getUserType(DatasetType obj,Map<String,String> input)
 	{
+		UserType ret =  obj.new UserType();
 		if(input!=null && !input.isEmpty())
 		{
-			UserType ret =  obj.new UserType();
 			ret._type = (String) input.get("_type");
 			ret._uid = (String) input.get("_uid");
 			ret.name = (String) input.get("name");
 			ret.profilePhotoUrl = (String) input.get("profilePhotoUrl");
-			return ret;
 		}
-		return null;
+		return ret;
 	}
 
     

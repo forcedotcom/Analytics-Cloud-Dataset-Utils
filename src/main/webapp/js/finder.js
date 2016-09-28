@@ -3,13 +3,26 @@ $(document).ready(function() {
     var currentData = null;
     var gettingHistory = false;
 
-    listDatasets();
+	var current = decodeURIComponent(urlParam('current'));
+	
+	if (current == undefined || isEmpty(current) )
+	{
+		current = false;
+	}else
+	{
+		if(current == 'true')
+			current = true;
+		else
+			current = false;
+	}
+
+    listDatasets(current);
     
 });
 
 
-function listDatasets(){
-    $.getJSON('list?type=datasetAndApps&current=true',{},function(data){
+function listDatasets(current){
+    $.getJSON('list?type=datasetAndApps&current='+current,{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
 	        $("#header-count").text('Dataset Count: '+data.length);
         	printTable(data);
@@ -77,7 +90,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   <td> \
     	   <span class=\"name\">"+$('<div/>').text(data[i]._createdBy.name).html()+"</span> \
     	   </td> \
-    	   <td class=\"hidden-phone\">"+new Date(data[i].edgemartData._createdDateTime).toLocaleString()+"</td> \
+    	   <td class=\"hidden-phone\">"+new Date(data[i]._createdDateTime).toLocaleString()+"</td> \
     	   <td class=\"hidden-phone\">"+lastAccessed+"</td> \
     	   <td class=\"hidden-phone\"> \
     	   <div class=\"btn-group\"> \
@@ -133,7 +146,7 @@ function loadDiv(selobj,url,nameattr,displayattr)
                  		.attr('data-value',obj[nameattr])
                  		.attr('data-selectable','')
                  		.attr('class','option')
-            			.html(obj[displayattr]));
+            			.text(obj[displayattr]));
         })
     })
     .fail(function(jqXHR, textStatus, errorThrown) { 
@@ -146,6 +159,12 @@ function loadDiv(selobj,url,nameattr,displayattr)
     });
 }
 
-function isEmpty(str) {
-    return (!str || 0 === str.length);
+function urlParam(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results==null){
+       return null;
+    }
+    else{
+       return results[1] || 0;
+    }
 }

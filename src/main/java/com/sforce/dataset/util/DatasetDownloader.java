@@ -151,7 +151,7 @@ public class DatasetDownloader {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Map<String,String> getXMD(String alias, String datasetId,String datasetVersion, PartnerConnection partnerConnection) throws Exception 
 	{
-		if(datasetId == null || datasetVersion == null || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
+		if(datasetId == null || datasetId.trim().equalsIgnoreCase("null") || datasetVersion == null || datasetVersion.trim().equalsIgnoreCase("null") || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
 			return getXMD(alias,partnerConnection);
 		
 //		partnerConnection.getServerTimestamp();

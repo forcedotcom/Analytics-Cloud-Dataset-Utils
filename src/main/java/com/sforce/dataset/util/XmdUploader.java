@@ -117,7 +117,7 @@ public class XmdUploader {
 			
 			URI u = new URI(serviceEndPoint);
 
-			if(datasetId == null || datasetVersion == null || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
+			if(datasetId == null || datasetId.trim().equalsIgnoreCase("null") || datasetVersion == null || datasetVersion.trim().equalsIgnoreCase("null") || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
 			{
 
 			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true&alias="+datasetAlias,null);			
@@ -190,7 +190,7 @@ public class XmdUploader {
 				System.out.println("Found existing Dataset {"+_alias+"} version {"+datasetVersion+"}, created on {"+createdDateTime+"}, in folder {"+folderID+"}");
 			}else
 			{
-				System.out.println("Dataset {"+_alias+"} not found");
+				System.out.println("Dataset {"+datasetAlias+"} not found");
 				return false;
 			}
 			
