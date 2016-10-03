@@ -49,7 +49,7 @@ public class DatasetAugmenter {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void augmentEM(PartnerConnection partnerConnection) throws Exception
 	{
-		List<DatasetType> list = DatasetUtils.listDatasets(partnerConnection, true);
+		List<DatasetType> list = DatasetUtils.listDatasets(partnerConnection, true, null);
 		System.out.println("\n");
 		if(list==null || list.size()==0)
 		{

@@ -270,7 +270,13 @@ public class ListServlet extends HttpServlet {
 						{
 							current = true;
 						}
-						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, current);
+						String search = null;
+						tmp = request.getParameter("search");
+						if(tmp!=null && !tmp.trim().isEmpty() && !tmp.equalsIgnoreCase("null"))
+						{
+							search = tmp;
+						}
+						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, current, search);
 						DatasetType def = new DatasetType();
 						def.name = "";
 						def._alias = "";
@@ -287,7 +293,13 @@ public class ListServlet extends HttpServlet {
 						{
 							current = true;
 						}
-						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, current);
+						String search = null;
+						tmp = request.getParameter("search");
+						if(tmp!=null && !tmp.trim().isEmpty() && !tmp.equalsIgnoreCase("null"))
+						{
+							search = tmp;
+						}
+						List<DatasetType> datasets = DatasetUtils.listDatasets(conn, current, search);
 					    response.setContentType("application/json");
 				    	ObjectMapper mapper = new ObjectMapper();
 				    	mapper.writeValue(response.getOutputStream(), datasets);

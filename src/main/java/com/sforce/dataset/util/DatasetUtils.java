@@ -136,7 +136,7 @@ public class DatasetUtils {
 	{		
 		if(datasetId==null || datasetId.trim().isEmpty())
 		{
-			List<DatasetType> temp = listDatasets(partnerConnection, false);
+			List<DatasetType> temp = listDatasets(partnerConnection, false, alias);
 			for(DatasetType t:temp)
 			{
 				if(t._alias.equals(alias))
@@ -211,7 +211,7 @@ public class DatasetUtils {
 	{
 		GetUserInfoResult userInfo = connection.getUserInfo();
 		String userID = userInfo.getUserId();
-		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
+		Map<String, Map> dataSetMap = listDataset(connection, isCurrent, null);
 		if(dataSetMap==null || dataSetMap.size()==0)
 		{
 			return dataSetMap;
@@ -245,7 +245,7 @@ public class DatasetUtils {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  {
+	private static Map<String,Map> listDataset(PartnerConnection partnerConnection, boolean isCurrent, String search) throws ConnectionException, URISyntaxException, ClientProtocolException, IOException  {
 		LinkedHashMap<String,Map> dataSetMap = new LinkedHashMap<String,Map>();
 //		partnerConnection.getServerTimestamp();
 		ConnectorConfig config = partnerConnection.getConfig();			
@@ -257,8 +257,12 @@ public class DatasetUtils {
 
 		
 		URI u = new URI(serviceEndPoint);
-
-		URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current="+isCurrent+"&sortOrder=Mru",null);			
+		URI listEMURI;
+		if(search==null||search.trim().isEmpty() || search.trim().equalsIgnoreCase("null"))		
+			listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current="+isCurrent+"&sortOrder=Mru",null);			
+		else
+			listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current="+isCurrent+"&sortOrder=Mru"+"&search="+search,null);			
+			
 		HttpGet listEMPost = new HttpGet(listEMURI);
 
 		listEMPost.setConfig(requestConfig);
@@ -307,11 +311,11 @@ public class DatasetUtils {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	@SuppressWarnings("rawtypes")
-	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException 
+	public static List<DatasetType> listDatasets(PartnerConnection connection, boolean isCurrent, String search) throws ClientProtocolException, ConnectionException, URISyntaxException, IOException 
 	{
 		List<DatasetType> datasetList = new LinkedList<DatasetType>();
 		List<FolderType> apps = listFolders(connection);
-		Map<String, Map> dataSetMap = listDataset(connection, isCurrent);
+		Map<String, Map> dataSetMap = listDataset(connection, isCurrent, search);
 		if(dataSetMap != null && !dataSetMap.isEmpty())
 		{
 			for(String alias:dataSetMap.keySet())

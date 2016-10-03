@@ -46,7 +46,20 @@
 		</div>
         
         <div id="navbar-collapse1" class="collapse navbar-collapse">
+    
           <ul class="nav navbar-nav navbar-right">
+          <li>
+          	<div class="navbar-form">
+	        <!--form class="navbar-form" role="search" action="none"-->
+	        <div class="input-group">
+	            <input id="searchinput" type="text" class="form-control" placeholder="Search..." name="searchinput">
+	            <div class="input-group-btn">
+	                <button id="searchbtn" class="btn btn-default" name="searchbtn"><i class="glyphicon glyphicon-search"></i></button>
+	            </div>
+	        </div>
+	        <!--/form-->
+	        </div>
+          </li>
              <li>
                 <a data-toggle="dropdown" class="dropdown-toggle" href="#" style="color: white;"><i style="font-size:1.5em;"  class="glyphicon glyphicon-th-list"></i></a>
                 <ul class="dropdown-menu">
@@ -68,8 +81,8 @@
 
 <div class="container-fluid">
 	<div id="header" class="row">
-  		<div class="col-md-11"></div>
-	    <div id="header-count" class="col-md-1 label label-primary text-right">&nbsp;</div>
+  		<div class="col-md-10"></div>
+	    <div  class="col-md-2 label label-primary text-right"><h5 id="header-count">&nbsp;</h5></div>
 	</div>
 </div>
 

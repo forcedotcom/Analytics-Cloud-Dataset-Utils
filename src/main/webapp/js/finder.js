@@ -3,7 +3,7 @@ $(document).ready(function() {
     var currentData = null;
     var gettingHistory = false;
 
-	var current = decodeURIComponent(urlParam('current'));
+	current = decodeURIComponent(urlParam('current'));
 	
 	if (current == undefined || isEmpty(current) )
 	{
@@ -15,16 +15,41 @@ $(document).ready(function() {
 		else
 			current = false;
 	}
+	
+    listDatasets(null);
 
-    listDatasets(current);
+	$('button[name=searchbtn]').click(searchDatasets);	
+	
+	$('#searchinput').keypress(function (e) {
+  		if (e.which == 13) {
+    		$('button[name=searchbtn]').click();
+    		return false;  
+  		}  
+	});
     
 });
 
+function searchDatasets(event){
+		query = $("#searchinput").val();
+		if(isEmpty(query))
+		{
+			listDatasets(null);
+		}else
+		{
+			listDatasets(query);
+		}
+}
 
-function listDatasets(current){
-    $.getJSON('list?type=datasetAndApps&current='+current,{},function(data){
+function listDatasets(query){
+    $.getJSON('list?type=datasetAndApps&current='+current+'&search='+query,{},function(data){
     	if (typeof data !== 'undefined' && data.length > 0) {
-	        $("#header-count").text('Dataset Count: '+data.length);
+    		if(data.length == 500)
+    		{
+	        	$("#header-count").text('Dataset Count: '+data.length + ' out of 500+');	        
+	        }else
+	        {
+	        	$("#header-count").text('Dataset Count: '+data.length);
+	        }
         	printTable(data);
     	}else
     	{
@@ -40,7 +65,7 @@ function listDatasets(current){
             self.location.href = 'login.html';
         }else
         {
-			        	   handleError($("#title2").get(0),jqXHR.responseText);
+			handleError($("#title2").get(0),jqXHR.responseText);
         }
     });
   }
