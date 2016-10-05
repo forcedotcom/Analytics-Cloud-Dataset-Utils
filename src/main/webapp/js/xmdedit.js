@@ -13,7 +13,7 @@ $(document).ready(function() {
 	var datasetAlias = decodeURIComponent(urlParam('datasetAlias'));
 	if (datasetAlias == undefined || isEmpty(datasetAlias) ) 
 	{
-		self.location.href = 'finder.html';
+		self.location.href = 'finder.html?current=false';
 	}
 	
 	var datasetId = decodeURIComponent(urlParam('datasetId'));

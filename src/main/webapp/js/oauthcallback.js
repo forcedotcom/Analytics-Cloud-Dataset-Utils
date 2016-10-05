@@ -54,7 +54,7 @@ if(qs == null || !qs.hasOwnProperty('access_token'))
 				cache : false,
 				dataType : 'json',
 				success : function(data) {
-						self.location.href = 'finder.html';
+						self.location.href = 'finder.html?current=false';
 				},
 		           error: function(jqXHR, status, error) {
 		               if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {

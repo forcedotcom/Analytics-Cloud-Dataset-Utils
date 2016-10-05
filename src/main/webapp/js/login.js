@@ -98,7 +98,7 @@ $(document).ready(function() {
 					{					 
 						self.location.href = data.statusMessage;
 					}else{
-						self.location.href = 'finder.html';
+						self.location.href = 'finder.html?current=false';
 					}
 				},
 		           error: function(jqXHR, status, error) {
