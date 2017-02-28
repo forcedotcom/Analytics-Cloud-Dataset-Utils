@@ -1,6 +1,6 @@
-#  Salesforce.com Analytics Cloud DatasetUtils
+#  Wave DatasetUtils
 
-Salesforce.com Analytics Cloud DatasetUtils is a reference implementation of the Analytics cloud External data API. 
+Wave DatasetUtils is a reference implementation of the Analytics cloud External data API. 
 
 ## Downloading DatasetUtils
 
