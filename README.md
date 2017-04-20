@@ -1,6 +1,7 @@
 #  Wave DatasetUtils
 
-Wave DatasetUtils is a reference implementation of the Analytics cloud External data API. 
+Wave DatasetUtils is a reference implementation of the Analytics cloud External data API. This tool is free to use, but it is not officially supported by Salesforce.
+This is a community project that have not been officially tested or documented. Please do not contact Salesforce for support when using this application.
 
 ## Downloading DatasetUtils
 
