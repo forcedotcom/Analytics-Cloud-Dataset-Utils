@@ -520,9 +520,9 @@ public class ExternalFileSchema  {
 								
 								if(user_field.getfType()==FieldType.MEASURE)
 								{
-									if(user_field.getDefaultValue()==null || !isLatinNumber(user_field.getDefaultValue()))
+									if(user_field.getDefaultValue()!=null && !isLatinNumber(user_field.getDefaultValue()))
 									{
-										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must be either null or have a default numeric value\n");
 									}
 									
 									if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
