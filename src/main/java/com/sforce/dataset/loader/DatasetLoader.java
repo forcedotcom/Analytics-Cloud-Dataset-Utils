@@ -1819,7 +1819,7 @@ public class DatasetLoader {
         // The endpoint for the Bulk API service is the same as for the normal
         // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
         String soapEndpoint = partnerConfig.getServiceEndpoint();
-        String apiVersion = "31.0";
+        String apiVersion = "47.0";
         String restEndpoint = soapEndpoint.substring(0, soapEndpoint.indexOf("Soap/"))
             + "async/" + apiVersion;
         config.setRestEndpoint(restEndpoint);
