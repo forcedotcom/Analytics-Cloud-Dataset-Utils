@@ -52,6 +52,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 
@@ -72,6 +73,8 @@ public class DataFlowUtil {
 	//private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("EEEE MMMM d HH:mm:ss z yyyy"); //Mon Jun 15 00:12:03 GMT 2015
 	private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX"); //Mon Jun 15 00:12:03 GMT 2015
 	private  static final String dataflowURL = "/insights/internal_api/v1.0/esObject/workflow/%s/json";
+	//New public endpoint . Only required in start as other methods deprecated
+	private static final String dataflowRunURL = "/services/data/v47.0/wave/dataflowjobs";
 	
 	@SuppressWarnings("rawtypes")
 	public static void uploadAndStartDataFlow(PartnerConnection partnerConnection, Map wfdef, String workflowName) throws ConnectionException, IllegalStateException, IOException, URISyntaxException
@@ -132,7 +135,7 @@ public class DataFlowUtil {
 		emis.close();
 		httpClient.close();
 
-		if (statusCode != HttpStatus.SC_OK) 
+		if (statusCode != HttpStatus.SC_CREATED) 
 	    {
 			String errorCode = statusCode+"";
 	    	try
@@ -453,12 +456,18 @@ public class DataFlowUtil {
 		
 		URI u = new URI(serviceEndPoint);
 
-		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId).replace("json", "start"), null,null);			
+		//URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), String.format(dataflowURL, dataflowId).replace("json", "start"), null,null);		
 		
-        HttpPut httput = new HttpPut(patchURI);
-        httput.setConfig(requestConfig);
-        httput.addHeader("Authorization","OAuth "+sessionID);			
-		CloseableHttpResponse emresponse = httpClient.execute(httput);
+		URI patchURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), dataflowRunURL, null,null);
+  
+		HttpPost httpPost = new HttpPost(patchURI);
+        StringEntity params =new StringEntity("{\"command\":\"start\",\"dataflowId\":\""+dataflowId+"\"}");
+        System.out.println("DataflowId " +dataflowId);
+        httpPost.setConfig(requestConfig);
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization","OAuth "+sessionID);
+        httpPost.setEntity(params);		
+		CloseableHttpResponse emresponse = httpClient.execute(httpPost);
 	   String reasonPhrase = emresponse.getStatusLine().getReasonPhrase();
        int statusCode = emresponse.getStatusLine().getStatusCode();
 		HttpEntity emresponseEntity = emresponse.getEntity();
@@ -467,7 +476,7 @@ public class DataFlowUtil {
 		emis.close();
 		httpClient.close();
 
-	       if (statusCode != HttpStatus.SC_OK) 
+		if (statusCode != HttpStatus.SC_CREATED ) 
 	       {
 			String errorCode = statusCode+"";
 	    	try
@@ -495,16 +504,14 @@ public class DataFlowUtil {
 		ObjectMapper mapper = new ObjectMapper();	
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		@SuppressWarnings("rawtypes")
-		Map res =  mapper.readValue(emList, Map.class);
+		LinkedHashMap res =  mapper.readValue(emList, LinkedHashMap.class);
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		List<Map> resList = (List<Map>) res.get("result");
-		if(resList!=null && !resList.isEmpty())
+		String stat = (String) res.get("status");
+		if(stat!=null)
 		{
-			if((boolean) resList.get(0).get("success"))
-			{
-				System.out.println(new Date()+" : Dataflow {"+dataflowAlias+"} succesfully started");	
-				return true;
-			}
+
+			System.out.println(new Date()+" : Dataflow {"+dataflowAlias+"} succesfully started");	
+			return true;
 		}
 	    throw new IOException(String.format("Dataflow %s start failed: %s", dataflowAlias,emList));
 	}

@@ -4,7 +4,7 @@ $(document).ready(function() {
     var gettingHistory = false;
 
 	current = decodeURIComponent(urlParam('current'));
-	
+
 	if (current == undefined || isEmpty(current) )
 	{
 		current = false;
@@ -15,18 +15,18 @@ $(document).ready(function() {
 		else
 			current = false;
 	}
-	
+
     listDatasets(null);
 
-	$('button[name=searchbtn]').click(searchDatasets);	
-	
+	$('button[name=searchbtn]').click(searchDatasets);
+
 	$('#searchinput').keypress(function (e) {
   		if (e.which == 13) {
     		$('button[name=searchbtn]').click();
-    		return false;  
-  		}  
+    		return false;
+  		}
 	});
-    
+
 });
 
 function searchDatasets(event){
@@ -45,7 +45,7 @@ function listDatasets(query){
     	if (typeof data !== 'undefined' && data.length > 0) {
     		if(data.length == 500)
     		{
-	        	$("#header-count").text('Dataset Count: '+data.length + ' out of 500+');	        
+	        	$("#header-count").text('Dataset Count: '+data.length + ' out of 500+');
 	        }else
 	        {
 	        	$("#header-count").text('Dataset Count: '+data.length);
@@ -56,11 +56,11 @@ function listDatasets(query){
      	   var tmp = $('<tr/>').append('').html("<td colspan=\"6\">No Datasets found</td>");
        	   tmp.attr("id","ErrorRow");
        	   tmp.addClass("alert-danger");
-            $("#result-body").append(tmp)            
+            $("#result-body").append(tmp)
     	}
     })
-    .fail(function(jqXHR, textStatus, errorThrown) { 
-        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1)
         {
             self.location.href = 'login.html';
         }else
@@ -75,8 +75,8 @@ function deleteDataset(datasetAlias,datasetId){
     $.getJSON(url,{},function(data){
     	$( "#"+datasetAlias).remove();
     })
-    .fail(function(jqXHR, textStatus, errorThrown) { 
-        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) 
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1)
         {
             self.location.href = 'login.html';
         }else
@@ -100,14 +100,14 @@ function deleteDataset(datasetAlias,datasetId){
     	   {
     		   buttonClass = buttonClass + " disabled";
     	   }
-    	   
+
     	   var lastAccessed = "n/a";
 	    	if(data[i]._lastAccessed>0)
-	    	{	    	
+	    	{
 	    		lastAccessed = new Date(data[i]._lastAccessed).toLocaleString();
 	    	}
- 
-    	   
+
+
     	   var tablerow =  "<td> \
     	   <a href=\"csvpreview.html?type=dataset&name="+data[i]._alias+ "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\"><span class=\"name\">"+$('<div/>').text(data[i].name).html()+"</span></a> \
     	   </td> \
@@ -129,7 +129,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   <a href=\"list?datasetAlias=" + data[i]._alias + "&type=metadataJson"+"\">Download Metadata Json</a> \
     	   </li> \
     	   <li> \
-    	   <a href=\"xmdeditor.html?datasetAlias=" + data[i]._alias + "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\">Edit Xmd</a> \
+    	   <a href=\"xmdeditor.html?datasetAlias=" + data[i]._alias + "&datasetId=" + data[i]._uid + "&datasetVersion=" + data[i].edgemartData._uid+"\">View Xmd</a> \
     	   </li> \
     	   <li> \
     	   <a href=\"#\" onclick='deleteDataset(\""+data[i]._alias+"\",\""+data[i]._uid+"\");'>Delete</a> \
@@ -137,7 +137,7 @@ function deleteDataset(datasetAlias,datasetId){
     	   </ul> \
     	   </div> \
     	   </td>"
-    	   
+
     	   var tmp = $('<tr/>').append('').html(tablerow);
        	   tmp.attr("id",data[i]._alias);
             $("#result-body").append(tmp);
@@ -146,7 +146,7 @@ function deleteDataset(datasetAlias,datasetId){
        $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));
        $("#result-body").append($('<tr/>').attr('class', 'reset-this').append('').html("<td style=\"border-top : 0;\" colspan=\"6\">&nbsp;</td>"));
     }
-  
+
 
 $(document).ajaxSend(function(event, request, settings) {
     	  $("#title2").empty();
@@ -174,7 +174,7 @@ function loadDiv(selobj,url,nameattr,displayattr)
             			.text(obj[displayattr]));
         })
     })
-    .fail(function(jqXHR, textStatus, errorThrown) { 
+    .fail(function(jqXHR, textStatus, errorThrown) {
         if (isEmpty(jqXHR.responseText) || jqXHR.responseText.indexOf("<!DOCTYPE HTML>") > -1) {
             self.location.href = 'login.html';
         }else

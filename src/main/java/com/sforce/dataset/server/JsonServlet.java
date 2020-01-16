@@ -105,7 +105,7 @@ public class JsonServlet extends HttpServlet {
 				mapper.writerWithDefaultPrettyPrinter().writeValue(outfile , xmdObject);				
 				if(!XmdUploader.uploadXmd(outfile.getAbsolutePath(), datasetAlias, datasetId, datasetVersion, conn))
 				{
-					throw new IllegalArgumentException("Failed to uplaod XMD");
+					throw new IllegalArgumentException("Failed to upload XMD");
 				}
 			}else if(type.equalsIgnoreCase("dataflow"))
 			{

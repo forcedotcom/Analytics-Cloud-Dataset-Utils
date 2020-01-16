@@ -1,7 +1,8 @@
-#  Not Under Active Development
-#  Wave DatasetUtils
 
-Wave DatasetUtils is a reference implementation of the Analytics cloud External data API. This tool is free to use, but it is not officially supported by Salesforce.
+
+#  DatasetUtils
+
+DatasetUtils is a reference implementation of the Einstein Analytics  External Data API. This tool is free to use, but it is not officially supported by Salesforce.
 This is a community project that have not been officially tested or documented. Please do not contact Salesforce for support when using this application.
 
 ## Downloading DatasetUtils
@@ -12,11 +13,12 @@ Download the latest version from [releases](https://github.com/forcedotcom/Analy
 
 ## Prerequisite
 
-Download and install Java JDK (not JRE) from Oracle
+Download and install Java JDK (not JRE) from Zulu Open JDK
 
-* [Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* [Zulu Open JDK](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk)
 
-After installation is complete. open a console and check that the java version is 1.8 or higher by running the following command:
+After installation is complete. Different versions of DatasetUtils require different versions of JDK, the latest release API 47 requires JDK 11. Open a console and check that the java version is correct for your DatasetUtils version  by running the following command:
+
 
 ``java -version``
 
@@ -122,5 +124,5 @@ Input Parameter
     java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
 
 ## Building DatasetUtils
-    git clone git@github.com:forcedotcom/Analytics-Cloud-Dataset-Utils.git
+    git clone git@github.com:timbezold/datasetutils.git
     mvn clean install

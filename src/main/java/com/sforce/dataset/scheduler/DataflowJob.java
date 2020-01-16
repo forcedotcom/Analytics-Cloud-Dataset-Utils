@@ -152,14 +152,14 @@ public class DataflowJob  implements Job {
 	public void runDataflow(DataFlow task, PartnerConnection partnerConnection) throws IllegalStateException, ConnectionException, IOException, URISyntaxException
 	{		
 		System.out.println(new Date()+ " : Executing job: " + task.getName());
-		if(!isRunning(partnerConnection, defaultDataflowId, task.getName(), null))
+		if(!isRunning(partnerConnection, task.get_uid(), task.getName(), null))
 		{
 //			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 //			long utcStartTime = cal.getTimeInMillis();
 //			System.out.println("Difference between current and utc:" + (utcStartTime-startTime));
 			if(task.getWorkflowType().equalsIgnoreCase("local"))
 			{
-				DataFlowUtil.uploadDataFlow(partnerConnection, task.getName(), defaultDataflowId, task.getWorkflowDefinition());
+				DataFlowUtil.uploadDataFlow(partnerConnection, task.getName(), task.get_uid(), task.getWorkflowDefinition());
 			}
 			long startTime = 0;
 			GetServerTimestampResult serverTimestampResult = partnerConnection.getServerTimestamp();
@@ -168,11 +168,11 @@ public class DataflowJob  implements Job {
 				long startTimeSeconds = startTime/1000L;
 				startTime = startTimeSeconds*1000L;
 			}
-			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), defaultDataflowId);
-			JobEntry job = getJob(partnerConnection, defaultDataflowId, startTime);
+			DataFlowUtil.startDataFlow(partnerConnection, task.getName(), task.get_uid());
+			JobEntry job = getJob(partnerConnection, task.get_uid(), startTime);
 			while(true)
 			{
-				if(isRunning(partnerConnection, defaultDataflowId, task.getName(), job))
+				if(isRunning(partnerConnection, task.get_uid(), task.getName(), job))
 				{
 					try {
 						Thread.sleep(60000);
@@ -186,7 +186,7 @@ public class DataflowJob  implements Job {
 			}
 			if(task.getWorkflowType().equalsIgnoreCase("local"))
 			{
-				DataFlowUtil.uploadDataFlow(partnerConnection, "Empty Dataflow", defaultDataflowId, new HashMap());
+				DataFlowUtil.uploadDataFlow(partnerConnection, "Empty Dataflow", task.get_uid(), new HashMap());
 			}
 		}else
 		{
@@ -258,6 +258,10 @@ public class DataflowJob  implements Job {
 					}else if(job.getStatus()==2)
 					{
 						return true;
+					}else if(job.getStatus()==5)
+					{
+						//completed but with warning
+						return false;
 					}else
 					{
 						if(jobEntry!=null)

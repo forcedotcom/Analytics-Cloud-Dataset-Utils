@@ -1199,13 +1199,13 @@ public class DatasetUtilMain {
 		System.out.println("\n*******************************************************************************");					
 		System.out.println("java.version:"+System.getProperty("java.version"));
 		System.out.println("java.class.path:"+System.getProperty("java.class.path"));
-		System.out.print("SystemClassLoader:");
+		/*System.out.print("SystemClassLoader:");
         ClassLoader sysClassLoader = ClassLoader.getSystemClassLoader();
         URL[] urls = ((URLClassLoader)sysClassLoader).getURLs(); 
         for(int i=0; i< urls.length; i++)
         {
             System.out.println(urls[i].getFile());
-        }       
+        }       */
         System.out.println("*******************************************************************************\n");					 
     }
 			
