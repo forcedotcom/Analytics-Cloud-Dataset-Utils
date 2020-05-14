@@ -56,10 +56,8 @@ import com.sforce.dataset.loader.EbinFormatWriter;
 import com.sforce.dataset.loader.file.schema.ext.ExternalFileSchema;
 import com.sforce.dataset.server.DatasetUtilServer;
 import com.sforce.dataset.util.CharsetChecker;
-import com.sforce.dataset.util.DatasetAugmenter;
 import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.dataset.util.DatasetUtils;
-import com.sforce.dataset.util.SfdcExtracter;
 import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.dataset.util.XmdUploader;
 import com.sforce.soap.partner.PartnerConnection;
@@ -71,7 +69,7 @@ public class DatasetUtilMain {
 	@SuppressWarnings("unused")
 	private static final boolean isJdk14LoggerConfigured = DatasetUtils.configureLog4j();	
 	
-	public static final String[][] validActions = {{"load","Load CSV"}, {"defineExtractFlow","Define SFDC Extract Data Flow"}, {"defineAugmentFlow","Define Dataset Augment Data Flow"},{"downloadXMD","Download All XMD Json Files"}, {"uploadXMD","Upload User XMD Json File"}, {"detectEncoding","Detect file encoding"}, {"downloadErrorFile","Fetch CSV Upload Error Report"}};
+	public static final String[][] validActions = {{"load","Load CSV"}, {"downloadXMD","Download All XMD Json Files"}, {"uploadXMD","Upload User XMD Json File"}, {"detectEncoding","Detect file encoding"}, {"downloadErrorFile","Fetch CSV Upload Error Report"}};
 
 	public static void main(String[] args) {
 
@@ -270,6 +268,11 @@ public class DatasetUtilMain {
 					if(args[i]!=null && !args[i].trim().isEmpty())
 						params.rowLimit = (new BigDecimal(args[i].trim())).intValue();
 				}
+				else if(args[i-1].equalsIgnoreCase("--chunkMulti"))
+				{
+					if(args[i]!=null && !args[i].trim().isEmpty())
+						params.chunkSizeMulti = (new BigDecimal(args[i].trim())).intValue();
+				}
 				else if(args[i-1].equalsIgnoreCase("--rootObject"))
 				{
 					params.rootObject = args[i];
@@ -434,24 +437,7 @@ public class DatasetUtilMain {
 
 		if(args.length==0 || action == null)
 		{
-//			System.out.println("\n*******************************************************************************");					
-////			FileListenerUtil.startAllListener(partnerConnection);
-//			try {
-//				Thread.sleep(1000);
-//			} catch (InterruptedException e) {
-//			}
-//			System.out.println("*******************************************************************************\n");	
-//			System.out.println();			
-
-//			System.out.println("\n*******************************************************************************");					
-//	        try {
-//		        DatasetUtilServer datasetUtilServer = new DatasetUtilServer();
-//				datasetUtilServer.init(args, false);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//			System.out.println("*******************************************************************************\n");	
-//			System.out.println();			
+			
 
 			while(true)
 			{
@@ -464,11 +450,7 @@ public class DatasetUtilMain {
 				getRequiredParams(action, partnerConnection, params);
 				@SuppressWarnings("unused")
 				boolean status = doAction(action, partnerConnection, params);
-//				if(status)
-//				{
-//					if(action.equalsIgnoreCase("load") && params.debug)
-//						createListener(partnerConnection, params);
-//				}
+
 			}
 		}else
 		{
@@ -502,26 +484,22 @@ public class DatasetUtilMain {
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
 		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
-//		System.out.println("--createNewDateParts : (Optional) wether to create new date parts");
-//		System.out.println("jsonConfig: (Optional) the dataflow definition json file");
+
 		System.out.println("*******************************************************************************\n");
 		System.out.println("Usage Example 1: Upload a csv to a dataset");
 		System.out.println("java -jar datasetutil.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset test");
 		System.out.println("");
-		System.out.println("Usage Example 2: Download dataset xmd files");
+		System.out.println("Usage Example 2: Append a csv to a dataset");
+		System.out.println("java -jar datasetutil.jar --action load --operation append --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset test");
+		System.out.println("");
+		System.out.println("Usage Example 3: Download dataset xmd files");
 		System.out.println("java -jar datasetloader.jar --action downloadxmd --u pgupta@force.com --p @#@#@# --dataset test");
 		System.out.println("");
-		System.out.println("Usage Example 3: Upload user.xmd.json");
+		System.out.println("Usage Example 4: Upload user.xmd.json");
 		System.out.println("java -jar datasetutil.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset test");
-		System.out.println("");
-		System.out.println("Usage Example 4: Augment 2 datasets");
-		System.out.println("java -jar datasetutil.jar --action defineAugmentFlow --u pgupta@force.com --p @#@#@#");
 		System.out.println("");
 		System.out.println("Usage Example 5: Generate the schema file from CSV");
 		System.out.println("java -jar datasetutil.jar --action load --inputFile Opportunity.csv");
-		System.out.println("");
-		System.out.println("Usage Example 6: defineExtractFlow salesforce data");
-		System.out.println("java -jar datasetutil.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem");
 		System.out.println("");
 	}
 	
@@ -738,7 +716,8 @@ public class DatasetUtilMain {
 			        session.start();
 					try
 					{
-						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.schemaFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset, params.app, params.datasetLabel, params.Operation, params.useBulkAPI, partnerConnection, params.notificationLevel, params.notificationEmail, System.out);
+						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.schemaFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset,
+								params.app, params.datasetLabel, params.Operation, params.useBulkAPI,params.chunkSizeMulti, partnerConnection, params.notificationLevel, params.notificationEmail, System.out);
 						if(status)
 							session.end();
 						else
@@ -804,29 +783,7 @@ public class DatasetUtilMain {
 					e.printStackTrace(System.out);
 					return false;
 				}
-			}else if(action.equalsIgnoreCase("defineAugmentFlow"))
-			{
-				
-				try {
-					DatasetAugmenter.augmentEM(partnerConnection);
-				} catch (Exception e) {
-					e.printStackTrace(System.out);
-					return false;
-				}
-			}else if(action.equalsIgnoreCase("defineExtractFlow"))
-			{
-				if(params.rootObject==null)
-				{
-					System.out.println("\nERROR: rootObject must be specified");
-					return false;
-				}
-				
-				try{
-					SfdcExtracter.extract(params.rootObject,params.dataset, partnerConnection, params.rowLimit);
-				} catch (Exception e) {
-					e.printStackTrace(System.out);
-					return false;
-				}
+
 			}else if(action.equalsIgnoreCase("downloadErrorFile"))
 			{
 				if (params.dataset==null) 
@@ -1025,29 +982,6 @@ public class DatasetUtilMain {
 			{
 				params.dataset = getInputFromUser("Enter dataset name: ", true, false);						
 			}
-		}else if(action.equalsIgnoreCase("defineAugmentFlow"))
-		{
-				
-		}else if(action.equalsIgnoreCase("defineExtractFlow"))
-		{
-			while (params.rootObject==null || params.rootObject.isEmpty()) 
-			{
-				String tmp = getInputFromUser("Enter root SObject name for Extract: ", true, false);
-				Map<String, String> objectList = null;
-				try {
-					objectList = SfdcUtils.getObjectList(partnerConnection, Pattern.compile("\\b"+tmp+"\\b"), false);
-				} catch (ConnectionException e) {
-				}
-				if(objectList==null || objectList.size()==0)
-				{
-					System.out.println("\nError: Object {"+tmp+"} not found");
-					System.out.println();
-				}else
-				{
-					params.rootObject = tmp;
-					break;
-				}
-			}
 				
 		}else if(action.equalsIgnoreCase("downloadErrorFile"))
 		{
@@ -1140,38 +1074,7 @@ public class DatasetUtilMain {
 		
 	}
 	
-/*
-	private static void createListener(PartnerConnection partnerConnection,
-			DatasetUtilParams params) {
-		String response = getInputFromUser("Do you want to create a FileListener for above file upload (Yes/No): ", false, false);
-		if(response!=null && (response.equalsIgnoreCase("Y") || response.equalsIgnoreCase("YES")))
-		{
-			try {
-				FileListener fileListener = new FileListener();
-				fileListener.setApp(params.app);
-				fileListener.setCea(params.codingErrorAction);
-				fileListener.setDataset(params.dataset);
-				fileListener.setDatasetLabel(params.datasetLabel);
-				fileListener.setFilecharset(params.fileEncoding);
-				fileListener.setInputFileDirectory(params.inputFile);
-//				fileListener.setInputFilePattern(inputFilePattern);
-				fileListener.setOperation(params.Operation);
-				fileListener.setUploadFormat(params.uploadFormat);
-				fileListener.setUseBulkAPI(params.useBulkAPI);
-//				fileListener.setFileAge(fileAge);
-//				fileListener.setPollingInterval();
-				
-				ThreadContext tx = ThreadContext.get();
-				Session session = tx.getSession();
 
-				FileListenerThread.moveInputFile(new File(params.inputFile), true, session);
-				FileListenerUtil.addAndStartListener(fileListener, partnerConnection);
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
-		}
-	}
-*/
 	
 	public static void printBanner()
 	{
@@ -1199,13 +1102,7 @@ public class DatasetUtilMain {
 		System.out.println("\n*******************************************************************************");					
 		System.out.println("java.version:"+System.getProperty("java.version"));
 		System.out.println("java.class.path:"+System.getProperty("java.class.path"));
-		/*System.out.print("SystemClassLoader:");
-        ClassLoader sysClassLoader = ClassLoader.getSystemClassLoader();
-        URL[] urls = ((URLClassLoader)sysClassLoader).getURLs(); 
-        for(int i=0; i< urls.length; i++)
-        {
-            System.out.println(urls[i].getFile());
-        }       */
+
         System.out.println("*******************************************************************************\n");					 
     }
 			

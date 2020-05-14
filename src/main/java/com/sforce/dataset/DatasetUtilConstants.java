@@ -62,9 +62,9 @@ public class DatasetUtilConstants {
 //	public static boolean createNewDateParts = false;
 	public static CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
 
-	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/47.0";
-	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/47.0";
-	public static final String defaultSoapEndPointPath = "/services/Soap/u/47.0";
+	public static final String defaultEndpoint = "https://login.salesforce.com/services/Soap/u/48.0";
+	public static final String defaultTestEndpoint = "https://test.salesforce.com/services/Soap/u/48.0";
+	public static final String defaultSoapEndPointPath = "/services/Soap/u/48.0";
 	
 	public static boolean debug = false;
 	public static boolean ext = false;

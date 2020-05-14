@@ -6,15 +6,15 @@
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>47.0.0-SNAPSHOT</version>
+	<version>48.1.0-SNAPSHOT</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
 		<url>http://salesforce.com</url>
 	</organization>
 	<properties>
-		<force.version>47.0.0</force.version>
-		<force.partner.version>47.0.0</force.partner.version>
+		<force.version>48.1.0</force.version>
+		<force.partner.version>48.1.0</force.partner.version>
 		<java.compile.version>11</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -200,7 +200,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.4.1</version>
+				<version>3.2.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -229,7 +229,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>${java.compile.version}</source>
 					<target>${java.compile.version}</target>
@@ -238,7 +238,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.4.3</version>
+				<version>3.1.0</version>
 				<configuration>
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
@@ -246,7 +246,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.3.1</version>
+				<version>3.2.0</version>
 				<configuration>
 					<includes>
 						<include>**</include>
@@ -255,7 +255,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
 						<id>attach-source</id>
@@ -268,7 +268,10 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.7</version>
+				<version>3.1.1</version>
+				  <configuration>
+                <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+            </configuration>
 				<executions>
 					<execution>
 						<id>attach-javadoc</id>
@@ -282,7 +285,7 @@
 			<plugin>
 				<groupId>com.mycila.maven-license-plugin</groupId>
 				<artifactId>maven-license-plugin</artifactId>
-				<version>1.8.0</version>
+				<version>1.9.0</version>
 				<configuration>
 					<header>license.txt</header>
 					<excludes>
@@ -318,7 +321,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.7.1</version>
+				<version>2.22.0</version>
 				<configuration>
 					<forkMode>always</forkMode>
 				</configuration>

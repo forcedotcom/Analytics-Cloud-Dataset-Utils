@@ -17,7 +17,7 @@ Download and install Java JDK (not JRE) from Zulu Open JDK
 
 * [Zulu Open JDK](https://www.azul.com/downloads/zulu-community/?&architecture=x86-64-bit&package=jdk)
 
-After installation is complete. Different versions of DatasetUtils require different versions of JDK, the latest release API 47 requires JDK 11. Open a console and check that the java version is correct for your DatasetUtils version  by running the following command:
+After installation is complete. Different versions of DatasetUtils require different versions of JDK, the latest release API 48 requires JDK 11. Open a console and check that the java version is correct for your DatasetUtils version  by running the following command:
 
 
 ``java -version``
@@ -49,17 +49,13 @@ Or you can pass in all the param in the command line and let it run uninterrupte
 
 Input Parameter
 
---action  :"load" OR "defineExtractFlow" OR "defineAugmentFlow"  OR "downloadxmd"  OR "uploadxmd"  OR "detectEncoding" OR "downloadErrorFile"
+--action  :"load" OR  "downloadxmd"  OR "uploadxmd"  OR "detectEncoding" OR "downloadErrorFile"
  
 **load**: for loading csv  
-
-**defineAugmentFlow**: for augmenting existing datasets  
 
 **downloadxmd**: to download existing xmd files  
 
 **uploadxmd**: for uploading user.xmd.json  
-
-**defineExtractFlow**: for extracting data from Salesforce  
 
 **detectEncoding**: To detect the encoding of the inputFile  
 
@@ -100,29 +96,29 @@ Input Parameter
 --server  : set this to true if you want to run this in server mode and use the UI. **If you give this param all other params will be ignored**
 
 ## Usage Example 1: Start the server for using the UI
-    java -jar datasetutils-32.0.0.jar --server true
+    java -jar datasetutils-48.1.0jar --server true
 
-## Usage Example 2: Upload a local csv to a dataset
-    java -jar datasetutils-32.0.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
+## Usage Example 2: Upload a local csv to a dataset in production
+    java -jar datasetutils-48.1.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
+    
+## Usage Example 3: Append a local csv to a dataset
+	java -jar datasetutils-48.1.0.jar --action load --operation append --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
+	
+## Usage Example 4: Upload a local csv to a dataset in sandbox
+	java -jar datasetutils-48.1.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest --endpoint https://test.salesforce.com/services/Soap/u/48.0
 
-## Usage Example 3: Download dataset xmd files
-    java -jar datasetutils-32.0.0.jar --action downloadxmd --u pgupta@force.com --p @#@#@# --dataset puntest
+## Usage Example 5: Download dataset main xmd json file
+    java -jar datasetutils-48.1.0.jar --action downloadxmd --u pgupta@force.com --p @#@#@# --dataset puntest
 
-## Usage Example 4: Upload user.xmd.json
-    java -jar datasetutils-32.0.0.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset puntest
-
-## Usage Example 5: Augment datasets
-    java -jar datasetutils-32.0.0.jar --action defineAugmentFlow --u pgupta@force.com --p @#@#@#
-
-## Usage Example 6: Define Salesforce data flow
-    java -jar datasetutils-32.0.0.jar --action defineExtractFlow --u pgupta@force.com --p @#@#@# --rootObject OpportunityLineItem
+## Usage Example 6: Upload user.xmd.json
+    java -jar datasetutils-48.1.0.jar --action uploadxmd --u pgupta@force.com --p @#@#@# --inputFile user.xmd.json --dataset puntest
 
 ## Usage Example 7: Detect inputFile encoding
-    java -jar datasetutils-32.0.0.jar --action detectEncoding --inputFile Opportunity.csv
+    java -jar datasetutils-48.1.0.jar --action detectEncoding --inputFile Opportunity.csv
 
 ## Usage Example 8: download error logs file for csv uploads
-    java -jar datasetutils-32.0.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
+    java -jar datasetutils-48.1.0.jar --action downloadErrorFile --u pgupta@force.com --p @#@#@# --dataset puntest
 
 ## Building DatasetUtils
-    git clone git@github.com:timbezold/datasetutils.git
+    git clone https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils.git
     mvn clean install
