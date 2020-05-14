@@ -71,7 +71,6 @@ public class CsvUploadWorker implements Runnable {
 	private boolean useBulkAPI = false;
 	private String notificationLevel = null; 
 	private String notificationEmail = null;
-	private int chunkSizeMulti =1;
 	
 	private volatile AtomicBoolean uploadStatus = new AtomicBoolean(false);
 	private volatile AtomicBoolean isDone = new AtomicBoolean(false);
@@ -196,8 +195,7 @@ public class CsvUploadWorker implements Runnable {
         session.start();
 		boolean status = false;
 		try {
-			status = DatasetLoader.uploadDataset(csvFile.toString(), null ,uploadFormat, CodingErrorAction.REPORT, inputFileCharset, datasetName, datasetApp, datasetLabel, operation, useBulkAPI,
-					chunkSizeMulti,partnerConnection, notificationLevel, notificationEmail, logger);
+			status = DatasetLoader.uploadDataset(csvFile.toString(), null ,uploadFormat, CodingErrorAction.REPORT, inputFileCharset, datasetName, datasetApp, datasetLabel, operation, useBulkAPI, partnerConnection, notificationLevel, notificationEmail, logger);
 			if(status)
 				session.end();
 			else

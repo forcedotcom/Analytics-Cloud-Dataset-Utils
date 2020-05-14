@@ -43,8 +43,7 @@ public class FileListener {
 	private String codingErrorAction = "REPORT";
 	private boolean useBulkAPI = false;
 	private int pollingInterval = 10000;
-	private int fileAge = 10000;
-	private int chunkSizeMulti =5;
+	private int fileAge = 10000;	
 	private String notificationLevel = null; 
 	private String notificationEmail = null;
 
@@ -142,9 +141,6 @@ public class FileListener {
 	}
 	public void setUseBulkAPI(boolean useBulkAPI) {
 		this.useBulkAPI = useBulkAPI;
-	}
-	public int getChunkSizeMulti() {
-		return chunkSizeMulti;
 	}
 	public String getInputFileDirectory() {
 		return inputFileDirectory;

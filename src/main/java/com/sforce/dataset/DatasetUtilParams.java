@@ -44,7 +44,6 @@ public class DatasetUtilParams {
 	String uploadFormat = null;
 	String Operation = null;
 	int rowLimit = 0;
-	int chunkSizeMulti=1;
 	String notificationLevel = null; 
 	String notificationEmail = null;
 	boolean useBulkAPI = false;

@@ -183,7 +183,7 @@ public class DatasetLoader {
 	public static boolean uploadDataset(String inputFileString,String schemaFileString,
 			String uploadFormat, CodingErrorAction codingErrorAction,
 			Charset inputFileCharset, String datasetAlias,
-			String datasetFolder,String datasetLabel, String Operation, boolean useBulkAPI,int chunkSizeMulti,
+			String datasetFolder,String datasetLabel, String Operation, boolean useBulkAPI,
 			PartnerConnection partnerConnection,String notificationLevel, String notificationEmail, PrintStream logger) throws DatasetLoaderException
 	{
 		File archiveDir = null;
@@ -843,8 +843,7 @@ public class DatasetLoader {
 			}
 
 			long startTime = System.currentTimeMillis();
-			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir,
-					"Overwrite", updateHdrJson, notificationLevel,  notificationEmail, logger, chunkSizeMulti);
+			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir, "Overwrite", updateHdrJson, notificationLevel,  notificationEmail, logger);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 			
@@ -928,9 +927,7 @@ public class DatasetLoader {
 	 * @throws ConnectionException the connection exception
 	 * @throws AsyncApiException the async api exception
 	 */
-	private static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, 
-			String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation,
-			boolean updateHdrJson,String notificationLevel, String notificationEmail, PrintStream logger,int chunkSizeMulti) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
+	private static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation, boolean updateHdrJson,String notificationLevel, String notificationEmail, PrintStream logger) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
 	{
 		BlockingQueue<Map<Integer, File>> q = new LinkedBlockingQueue<Map<Integer, File>>(); 
 		LinkedList<Integer> existingFileParts = new LinkedList<Integer>();
@@ -991,7 +988,7 @@ public class DatasetLoader {
 
 		session.setParam(DatasetUtilConstants.hdrIdParam,hdrId);
 		
-		Map<Integer, File> fileParts = chunkBinary(dataFile, datasetArchiveDir, logger,chunkSizeMulti);
+		Map<Integer, File> fileParts = chunkBinary(dataFile, datasetArchiveDir, logger);
 		boolean allPartsUploaded = false;
 		int retryCount=0; 
 		if(fileParts.size()<=MAX_NUM_UPLOAD_THREADS)
@@ -1320,7 +1317,7 @@ public class DatasetLoader {
 
 		if(!batchInfoList.isEmpty())
 		{
-			if(retryCount<5)
+			if(retryCount<3)
 			{		
 				LinkedHashMap<Integer,File> failedFileParts = new LinkedHashMap<Integer,File>();
 				for(BatchInfo b:batchInfoList.keySet())
@@ -1450,7 +1447,7 @@ public class DatasetLoader {
 	 * @return the map
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public static Map<Integer,File> chunkBinary(File inputFile, File archiveDir, PrintStream logger,int chunkSizeMulti) throws IOException 
+	public static Map<Integer,File> chunkBinary(File inputFile, File archiveDir, PrintStream logger) throws IOException 
 	{	
 		if(inputFile == null)
 		{
@@ -1473,7 +1470,7 @@ public class DatasetLoader {
 		try 
 		{
 			input = new FileInputStream(inputFile);
-			byte[] buffer = new byte[DEFAULT_BUFFER_SIZE*chunkSizeMulti];
+			byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             Arrays.fill(buffer, (byte)0);
 			int n = 0;
 			int count = -1;
@@ -1822,7 +1819,7 @@ public class DatasetLoader {
         // The endpoint for the Bulk API service is the same as for the normal
         // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
         String soapEndpoint = partnerConfig.getServiceEndpoint();
-        String apiVersion = "48.0";
+        String apiVersion = "47.0";
         String restEndpoint = soapEndpoint.substring(0, soapEndpoint.indexOf("Soap/"))
             + "async/" + apiVersion;
         config.setRestEndpoint(restEndpoint);

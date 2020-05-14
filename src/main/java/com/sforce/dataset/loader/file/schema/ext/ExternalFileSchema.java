@@ -466,9 +466,9 @@ public class ExternalFileSchema  {
 							{
 								if(user_field != null && user_field.getName()!=null && !user_field.getName().isEmpty())
 								{
-									if(user_field.getName().length()>255)
+									if(user_field.getName().length()>40)
 									{
-										message.append("field name {"+user_field.getName()+"} is greater than 255 characters\n");
+										message.append("field name {"+user_field.getName()+"} is greater than 40 characters\n");
 									}
 
 									if(!createDevName(user_field.getName(), "Column", (fieldCount-1), true).equals(user_field.getName()))
@@ -520,9 +520,9 @@ public class ExternalFileSchema  {
 								
 								if(user_field.getfType()==FieldType.MEASURE)
 								{
-									if(user_field.getDefaultValue()!=null && !isLatinNumber(user_field.getDefaultValue()))
+									if(user_field.getDefaultValue()==null || !isLatinNumber(user_field.getDefaultValue()))
 									{
-										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have a proper default numeric value if not null \n");
+										message.append("field {"+user_field.getFullyQualifiedName()+"}  in schema must have default numeric value\n");
 									}
 									
 									if(!(user_field.getPrecision()>0 && user_field.getPrecision()<19))
@@ -951,7 +951,7 @@ public class ExternalFileSchema  {
 		{
 			if(defaultName.equalsIgnoreCase("object") || defaultName.equalsIgnoreCase("column"))
 			{
-				maxLength = 255;
+				maxLength = 40;
 			}
 		}
 		try 
@@ -1061,9 +1061,6 @@ public class ExternalFileSchema  {
 		int sz = str.length();
 		if (sz == 0) {
 			return false;
-		}
-		if("null".equals(str)) {
-			return true;
 		}
 
 		for (int i = 0; i < sz; i++) {
