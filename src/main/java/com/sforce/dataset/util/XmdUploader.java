@@ -105,13 +105,13 @@ public class XmdUploader {
 		}
 
 
-			System.out.println();
-//			partnerConnection.getServerTimestamp();			
+
+	
 			ConnectorConfig config = partnerConnection.getConfig();			
 			String sessionID = config.getSessionId();
 			String _alias = null;
-			//Date createdDateTime = null;
-			String createdDateTime = null; //Tomasz added
+
+			String createdDateTime = null;
 			String folderID = null;
 			String userXmdUri = null;
 			String serviceEndPoint = config.getServiceEndpoint();
@@ -124,8 +124,7 @@ public class XmdUploader {
 			if(datasetId == null || datasetId.trim().equalsIgnoreCase("null") || datasetVersion == null || datasetVersion.trim().equalsIgnoreCase("null") || datasetId.trim().isEmpty() || datasetVersion.trim().isEmpty())
 			{
 
-			//URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/insights/internal_api/v1.0/esObject/edgemart", "current=true&alias="+datasetAlias,null); //Tomasz commented
-			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/services/data/v39.0/wave/datasets", null,null);	//Tomasz added		
+			URI listEMURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(), "/services/data/v48.0/wave/datasets", null,null);		
 			HttpGet listEMPost = new HttpGet(listEMURI);
 			listEMPost.setConfig(requestConfig);
 			
@@ -142,8 +141,7 @@ public class XmdUploader {
 					ObjectMapper mapper = new ObjectMapper();	
 					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 					Map res =  mapper.readValue(emList, Map.class);
-//					mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, res);
-					//List result = (List) res.get("result"); //Tomasz commented
+
 					List result = (List) res.get("datasets");
 					if(result != null && !result.isEmpty())
 					{
@@ -152,28 +150,19 @@ public class XmdUploader {
 						{
 							_alias = (String) resp.get("name");
 							datasetId = (String) resp.get("id");
-							
-							//Integer _createdDateTime = (Integer) resp.get("_createdDateTime"); //Tomasz commented
-							createdDateTime = (String) resp.get("createdDate"); //Tomasz added
-							//System.out.println("_createdDateTime: "+ _createdDateTime);
-							/*if(_createdDateTime != null)
-							{
-								createdDateTime = new Date(1000L*_createdDateTime);
-							}*/												//Tomasz commented
+
+							createdDateTime = (String) resp.get("createdDate"); 
+
 							
 							Map folder = (Map) resp.get("folder");
 							if(folder != null)
 							{
-								//folderID = (String) folder.get("_uid"); //Tomasz commented
-								folderID = (String) folder.get("id");  //Tomasz added
+
+								folderID = (String) folder.get("id"); 
 							}
-							/*Map edgemartData = (Map) resp.get("edgemartData");
-							if(edgemartData != null)
-							{
-								datasetVersion = (String) edgemartData.get("_uid");
-							}*/															//Tomasz commented block
+
 							
-							datasetVersion = (String) resp.get("currentVersionId");		//Tomasz added
+							datasetVersion = (String) resp.get("currentVersionId");		
 						
 							String _currentVersionURI = (String) resp.get("currentVersionUrl");
 							if(_currentVersionURI != null)
@@ -181,26 +170,15 @@ public class XmdUploader {
 								userXmdUri = (String) (_currentVersionURI + "/xmds/user");
 							}
 							
-							/*Map _files = (Map) resp.get("_files");
-							if(_files != null)
-							{
-								for(Object filename:_files.keySet())
-								{
-									if(filename!=null && filename.toString().equals("user.xmd.json"))
-									{
-											userXmdUri = (String) _files.get(filename);
-											break;
-									}
-								}
-							}*/ 														//Tomasz commented block
+
 						}
-//						System.out.println(resp);
+
 					}
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
 
-				//System.out.println(emList);
+
 			}
 
 			if(_alias != null && _alias.equals(datasetAlias))
@@ -214,33 +192,16 @@ public class XmdUploader {
 			
 			}
 			
-			//String altuserXmdUri = "/insights/internal_api/v1.0/esObject/edgemart/"+datasetId+"/version/"+datasetVersion+"/file/user.xmd.json";  //Tomasz commented
-			String altuserXmdUri = userXmdUri;
-			/*if(userXmdUri==null || userXmdUri.isEmpty())
-				userXmdUri = altuserXmdUri;
-			
-			if(!altuserXmdUri.equals(userXmdUri))
-			{
-				System.err.println("xmd url is different: ");
-				System.err.println(altuserXmdUri);
-				System.err.println(userXmdUri);
-			}*/ 														//Tomasz commented block
+				String altuserXmdUri = userXmdUri;
 
 			URI uploadURI = new URI(u.getScheme(),u.getUserInfo(), u.getHost(), u.getPort(),altuserXmdUri, null,null);
-			//HttpPost uploadFile = new HttpPost(uploadURI); //Tomasz commented
-			HttpPut uploadFile = new HttpPut(uploadURI);     //Tomasz added
 
-			
-			//MultipartEntityBuilder builder = MultipartEntityBuilder.create(); Tomasz commented block
-			/*builder.addBinaryBody("user.xmd.json", userXmd,
-					ContentType.APPLICATION_OCTET_STREAM, "user.xmd.json");*/
-			//HttpEntity multipart = builder.build();
+			HttpPut uploadFile = new HttpPut(uploadURI);    
 
-			//uploadFile.setEntity(multipart);      //Tomasz commented
 			uploadFile.addHeader("Authorization","OAuth "+sessionID);
 			uploadFile.addHeader("content-type", "application/json");
 			
-			String userXmdString = FileUtils.readFileToString(userXmd, "utf-8"); //Tomasz added
+			String userXmdString = FileUtils.readFileToString(userXmd, "utf-8"); 
 			StringEntity params = new StringEntity(userXmdString,"UTF-8");
 			uploadFile.setEntity(params);
 			
@@ -248,6 +209,10 @@ public class XmdUploader {
 			HttpEntity responseEntity = response.getEntity();
 			InputStream is = responseEntity.getContent();
 			String responseString = IOUtils.toString(is, "UTF-8");
+			if(responseString.contains("errorCode")){
+				System.out.println("Failed to perform the action.\n Error: "+responseString);
+				return false;
+			}
 			if(responseString!=null && !responseString.trim().isEmpty() )
 			{
 				try 
@@ -255,32 +220,13 @@ public class XmdUploader {
 					ObjectMapper mapper = new ObjectMapper();
 					mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 					Map<String, List<Map<String, String>>> res =  (Map<String, List<Map<String, String>>>)mapper.readValue(responseString, Map.class);
-					//List<Map<String, String>> result = res.get("result");			//Tomasz commented
-					//if(result != null && !result.isEmpty()) //Tomasz commented
+
 					if(response.getStatusLine().getStatusCode() == 200 || response.getStatusLine().getStatusCode() == 204)
 					{
-						//Map<String, String> resp = result.get(0);
-						//if(resp!=null && !resp.isEmpty())
-						//{
-							//@SuppressWarnings("unused")
-							//String _type = resp.get("_type");
-							//String _uid = resp.get("_uid");
-							//if(_uid!=null)
-							//{
+
 								System.out.println("User XMD succesfully uploaded to Dataset {"+_alias+"},  version {"+datasetVersion+"}");
 								return true;
-							//}else
-							//{
-								//System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
-								//System.out.println(resp);
-								//return false;
-							//}
-						//}else
-						//{
-						//	System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
-						//	System.out.println(res);
-						//	return false;
-						//}
+
 					}else
 					{
 						System.out.println("User XMD uploaded to Dataset {"+_alias+"} failed");
@@ -306,8 +252,8 @@ public class XmdUploader {
 	{
 		for(Map emart:emarts)
 		{
-			//String _alias = (String) emart.get("_alias"); //Tomasz commented
-			String _alias = (String) emart.get("name"); //Tomasz added
+
+			String _alias = (String) emart.get("name"); 
 			if(_alias==null)
 			{
 				continue;

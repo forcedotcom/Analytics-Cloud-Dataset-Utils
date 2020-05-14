@@ -74,7 +74,7 @@ public class DataFlowUtil {
 	private static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX"); //Mon Jun 15 00:12:03 GMT 2015
 	private  static final String dataflowURL = "/insights/internal_api/v1.0/esObject/workflow/%s/json";
 	//New public endpoint . Only required in start as other methods deprecated
-	private static final String dataflowRunURL = "/services/data/v47.0/wave/dataflowjobs";
+	private static final String dataflowRunURL = "/services/data/v48.0/wave/dataflowjobs";
 	
 	@SuppressWarnings("rawtypes")
 	public static void uploadAndStartDataFlow(PartnerConnection partnerConnection, Map wfdef, String workflowName) throws ConnectionException, IllegalStateException, IOException, URISyntaxException

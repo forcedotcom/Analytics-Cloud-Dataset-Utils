@@ -69,7 +69,7 @@ public class DataFlowMonitorUtil {
 			{
 				if(cnt>4)
 					break;
-				if(job.getType().equalsIgnoreCase("system") && (job.getStatus()==JobEntry.FAILED || job.getStatus()==JobEntry.WARNING))
+				if(job.getStatus()==JobEntry.FAILED || job.getStatus()==JobEntry.WARNING)
 				{									
 					List<NodeEntry> nodes = DataFlowMonitorUtil.getDataFlowJobNodes(partnerConnection, job.getNodeUrl());
 					for(NodeEntry node:nodes)

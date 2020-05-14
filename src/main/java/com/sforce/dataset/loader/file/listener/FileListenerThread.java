@@ -145,7 +145,7 @@ public void run() {
 //						File logFile = new File(logsDir,FilenameUtils.getBaseName(file.getName())+timeStamp+".log");
 						File logFile = session.getSessionLog();
 						logger = new PrintStream(new FileOutputStream(logFile), true, "UTF-8");
-						status = DatasetLoader.uploadDataset(workFile.toString(),null, fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDatasetAlias(), fileListener.getDatasetApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(), partnerConnection, fileListener.getNotificationLevel(), fileListener.getNotificationEmail(), logger);
+						status = DatasetLoader.uploadDataset(workFile.toString(),null, fileListener.getUploadFormat(), fileListener.cea, fileListener.charset, fileListener.getDatasetAlias(), fileListener.getDatasetApp(), fileListener.getDatasetLabel(), fileListener.getOperation(), fileListener.isUseBulkAPI(),fileListener.getChunkSizeMulti(), partnerConnection, fileListener.getNotificationLevel(), fileListener.getNotificationEmail(), logger);
 						if(workFile!=null && workFile.exists())
 						{
 							cleanup(workFile, status, session);
