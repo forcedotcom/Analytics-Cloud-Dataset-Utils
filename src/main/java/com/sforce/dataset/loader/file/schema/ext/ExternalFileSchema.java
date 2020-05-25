@@ -486,8 +486,11 @@ public class ExternalFileSchema  {
 										for(FieldType user_field_2:user_fields)
 										{
 											if(user_field_2 !=null && user_field_2.getType()!=null && user_field_2.getType().equalsIgnoreCase("date") && user_field.getName().contains(user_field_2.getName()))
-											{
-												message.append("field name {"+user_field.getName()+"} not allowed. When there is field {"+user_field_2.getName()+"} of type Date\n");
+											{ 
+												//TJW remarking this error addition as error trap is too broad and caught legitimate field names
+												//More precise validation will be implemented TBD
+											//	message.append("field name {"+user_field.getName()+"} not allowed. When there is field {"+user_field_2.getName()+"} of type Date\n"); 
+												logger.println("WARNING field name {"+user_field.getName()+"} may conflict with digest generated date part dimensions. When there is field {"+user_field_2.getName()+"} of type Date\n");
 											}
 										}
 									}

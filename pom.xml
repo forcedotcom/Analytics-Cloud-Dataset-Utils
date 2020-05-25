@@ -6,7 +6,7 @@
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>48.1.0-SNAPSHOT</version>
+	<version>48.1.0</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
