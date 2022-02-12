@@ -45,7 +45,7 @@ Best is to run in interactive mode. open a terminal and type in the following co
 
 Or you can pass in all the param in the command line and let it run uninterrupted.
  
-    java -jar datasetutil-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
+    java -jar datasetutils-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
 
 Input Parameter
 
