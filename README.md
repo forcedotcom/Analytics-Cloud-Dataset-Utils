@@ -5,6 +5,15 @@
 DatasetUtils is a reference implementation of the Einstein Analytics  External Data API. This tool is free to use, but it is not officially supported by Salesforce.
 This is a community project that have not been officially tested or documented. Please do not contact Salesforce for support when using this application.
 
+
+## Log4j2 Issues (CVE-2021-44228 and CVE-2021-45046)
+
+The whole thrust  of these vulnerabilities is to be able to inject malicious byte code using JNDI look ups or JDBC appender approach; A review of the DatasetUtils does not show JDBC Appender or jndi lookups being used. In addition  we are using an old version of Log4j 1.2 which does not have these vulnerabilities reported.  
+
+## DatasetUtils current status
+As there is quite a lot of scope for re-write and removal of deprecated code in DatasetUtils including reducing or removing 3rd party libs as prompted by the Log4j issues we are looking at end of life for this code and actively considering a replacement in both functionality and technology employed.
+
+
 ## Downloading DatasetUtils
 
 Download the latest version from [releases](https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils/releases) and follow the examples below:
