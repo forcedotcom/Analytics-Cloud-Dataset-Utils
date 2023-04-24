@@ -50,11 +50,11 @@ Run datasetutils.app by double clicking it
 
 Best is to run in interactive mode. open a terminal and type in the following command and follow the prompts on the console: 
 
-    java -jar datasetutil-<version>.jar --server false
+    java -jar datasetutils-<version>.jar --server false
 
 Or you can pass in all the param in the command line and let it run uninterrupted.
  
-    java -jar datasetutil-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
+    java -jar datasetutils-<version>.jar --action <action> --u <user@domain.com> --dataset <dataset> --app <app> --inputFile <inputFile> --endpoint <endPoint>
 
 Input Parameter
 
@@ -105,7 +105,7 @@ Input Parameter
 --server  : set this to true if you want to run this in server mode and use the UI. **If you give this param all other params will be ignored**
 
 ## Usage Example 1: Start the server for using the UI
-    java -jar datasetutils-48.1.0jar --server true
+    java -jar datasetutils-48.1.0.jar --server true
 
 ## Usage Example 2: Upload a local csv to a dataset in production
     java -jar datasetutils-48.1.0.jar --action load --u pgupta@force.com --p @#@#@# --inputFile Opportunity.csv --dataset puntest
