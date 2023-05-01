@@ -249,9 +249,9 @@ public class DatasetLoader {
 			{
 				mode = INCREMENTAL_MODE_INCREMENTAL;
 			}
-			else if (mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE))
+			else
 			{
-					mode = INCREMENTAL_MODE_NONE;
+				mode = INCREMENTAL_MODE_NONE;
 			}
 		}
 		
@@ -1190,10 +1190,10 @@ public class DatasetLoader {
 
 			if (mode != null) {
 				if (mode.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL)) {
-					sobj.setField("Mode", mode);
+					sobj.setField("Mode", INCREMENTAL_MODE_INCREMENTAL);
 				}
 				else if (mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE)) {
-					sobj.setField("Mode", mode);
+					sobj.setField("Mode", INCREMENTAL_MODE_NONE);
 				}
 			}
 
