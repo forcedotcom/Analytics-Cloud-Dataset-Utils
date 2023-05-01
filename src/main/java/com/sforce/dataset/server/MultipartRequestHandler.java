@@ -111,6 +111,7 @@ public class MultipartRequestHandler {
 		String inputCsv = null;
 		String inputJson = null;
 		String inputFileCharset = null;
+		String mode = null;
 				
 		for (FileItem item : items) {
 				    if (item.isFormField()) {
@@ -133,6 +134,8 @@ public class MultipartRequestHandler {
 				        	inputJson = item.getString();
 				        if(item.getFieldName().equals("inputFileCharset"))
 				        	inputFileCharset = item.getString();
+						if(item.getFieldName().equals("mode"))
+							mode = item.getString();
 				        
 				    } else {
 				    	if(item.getSize()>0 && item.getInputStream() != null)
@@ -205,6 +208,7 @@ public class MultipartRequestHandler {
 					{
 						throw new IllegalArgumentException("Input File {"+outFile.getName()+"} is of zero length");
 					}
+					fm.setMode(mode);
 				}
 		return files;
 	}

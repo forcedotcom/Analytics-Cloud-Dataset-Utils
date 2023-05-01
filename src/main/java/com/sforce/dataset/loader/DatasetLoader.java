@@ -90,6 +90,9 @@ import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 import com.sforce.ws.util.Base64;
+
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_INCREMENTAL;
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_NONE;
 //import org.supercsv.io.CsvListReader;
 //import org.supercsv.prefs.CsvPreference;
 
@@ -176,6 +179,7 @@ public class DatasetLoader {
  * @param logger the logger
  * @param notificationLevel notificationLevel
  * @param notificationEmail notificationEmail
+ * @param mode mode
  * @return true, if successful
  * @throws DatasetLoaderException the dataset loader exception
  */
@@ -184,7 +188,7 @@ public class DatasetLoader {
 			String uploadFormat, CodingErrorAction codingErrorAction,
 			Charset inputFileCharset, String datasetAlias,
 			String datasetFolder,String datasetLabel, String Operation, boolean useBulkAPI,int chunkSizeMulti,
-			PartnerConnection partnerConnection,String notificationLevel, String notificationEmail, PrintStream logger) throws DatasetLoaderException
+			PartnerConnection partnerConnection,String notificationLevel, String notificationEmail, String mode, PrintStream logger) throws DatasetLoaderException
 	{
 		File archiveDir = null;
 		File datasetArchiveDir = null;
@@ -240,6 +244,16 @@ public class DatasetLoader {
 		{
 			Operation = "Overwrite";
 		}
+		if(mode != null) {
+			if (mode.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL))
+			{
+				mode = INCREMENTAL_MODE_INCREMENTAL;
+			}
+			else if (mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE))
+			{
+					mode = INCREMENTAL_MODE_NONE;
+			}
+		}
 		
 		if(datasetLabel==null || datasetLabel.trim().isEmpty())
 		{
@@ -261,6 +275,7 @@ public class DatasetLoader {
 		logger.println("uploadFormat: "+uploadFormat);
 		logger.println("notificationLevel: "+notificationLevel);
 		logger.println("notificationEmail: "+notificationEmail);
+		logger.println("mode: "+mode);
 		logger.println("JVM Max memory: "+nf.format(rt.maxMemory()/mb));
 		logger.println("JVM Total memory: "+nf.format(rt.totalMemory()/mb));
 		logger.println("JVM Free memory: "+nf.format(rt.freeMemory()/mb));
@@ -493,7 +508,7 @@ public class DatasetLoader {
 
 			if(hdrId==null || hdrId.isEmpty())
 			{
-				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, altSchema.toBytes(), uploadFormat, Operation, notificationLevel,  notificationEmail, logger);
+				hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, altSchema.toBytes(), uploadFormat, Operation, notificationLevel,  notificationEmail, mode, logger);
 			}
 			
 			if(hdrId ==null || hdrId.isEmpty())
@@ -844,7 +859,7 @@ public class DatasetLoader {
 
 			long startTime = System.currentTimeMillis();
 			status = uploadEM(gzbinFile, uploadFormat, altSchema.toBytes(), datasetAlias,datasetFolder, datasetLabel,useBulkAPI, partnerConnection, hdrId, datasetArchiveDir,
-					"Overwrite", updateHdrJson, notificationLevel,  notificationEmail, logger, chunkSizeMulti);
+					"Overwrite", updateHdrJson, notificationLevel,  notificationEmail, mode, logger, chunkSizeMulti);
 			long endTime = System.currentTimeMillis();
 			uploadTime = endTime-startTime;
 			
@@ -930,7 +945,7 @@ public class DatasetLoader {
 	 */
 	private static boolean uploadEM(File dataFile, String dataFormat, byte[] metadataJsonBytes, String datasetAlias,String datasetFolder, 
 			String datasetLabel, boolean useBulk, PartnerConnection partnerConnection, String hdrId, File datasetArchiveDir, String Operation,
-			boolean updateHdrJson,String notificationLevel, String notificationEmail, PrintStream logger,int chunkSizeMulti) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException 
+			boolean updateHdrJson,String notificationLevel, String notificationEmail, String incrementalMode,PrintStream logger,int chunkSizeMulti) throws DatasetLoaderException, InterruptedException, IOException, ConnectionException, AsyncApiException
 	{
 		BlockingQueue<Map<Integer, File>> q = new LinkedBlockingQueue<Map<Integer, File>>(); 
 		LinkedList<Integer> existingFileParts = new LinkedList<Integer>();
@@ -975,7 +990,7 @@ public class DatasetLoader {
 
 		if(hdrId==null || hdrId.trim().isEmpty())
 		{
-			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, metadataJsonBytes, dataFormat, Operation, notificationLevel,  notificationEmail, logger);
+			hdrId = insertFileHdr(partnerConnection, datasetAlias,datasetFolder, datasetLabel, metadataJsonBytes, dataFormat, Operation, notificationLevel, notificationEmail, incrementalMode, logger);
 		}else
 		{
 			existingFileParts = getUploadedFileParts(partnerConnection, hdrId);
@@ -1129,51 +1144,59 @@ public class DatasetLoader {
 	 * @return the string
 	 * @throws DatasetLoaderException the dataset loader exception
 	 */
-	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, String datasetLabel,  byte[] metadataJson, String dataFormat, String Operation, String notificationLevel, String notificationEmail,PrintStream logger) throws DatasetLoaderException 
+	private static String insertFileHdr(PartnerConnection partnerConnection, String datasetAlias, String datasetContainer, String datasetLabel,  byte[] metadataJson, String dataFormat, String Operation,
+										String notificationLevel, String notificationEmail,String mode, PrintStream logger) throws DatasetLoaderException
 	{
 		String rowId = null;
 		long startTime = System.currentTimeMillis(); 
 		try {
-			
-	    	com.sforce.dataset.Preferences userPref = DatasetUtilConstants.getPreferences(partnerConnection.getUserInfo().getOrganizationId());
 
-			SObject sobj = new SObject();	        
-			sobj.setType("InsightsExternalData"); 
-	        
-	        if(dataFormat == null || dataFormat.equalsIgnoreCase("CSV"))
-	        	sobj.setField("Format","CSV");
-	        else
-	        	sobj.setField("Format","Binary");
-    		
-	        sobj.setField("EdgemartAlias", datasetAlias);
-	        
-	        //EdgemartLabel
-	        sobj.setField("EdgemartLabel", datasetLabel);
-	        
-	        if(datasetContainer!=null && !datasetContainer.trim().isEmpty() && !datasetContainer.equals(DatasetUtilConstants.defaultAppName))
-	        {
-	        	sobj.setField("EdgemartContainer", datasetContainer); //Optional dataset folder name
-	        }
-	        
+			com.sforce.dataset.Preferences userPref = DatasetUtilConstants.getPreferences(partnerConnection.getUserInfo().getOrganizationId());
 
-	        //sobj.setField("IsIndependentParts",Boolean.FALSE); //Optional Defaults to false
-    		
-	        //sobj.setField("IsDependentOnLastUpload",Boolean.FALSE); //Optional Defaults to false
-    		
-    		if(metadataJson != null && metadataJson.length != 0)
-    		{
-    			sobj.setField("MetadataJson",metadataJson);
-    			if(DatasetUtilConstants.debug)
-    			{
-					logger.println("MetadataJson {"+ new String(metadataJson) + "}");
-    			}
-    		}
-    		
-    		if(Operation!=null)
-    			sobj.setField("operation",Operation);
-    		else
-    			sobj.setField("operation","Overwrite");    			
-    		
+			SObject sobj = new SObject();
+			sobj.setType("InsightsExternalData");
+
+			if (dataFormat == null || dataFormat.equalsIgnoreCase("CSV"))
+				sobj.setField("Format", "CSV");
+			else
+				sobj.setField("Format", "Binary");
+
+			sobj.setField("EdgemartAlias", datasetAlias);
+
+			//EdgemartLabel
+			sobj.setField("EdgemartLabel", datasetLabel);
+
+			if (datasetContainer != null && !datasetContainer.trim().isEmpty() && !datasetContainer.equals(DatasetUtilConstants.defaultAppName)) {
+				sobj.setField("EdgemartContainer", datasetContainer); //Optional dataset folder name
+			}
+
+
+			//sobj.setField("IsIndependentParts",Boolean.FALSE); //Optional Defaults to false
+
+			//sobj.setField("IsDependentOnLastUpload",Boolean.FALSE); //Optional Defaults to false
+
+			if (metadataJson != null && metadataJson.length != 0) {
+				sobj.setField("MetadataJson", metadataJson);
+				if (DatasetUtilConstants.debug) {
+					logger.println("MetadataJson {" + new String(metadataJson) + "}");
+				}
+			}
+
+			if (Operation != null)
+				sobj.setField("operation", Operation);
+			else
+				sobj.setField("operation", "Overwrite");
+
+
+			if (mode != null) {
+				if (mode.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL)) {
+					sobj.setField("Mode", mode);
+				}
+				else if (mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE)) {
+					sobj.setField("Mode", mode);
+				}
+			}
+
     		sobj.setField("Action","None");
     		
         		//"Always, Failures, Warnings, Never"
@@ -1200,7 +1223,7 @@ public class DatasetLoader {
         			sobj.setField("NotificationSent",notificationLevel);
 
             		sobj.setField("NotificationEmail",notificationEmail);
-    		
+
     		
  			//sobj.setField("FileName",fileName);
  		 	//sobj.setField("Description",description);

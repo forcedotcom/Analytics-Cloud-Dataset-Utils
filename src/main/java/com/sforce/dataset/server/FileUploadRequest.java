@@ -44,6 +44,7 @@ public class FileUploadRequest {
 	private  String inputFileSize = null;
 	private  String inputFileType = null;
 	private  String inputFileCharset = "UTF-8";
+	private String mode = null;
 	public   File savedFile = null;
 	
 	public transient InputStream inputFileStream;
@@ -108,5 +109,10 @@ public class FileUploadRequest {
 	public void setDatasetLabel(String datasetLabel) {
 		this.datasetLabel = datasetLabel;
 	}
-	
+	public String getMode() {
+		return mode;
+	}
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
 }

@@ -51,4 +51,5 @@ public class DatasetUtilParams {
 	boolean debug = false;
 	boolean server = true;
 	CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+	String mode = null;
 }

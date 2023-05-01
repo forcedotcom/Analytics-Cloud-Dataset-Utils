@@ -6,15 +6,15 @@
 	<description>Analytics Cloud Datatset Utils</description>
 	<artifactId>datasetutils</artifactId>
 	<packaging>jar</packaging>
-	<version>48.1.0</version>
+	<version>48.1.1</version>
 	<url>https://github.com/forcedotcom/Analytics-Cloud-Dataset-Utils</url>
 	<organization>
 		<name>salesforce.com</name>
 		<url>http://salesforce.com</url>
 	</organization>
 	<properties>
-		<force.version>48.1.0</force.version>
-		<force.partner.version>48.1.0</force.partner.version>
+		<force.version>56.0.0</force.version>
+		<force.partner.version>56.0.0</force.partner.version>
 		<java.compile.version>11</java.compile.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
