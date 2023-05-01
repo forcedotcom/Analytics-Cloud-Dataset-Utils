@@ -33,13 +33,10 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.text.DecimalFormat;
-import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
@@ -58,10 +55,12 @@ import com.sforce.dataset.server.DatasetUtilServer;
 import com.sforce.dataset.util.CharsetChecker;
 import com.sforce.dataset.util.DatasetDownloader;
 import com.sforce.dataset.util.DatasetUtils;
-import com.sforce.dataset.util.SfdcUtils;
 import com.sforce.dataset.util.XmdUploader;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
+
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_INCREMENTAL;
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_NONE;
 
 @SuppressWarnings("deprecation")
 public class DatasetUtilMain {
@@ -304,7 +303,23 @@ public class DatasetUtilMain {
 						}
 						DatasetUtilConstants.codingErrorAction = params.codingErrorAction;
 					}
-				}else
+				}
+				else if(args[i-1].equalsIgnoreCase("--mode"))
+				{
+					String arg = args[i];
+					if(arg!=null)
+					{
+						if (arg.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL)) {
+							params.mode = INCREMENTAL_MODE_INCREMENTAL;
+						} else if (arg.equalsIgnoreCase(INCREMENTAL_MODE_NONE)) {
+							params.mode = INCREMENTAL_MODE_NONE;
+						}else {
+							System.out.println("Invalid mode {"+arg+"} Must be '" + INCREMENTAL_MODE_INCREMENTAL + "' or '" + INCREMENTAL_MODE_NONE + "'");
+							System.exit(-1);
+						}
+					}
+				}
+				else
 				{
 					printUsage();
 					System.out.println("\nERROR: Invalid argument: "+args[i-1]);
@@ -484,6 +499,7 @@ public class DatasetUtilMain {
 		System.out.println("--sessionId : (Optional) the salesforce sessionId. if specified,specify endpoint");
 		System.out.println("--fileEncoding : (Optional) the encoding of the inputFile default UTF-8");
 		System.out.println("--uploadFormat : (Optional) the whether to upload as binary or csv. default binary");
+		System.out.println("--mode  : (Optional) Incremental or None, default is None");
 
 		System.out.println("*******************************************************************************\n");
 		System.out.println("Usage Example 1: Upload a csv to a dataset");
@@ -717,7 +733,8 @@ public class DatasetUtilMain {
 					try
 					{
 						boolean status = DatasetLoader.uploadDataset(params.inputFile, params.schemaFile, params.uploadFormat, params.codingErrorAction,fileCharset, params.dataset,
-								params.app, params.datasetLabel, params.Operation, params.useBulkAPI,params.chunkSizeMulti, partnerConnection, params.notificationLevel, params.notificationEmail, System.out);
+								params.app, params.datasetLabel, params.Operation, params.useBulkAPI,params.chunkSizeMulti, partnerConnection, params.notificationLevel, params.notificationEmail,
+								params.mode, System.out);
 						if(status)
 							session.end();
 						else
@@ -927,6 +944,25 @@ public class DatasetUtilMain {
 					break;
 				}
 //				System.out.println();
+			}
+			while (params.mode ==null || params.mode.isEmpty())
+			{
+				params.mode = getInputFromUser("Enter mode: ", false, false);
+				if (params.mode == null || params.mode.isEmpty()) {
+					params.mode = INCREMENTAL_MODE_NONE;
+				}
+				else if(params.mode.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL))
+				{
+					params.mode = INCREMENTAL_MODE_INCREMENTAL;
+				}
+				else if (params.mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE)){
+					params.mode = INCREMENTAL_MODE_NONE;
+				}
+				else
+				{
+					System.out.println("Invalid mode {"+params.mode +"} Must be '" + INCREMENTAL_MODE_INCREMENTAL + "' or '" + INCREMENTAL_MODE_NONE + "'");
+					params.mode = null;
+				}
 			}
 			
 		}else if(action.equalsIgnoreCase("downloadErrorFile"))

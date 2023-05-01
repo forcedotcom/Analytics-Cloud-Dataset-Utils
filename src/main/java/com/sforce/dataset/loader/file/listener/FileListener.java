@@ -31,6 +31,9 @@ import java.nio.charset.CodingErrorAction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_INCREMENTAL;
+import static com.sforce.dataset.DatasetUtilConstants.INCREMENTAL_MODE_NONE;
+
 public class FileListener {
 	private String datasetAlias = null;
 	private String datasetLabel = null;
@@ -47,6 +50,7 @@ public class FileListener {
 	private int chunkSizeMulti =5;
 	private String notificationLevel = null; 
 	private String notificationEmail = null;
+	private String mode = null;
 
 	
 	@JsonIgnore
@@ -137,6 +141,24 @@ public class FileListener {
 			}
 		}
 	}
+
+	public String getMode() {
+		return mode;
+	}
+	public void SetMode(String mode) {
+		if(mode != null) {
+			if (mode.equalsIgnoreCase(INCREMENTAL_MODE_INCREMENTAL)){
+				this.mode = INCREMENTAL_MODE_INCREMENTAL;
+			} else if (mode.equalsIgnoreCase(INCREMENTAL_MODE_NONE)) {
+				this.mode = INCREMENTAL_MODE_NONE;
+			} else {
+				this.mode = null;
+			}
+		} else {
+			this.mode = null;
+		}
+	}
+
 	public boolean isUseBulkAPI() {
 		return useBulkAPI;
 	}
