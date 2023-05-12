@@ -281,6 +281,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+				    <additionalparam>-Xdoclint:none</additionalparam>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>com.mycila.maven-license-plugin</groupId>
